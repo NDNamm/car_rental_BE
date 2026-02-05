@@ -1,0 +1,33 @@
+package com.example.car_rental.exception;
+
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+
+@Getter
+@RequiredArgsConstructor
+public enum ErrorCode {
+    INVALID_KEY(9999, "Unknown error", HttpStatus.INTERNAL_SERVER_ERROR),
+
+    PHONE_EXISTED(1009, "Phone already exists", HttpStatus.CONFLICT),
+    EMAIL_EXISTED(1011, "Email already exists", HttpStatus.CONFLICT),
+
+    USER_NOT_FOUND(1003, "User not found", HttpStatus.NOT_FOUND),
+    ROLE_NOT_EXISTED(1010, "Role not found", HttpStatus.NOT_FOUND),
+
+    INVALID_CREDENTIALS(1012, "Invalid email or password", HttpStatus.UNAUTHORIZED),
+
+    PASSWORD_NOT_MATCH(1002, "Passwords do not match", HttpStatus.BAD_REQUEST),
+    USERNAME_INVALID(1004, "Full name must be at least 5 characters", HttpStatus.BAD_REQUEST),
+    PASSWORD_INVALID(1005, "Password must be at least 8 characters", HttpStatus.BAD_REQUEST),
+    PHONE_INVALID(1006, "Phone must be at least 10 characters", HttpStatus.BAD_REQUEST),
+    EMAIL_INVALID(1008, "Email format is invalid", HttpStatus.BAD_REQUEST),
+
+    TOKEN_MISSING(1013, "Authentication token is missing", HttpStatus.UNAUTHORIZED),
+    TOKEN_INVALID(1014, "Authentication token is invalid", HttpStatus.UNAUTHORIZED),;
+
+
+    private final int code;
+    private final String message;
+    private final HttpStatus status;
+}
