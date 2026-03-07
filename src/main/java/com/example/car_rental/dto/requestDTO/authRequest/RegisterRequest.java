@@ -24,9 +24,7 @@ public class RegisterRequest {
     @NotBlank(message = "PASSWORD_INVALID")
     @Size(min = 8, max = 20, message = "PASSWORD_INVALID")
     private String password;
-    @NotBlank(message = "PASSWORD_INVALID")
-    @Size(min = 8, max = 20, message = "PASSWORD_INVALID")
-    private String newPassword;
+
     @NotBlank(message = "PASSWORD_INVALID")
     @Size(min = 8, max = 20, message = "PASSWORD_INVALID")
     private String confirmPassword;

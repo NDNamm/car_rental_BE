@@ -39,11 +39,8 @@ public class Users {
     @Column(name = "email")
     private String email;
 
-    @Column(name = "phoneNumber")
+    @Column(name = "phone_number")
     private String phoneNumber;
-
-    @Column(name = "verified")
-    private Boolean verified = false;
 
     @Column(name = "created_at")
     private LocalDate createdAt;
@@ -52,4 +49,10 @@ public class Users {
     @JsonIgnore
     @JoinColumn(name = "role_id")
     private Roles role;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private Verifications verification;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private CarHandovers carHandovers;
 }

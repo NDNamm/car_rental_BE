@@ -1,7 +1,7 @@
 package com.example.car_rental.controller;
 
+import com.example.car_rental.dto.requestDTO.UserRequest;
 import com.example.car_rental.dto.responseDTO.ApiResponse;
-import com.example.car_rental.dto.responseDTO.UserRequest;
 import com.example.car_rental.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

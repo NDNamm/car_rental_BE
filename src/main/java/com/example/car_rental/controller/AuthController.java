@@ -2,18 +2,16 @@ package com.example.car_rental.controller;
 
 import com.example.car_rental.dto.requestDTO.authRequest.LoginRequest;
 import com.example.car_rental.dto.requestDTO.authRequest.RegisterRequest;
+import com.example.car_rental.dto.requestDTO.passwordRequest.ForgotPasswordRequest;
 import com.example.car_rental.dto.responseDTO.ApiResponse;
 import com.example.car_rental.dto.responseDTO.AuthResponse;
-import com.example.car_rental.security.JwtUtils;
 import com.example.car_rental.service.AuthService;
+import com.example.car_rental.service.PasswordService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -21,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
-    private final JwtUtils jwtUtils;
+    private final PasswordService passwordService;
 
     @PostMapping("/login")
     public ApiResponse<AuthResponse> login(
@@ -73,6 +71,33 @@ public class AuthController {
                 .code(200)
                 .message("Google login successful")
                 .data(authService.loginWithGoogle(idToken, response))
+                .build();
+    }
+
+    @PostMapping("/forgot-password")
+    public ApiResponse<String> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        passwordService.forgotPassword(request.getEmail());
+        return ApiResponse.<String>builder()
+                .code(200)
+                .message("OTP sent to your email")
+                .build();
+    }
+
+    @PostMapping("/check-otp")
+    public ApiResponse<String> checkOtpCode(@RequestBody ForgotPasswordRequest request) {
+        passwordService.checkOtp(request);
+        return ApiResponse.<String>builder()
+                .code(200)
+                .message("OTP ok")
+                .build();
+    }
+
+    @PatchMapping("/reset-password")
+    public ApiResponse<String> resetPassword(@RequestBody ForgotPasswordRequest request) {
+        passwordService.resetPassword(request);
+        return ApiResponse.<String>builder()
+                .code(200)
+                .message("Password changed successfully")
                 .build();
     }
 

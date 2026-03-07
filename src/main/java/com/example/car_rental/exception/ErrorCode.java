@@ -20,11 +20,16 @@ public enum ErrorCode {
     PASSWORD_NOT_MATCH(1002, "Passwords do not match", HttpStatus.BAD_REQUEST),
     USERNAME_INVALID(1004, "Full name must be at least 5 characters", HttpStatus.BAD_REQUEST),
     PASSWORD_INVALID(1005, "Password must be at least 8 characters", HttpStatus.BAD_REQUEST),
+    PASSWORD_OLD_NOT_MATCH(1006, "Passwords old do not match", HttpStatus.BAD_REQUEST),
     PHONE_INVALID(1006, "Phone must be at least 10 characters", HttpStatus.BAD_REQUEST),
     EMAIL_INVALID(1008, "Email format is invalid", HttpStatus.BAD_REQUEST),
 
     TOKEN_MISSING(1013, "Authentication token is missing", HttpStatus.UNAUTHORIZED),
-    TOKEN_INVALID(1014, "Authentication token is invalid", HttpStatus.UNAUTHORIZED),;
+    TOKEN_INVALID(1014, "Authentication token is invalid", HttpStatus.UNAUTHORIZED),
+    REFRESH_TOKEN_INVALID(4003, "REFRESH TOKEN INVALID OR EXPIRED", HttpStatus.UNAUTHORIZED),
+    TOKEN_EXPIRED(4001, "TOKEN_EXPIRED", HttpStatus.UNAUTHORIZED),
+    UNAUTHORIZED(401, "UNAUTHORIZED", HttpStatus.UNAUTHORIZED),
+    INVALID_OTP(4002, "INVALID_OTP", HttpStatus.UNAUTHORIZED),;
 
 
     private final int code;

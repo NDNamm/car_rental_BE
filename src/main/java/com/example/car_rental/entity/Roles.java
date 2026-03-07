@@ -12,7 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Table(name = "roles")
+@Table(name = "role")
 public class Roles {
 
     @Id
@@ -22,7 +22,6 @@ public class Roles {
     @Column(name = "role_name")
     private String roleName;
 
-    @ManyToOne
-    @JoinColumn(name = "role_id")
-    private Roles role;
+    @OneToMany(mappedBy = "role")
+    private List<Users> user;
 }

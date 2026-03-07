@@ -1,10 +1,11 @@
 package com.example.car_rental.service.impl;
 
-import com.example.car_rental.dto.responseDTO.UserRequest;
+import com.example.car_rental.dto.requestDTO.UserRequest;
 import com.example.car_rental.entity.Users;
 import com.example.car_rental.repository.UserRepository;
 import com.example.car_rental.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 @RequiredArgsConstructor
 @Service
+@Slf4j
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
@@ -34,7 +36,6 @@ public class UserServiceImpl implements UserService {
                 .dob(user.getDob())
                 .avatarUrl(user.getAvatarUrl())
                 .gender(user.getGender())
-                .verified(user.getVerified())
                 .createdAt(user.getCreatedAt())
                 .build());
     }

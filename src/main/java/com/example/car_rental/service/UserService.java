@@ -1,7 +1,7 @@
 package com.example.car_rental.service;
 
 
-import com.example.car_rental.dto.responseDTO.UserRequest;
+import com.example.car_rental.dto.requestDTO.UserRequest;
 import org.springframework.data.domain.Page;
 
 public interface UserService {

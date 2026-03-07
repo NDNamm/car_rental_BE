@@ -11,7 +11,7 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserRequest {
+public class UserResponse {
 
     private Long id;
     private String userName;
@@ -22,6 +22,5 @@ public class UserRequest {
     private GenderEnum gender;
     private String email;
     private String phoneNumber;
-    private Boolean verified;
     private LocalDate createdAt;
 }
