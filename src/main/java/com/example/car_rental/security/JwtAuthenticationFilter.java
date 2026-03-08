@@ -67,7 +67,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
         } catch (Exception e) {
-            unauthorized(response, "Invalid or expired token");
+            e.printStackTrace();
+            unauthorized(response, "Error: " + e.getMessage());
             return;
         }
 

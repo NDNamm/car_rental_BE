@@ -37,9 +37,11 @@ server:
   port: 8080
 
 cloudinary:
-  cloud-name: ${CLOUDINARY_NAME}
-  api-key: ${CLOUDINARY_KEY}
-  api-secret: ${CLOUDINARY_SECRET}
+  cloud-name: dsnp27eeq
+  api-key: 424175451863649
+  api-secret: dCOAwHvsDACKI1P_cTJDAFByaR0
+  allowed-formats: jpg, jpeg, png
+  allowed-image-extensions: .jpg, .jpeg, .png
 
 jwt:
   secret: alu/+a1d0NbwC4xqaJsIVyIS8XG+jrLIuNDNqv6I7Jg=

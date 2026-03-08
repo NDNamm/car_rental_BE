@@ -32,16 +32,21 @@ CREATE TABLE verifications (
     cccd_front_url VARCHAR(255) NOT NULL,
     cccd_back_url VARCHAR(255) NOT NULL,
     license_image_url VARCHAR(255) NOT NULL,
+    public_id_cccd_front VARCHAR(255) DEFAULT NULL,
+    public_id_cccd_back VARCHAR(255) DEFAULT NULL,
+    public_id_license VARCHAR(255) DEFAULT NULL,
     -- Thông tin GPLX
     license_number VARCHAR(50) NOT NULL,
-    license_expired_date DATE NOT NULL,
+    license_expired_date VARCHAR(50) NOT NULL,
     status ENUM('PENDING','APPROVED','REJECTED') DEFAULT 'PENDING',
     note VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
+alter table verifications add column license_expired_date VARCHAR(50) NOT NULL;
 
+    
 CREATE TABLE categories (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -66,8 +71,11 @@ CREATE TABLE car_images (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     car_id BIGINT,
     image_url VARCHAR(255),
+    public_id VARCHAR(255),
     FOREIGN KEY (car_id) REFERENCES cars(id)
 );
+
+
 
 CREATE TABLE bookings (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,

@@ -33,8 +33,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/lessons/**", "/api/vocabulary/**", "/api/questions/**",
                                 "/api/answers/**", "/api/rearrange-words/**").permitAll()
-                        .requestMatchers("/api/user/**").hasAnyRole("ADMIN", "USER")
-                        .requestMatchers("/api/lesson/**").hasAnyRole("ADMIN", "TEACHER")
+                        .requestMatchers("/api/verification/**").hasAnyRole("ADMIN", "USER")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

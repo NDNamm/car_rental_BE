@@ -31,6 +31,15 @@ public class Verifications {
     @Column(name = "license_image_url")
     private String licenseImageUrl;
 
+    @Column(name = "public_id_cccd_front")
+    private String publicIdCccdFront;
+
+    @Column(name = "public_id_cccd_back")
+    private String publicIdCccdBack;
+
+    @Column(name = "public_id_license")
+    private String publicIdLicense;
+
     @Column(name = "license_number")
     private String licenseNumber;
 
@@ -41,7 +50,7 @@ public class Verifications {
     private String note;
 
     @Column(name = "license_expired_date")
-    private LocalDate licenseExpiredDate;
+    private String licenseExpiredDate;
 
     @Column(name = "created_at")
     private LocalDate createdAt;

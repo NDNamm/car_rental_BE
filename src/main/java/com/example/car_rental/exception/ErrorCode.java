@@ -29,8 +29,12 @@ public enum ErrorCode {
     REFRESH_TOKEN_INVALID(4003, "REFRESH TOKEN INVALID OR EXPIRED", HttpStatus.UNAUTHORIZED),
     TOKEN_EXPIRED(4001, "TOKEN_EXPIRED", HttpStatus.UNAUTHORIZED),
     UNAUTHORIZED(401, "UNAUTHORIZED", HttpStatus.UNAUTHORIZED),
-    INVALID_OTP(4002, "INVALID_OTP", HttpStatus.UNAUTHORIZED),;
+    INVALID_OTP(4002, "INVALID_OTP", HttpStatus.UNAUTHORIZED),
 
+    VERIFICATION_NOT_FOUND(5001, "Verification not found", HttpStatus.NOT_FOUND),
+    ALREADY_VERIFIED(5002, "User already verified", HttpStatus.BAD_REQUEST),
+
+    UPDATE_IMAGE_FAIL(6003, "Failed to update image", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final int code;
     private final String message;

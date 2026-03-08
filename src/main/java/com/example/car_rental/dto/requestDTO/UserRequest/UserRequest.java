@@ -1,4 +1,4 @@
-package com.example.car_rental.dto.requestDTO;
+package com.example.car_rental.dto.requestDTO.UserRequest;
 
 import com.example.car_rental.entity.enums.GenderEnum;
 import lombok.*;

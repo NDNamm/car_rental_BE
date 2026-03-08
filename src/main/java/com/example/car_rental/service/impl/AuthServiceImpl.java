@@ -54,12 +54,12 @@ public class AuthServiceImpl implements AuthService {
 
         String role = user.getRole().getRoleName();
 
-        String accessToken = jwtUtils.generateAccessToken(String.valueOf(user.getId()), role);
-        String refreshToken = jwtUtils.generateRefreshToken(String.valueOf(user.getId()), role);
+        String accessToken = jwtUtils.generateAccessToken(String.valueOf(user.getEmail()), role);
+        String refreshToken = jwtUtils.generateRefreshToken(String.valueOf(user.getEmail()), role);
 
         // LƯU REDIS
         redisTemplate.opsForValue().set(
-                "refreshToken:" + user.getId(),
+                "refreshToken:" + user.getEmail(),
                 refreshToken,
                 Duration.ofDays(7)
         );

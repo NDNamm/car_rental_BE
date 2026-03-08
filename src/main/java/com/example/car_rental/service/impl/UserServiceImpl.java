@@ -1,6 +1,6 @@
 package com.example.car_rental.service.impl;
 
-import com.example.car_rental.dto.requestDTO.UserRequest;
+import com.example.car_rental.dto.requestDTO.UserRequest.UserRequest;
 import com.example.car_rental.entity.Users;
 import com.example.car_rental.repository.UserRepository;
 import com.example.car_rental.service.UserService;
@@ -19,6 +19,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
 
+    //ADMIN
     @Override
     public Page<UserRequest> getAllUsers(String email, String fullName, String phoneNumber, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
@@ -50,6 +51,8 @@ public class UserServiceImpl implements UserService {
 
     }
 
+
+    //USER
     @Override
     public UserRequest editProfile(UserRequest userRequest) {
         return null;
