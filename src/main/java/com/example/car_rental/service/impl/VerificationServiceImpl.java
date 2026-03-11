@@ -1,7 +1,7 @@
 package com.example.car_rental.service.impl;
 
-import com.cloudinary.Cloudinary;
-import com.example.car_rental.dto.requestDTO.VerificationRequest;
+import com.example.car_rental.dto.requestDTO.VerificationRequest.UpdateVerificationStatusRequest;
+import com.example.car_rental.dto.requestDTO.VerificationRequest.VerificationRequest;
 import com.example.car_rental.dto.responseDTO.VerificationResponse;
 import com.example.car_rental.entity.Users;
 import com.example.car_rental.entity.Verifications;
@@ -14,7 +14,6 @@ import com.example.car_rental.service.ImageService;
 import com.example.car_rental.service.VerificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,19 +32,47 @@ public class VerificationServiceImpl implements VerificationService {
     private final UserRepository userRepository;
     private final ImageService imageService;
 
+    //ADMIN
     @Override
-    public VerificationResponse getVerUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    public void updateStatus(Long id, UpdateVerificationStatusRequest request) {
+        Users user = userRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
+        Verifications verification = verificationRepository.findVerificationByUserId(user.getId());
+        if (verification == null) {
+            throw new AppException(ErrorCode.VERIFICATION_NOT_FOUND);
         }
 
-        String email = authentication.getName();
+        try {
+            VerStatusEnum newStatus = VerStatusEnum.valueOf(request.getStatus().toUpperCase());
+            verification.setStatus(newStatus);
+            verification.setNote(request.getNote());
+            verificationRepository.save(verification);
+
+        } catch (IllegalArgumentException e) {
+            throw new AppException(ErrorCode.INVALID_VERIFICATION_STATUS);
+        }
+
+    }
+
+
+    //Client
+    @Override
+    public VerificationResponse getVerUser() {
+
+        String email = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
+
         Users user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        Verifications verification = verificationRepository.findByUserId(user.getId());
+        Verifications verification = verificationRepository.findVerificationByUserId(user.getId());
+
+        if (verification == null) {
+            throw new AppException(ErrorCode.VERIFICATION_NOT_FOUND);
+        }
 
         return VerificationResponse.builder()
                 .id(verification.getId())
@@ -67,16 +94,15 @@ public class VerificationServiceImpl implements VerificationService {
     @Override
     @Transactional
     public void updateVer(VerificationRequest request, MultipartFile cccdFront, MultipartFile cccdBack, MultipartFile driverLicense) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
-        }
+        String email = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
 
-        String email = authentication.getName();
         Users user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        Verifications verification = verificationRepository.findByUserId(user.getId());
+        Verifications verification = verificationRepository.findVerificationByUserId(user.getId());
 
         if (verification == null) {
             verification = new Verifications();
@@ -93,7 +119,7 @@ public class VerificationServiceImpl implements VerificationService {
                     imageService.deleteImages(verification.getPublicIdCccdFront());
                 }
 
-                Map<String, String> cccdFrontUrl = imageService.uploadImages(cccdFront, "users", user.getFullName());
+                Map<String, String> cccdFrontUrl = imageService.uploadImages(cccdFront, "users", user.getFullName(), "cccd_front");
                 verification.setCccdFrontUrl(cccdFrontUrl.get("url"));
                 verification.setPublicIdCccdFront(cccdFrontUrl.get("public_id"));
             }
@@ -103,7 +129,7 @@ public class VerificationServiceImpl implements VerificationService {
                     imageService.deleteImages(verification.getPublicIdCccdBack());
                 }
 
-                Map<String, String> cccdBackUrl = imageService.uploadImages(cccdBack, "users", user.getFullName());
+                Map<String, String> cccdBackUrl = imageService.uploadImages(cccdBack, "users", user.getFullName(), "cccd_back");
                 verification.setCccdBackUrl(cccdBackUrl.get("url"));
                 verification.setPublicIdCccdBack(cccdBackUrl.get("public_id"));
             }
@@ -113,7 +139,7 @@ public class VerificationServiceImpl implements VerificationService {
                     imageService.deleteImages(verification.getLicenseImageUrl());
                 }
 
-                Map<String, String> LicenseImageUrl = imageService.uploadImages(cccdFront, "users", user.getFullName());
+                Map<String, String> LicenseImageUrl = imageService.uploadImages(driverLicense, "users", user.getFullName(), "driver_license");
                 verification.setLicenseImageUrl(LicenseImageUrl.get("url"));
                 verification.setPublicIdLicense(LicenseImageUrl.get("public_id"));
             }

@@ -6,6 +6,6 @@ import java.io.IOException;
 import java.util.Map;
 
 public interface ImageService {
-    Map<String, String> uploadImages(MultipartFile image, String folder, String name) throws IOException;
+    Map<String, String> uploadImages(MultipartFile image, String folder, String name, String nameImage) throws IOException;
     void deleteImages(String publicId) throws IOException;
 }

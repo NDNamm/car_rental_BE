@@ -18,12 +18,12 @@ public class ImageServiceImpl implements ImageService {
     private final Cloudinary cloudinary;
 
     @Override
-    public Map<String, String> uploadImages(MultipartFile image, String folder, String name) throws IOException {
+    public Map<String, String> uploadImages(MultipartFile image, String folder, String name, String nameImage) throws IOException {
         try {
             return cloudinary.uploader().upload(image.getBytes(), ObjectUtils.asMap(
-                    "project", "car_rental",
-                    "folder", folder,
-                    "name", name
+                    "folder", "car_rental/" + folder + "/" + name,
+                    "public_id", nameImage,
+                    "overwrite", true
             ));
         } catch (Exception e) {
             throw new IOException("Upload file failed: " + e.getMessage());

@@ -34,6 +34,7 @@ public class Payments {
     private PaymentTypeEnum paymentTypeEnum;
 
     @Column(name = "status")
+    @Enumerated(EnumType.STRING)
     private PaymentStatusEnum status;
 
     @Column(name = "transaction_code")

@@ -33,6 +33,8 @@ public enum ErrorCode {
 
     VERIFICATION_NOT_FOUND(5001, "Verification not found", HttpStatus.NOT_FOUND),
     ALREADY_VERIFIED(5002, "User already verified", HttpStatus.BAD_REQUEST),
+    INVALID_VERIFICATION_STATUS(5003, "Invalid verification status", HttpStatus.BAD_REQUEST),
+    CANNOT_UPDATE_NAME_AFTER_VERIFICATION(5004, "Cannot update name after verification", HttpStatus.BAD_REQUEST),
 
     UPDATE_IMAGE_FAIL(6003, "Failed to update image", HttpStatus.INTERNAL_SERVER_ERROR);
 

@@ -35,6 +35,7 @@ public class Bookings {
     private BigDecimal depositAmount;
 
     @Column(name = "status")
+    @Enumerated(EnumType.STRING)
     private BookingEnum status;
 
     @Column(name = "created_at")

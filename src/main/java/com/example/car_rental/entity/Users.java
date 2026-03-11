@@ -30,10 +30,14 @@ public class Users {
     @Column(name = "avatar_url")
     private String avatarUrl;
 
+    @Column(name = "public_id_avatar")
+    private String publicIdAvatar;
+
     @Column(name = "date_of_birth")
     private Date dob;
 
     @Column(name = "gender")
+    @Enumerated(EnumType.STRING)
     private GenderEnum gender;
 
     @Column(name = "email")

@@ -14,13 +14,9 @@ import java.util.Date;
 public class UserRequest {
 
     private Long id;
-    private String userName;
-    private String password;
     private String fullName;
-    private String avatarUrl;
     private Date dob;
     private GenderEnum gender;
-    private String email;
     private String phoneNumber;
     private LocalDate createdAt;
 }

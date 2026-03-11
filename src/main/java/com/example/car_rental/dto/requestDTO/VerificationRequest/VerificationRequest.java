@@ -1,9 +1,6 @@
-package com.example.car_rental.dto.requestDTO;
+package com.example.car_rental.dto.requestDTO.VerificationRequest;
 
-import com.example.car_rental.entity.Users;
 import com.example.car_rental.entity.enums.VerStatusEnum;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;

@@ -62,13 +62,11 @@ public class PasswordServiceImpl implements PasswordService {
     @Override
     @Transactional
     public void changePassword(ChangePassRequest request) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getName();
 
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new AppException(ErrorCode.UNAUTHORIZED);
-        }
-
-        String email = authentication.getName();
         Users user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 

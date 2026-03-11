@@ -14,8 +14,6 @@ import java.util.Date;
 public class UserResponse {
 
     private Long id;
-    private String userName;
-    private String password;
     private String fullName;
     private String avatarUrl;
     private Date dob;

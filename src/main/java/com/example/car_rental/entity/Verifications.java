@@ -44,6 +44,7 @@ public class Verifications {
     private String licenseNumber;
 
     @Column(name = "status")
+    @Enumerated(EnumType.STRING)
     private VerStatusEnum status;
 
     @Column(name = "note")

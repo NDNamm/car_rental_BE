@@ -16,6 +16,7 @@ create table users(
     -- Thông tin cá nhân
     full_name VARCHAR(100) NOT NULL,
     avatar_url VARCHAR(255),
+    public_id_avatar VARCHAR(255),
     date_of_birth DATE,
     gender ENUM('MALE','FEMALE','OTHER'),
     -- Liên hệ
@@ -24,6 +25,8 @@ create table users(
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (role_id) REFERENCES role(id)
 );
+
+alter table users add column public_id_avatar VARCHAR(255);
 
 CREATE TABLE verifications (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -44,9 +47,6 @@ CREATE TABLE verifications (
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
-alter table verifications add column license_expired_date VARCHAR(50) NOT NULL;
-
-    
 CREATE TABLE categories (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,

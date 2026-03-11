@@ -67,7 +67,7 @@ public class AuthServiceImpl implements AuthService {
         // COOKIE
         Cookie cookie = new Cookie("refreshToken", refreshToken);
         cookie.setHttpOnly(true);
-        cookie.setSecure(true);
+        cookie.setSecure(false);
         cookie.setPath("/");
         cookie.setMaxAge(7 * 24 * 60 * 60);
         response.addCookie(cookie);
@@ -123,7 +123,7 @@ public class AuthServiceImpl implements AuthService {
         //Xóa cookie ở trình duyệt
         ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
-                .secure(true)
+                .secure(false)
                 .path("/")
                 .sameSite("Strict")
                 .maxAge(Duration.ofDays(7))
@@ -143,30 +143,30 @@ public class AuthServiceImpl implements AuthService {
 
         try {
             Claims claims = jwtUtils.parseToken(refreshToken);
-            Long userId = Long.parseLong(claims.getSubject());
+            String email = claims.getSubject();
             String role = claims.get("role", String.class);
 
             //Check Redis
-            String redisKey = "refreshToken:" + userId;
+            String redisKey = "refreshToken:" + email;
             String savedToken = (String) redisTemplate.opsForValue().get(redisKey);
 
             if (savedToken == null || !savedToken.equals(refreshToken)) {
                 throw new AppException(ErrorCode.TOKEN_INVALID);
             }
 
-            String newRefreshToken = jwtUtils.generateRefreshToken(userId.toString(), role);
+            String newRefreshToken = jwtUtils.generateRefreshToken(email, role);
             Claims newClaims = jwtUtils.parseToken(newRefreshToken);
             long ttl = newClaims.getExpiration().getTime() - System.currentTimeMillis();
 
             redisTemplate.opsForValue().set(
-                    "refreshToken:" + userId,
+                    "refreshToken:" + email,
                     newRefreshToken,
                     Duration.ofMillis(ttl)
             );
 
             ResponseCookie cookie = ResponseCookie.from("refreshToken", newRefreshToken)
                     .httpOnly(true)
-                    .secure(true)
+                    .secure(false)
                     .path("/")
                     .sameSite("Strict")
                     .maxAge(Duration.ofMillis(ttl))
@@ -174,7 +174,7 @@ public class AuthServiceImpl implements AuthService {
 
             response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
-            String newAccessToken = jwtUtils.generateAccessToken(userId.toString(), role);
+            String newAccessToken = jwtUtils.generateAccessToken(email, role);
 
             return AuthResponse.builder()
                     .token(newAccessToken)
@@ -235,7 +235,7 @@ public class AuthServiceImpl implements AuthService {
             //Set HttpOnly Cookie
             ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
                     .httpOnly(true)
-                    .secure(true)
+                    .secure(false)
                     .path("/")
                     .sameSite("Strict")
                     .maxAge(Duration.ofDays(7))

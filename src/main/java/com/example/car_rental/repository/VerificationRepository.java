@@ -13,5 +13,5 @@ import java.util.Optional;
 
 @Repository
 public interface VerificationRepository extends JpaRepository<Verifications, Long> {
-   Verifications findByUserId(Long id);
+   Verifications findVerificationByUserId(Long id);
 }
