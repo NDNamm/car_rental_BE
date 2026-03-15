@@ -36,6 +36,16 @@ public enum ErrorCode {
     INVALID_VERIFICATION_STATUS(5003, "Invalid verification status", HttpStatus.BAD_REQUEST),
     CANNOT_UPDATE_NAME_AFTER_VERIFICATION(5004, "Cannot update name after verification", HttpStatus.BAD_REQUEST),
 
+    CATEGORY_EXISTED(6001,"Category already exists", HttpStatus.BAD_REQUEST),
+    CATEGORY_NOT_FOUND(6002,"Category not found", HttpStatus.NOT_FOUND),
+
+    FEATURE_EXISTED(7001,"Feature already exists", HttpStatus.BAD_REQUEST),
+    FEATURE_NOT_FOUND(7002,"Feature not found", HttpStatus.NOT_FOUND),
+
+    CAR_EXISTED(8001,"Car already exists", HttpStatus.BAD_REQUEST),
+    CAR_NOT_FOUND(8002,"Car not found", HttpStatus.NOT_FOUND),
+    IMAGE_DELETE_FAILED(8003,"Failed to delete image", HttpStatus.INTERNAL_SERVER_ERROR),
+
     UPDATE_IMAGE_FAIL(6003, "Failed to update image", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final int code;

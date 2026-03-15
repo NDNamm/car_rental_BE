@@ -33,6 +33,15 @@ spring:
             enable: true
             required: true
 
+logging:
+  level:
+    org:
+      hibernate:
+        orm:
+          jdbc:
+            bind: TRACE
+        SQL: DEBUG
+
 server:
   port: 8080
 

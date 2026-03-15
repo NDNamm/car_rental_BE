@@ -19,6 +19,9 @@ public class CarImages {
     @Column(name = "image_url")
     private String imageUrl;
 
+    @Column(name = "public_id")
+    private String publicId;
+
     @ManyToOne
     @JoinColumn(name = "car_id")
     private Cars car;

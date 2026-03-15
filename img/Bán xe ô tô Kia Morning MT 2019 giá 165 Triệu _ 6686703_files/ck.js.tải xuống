@@ -1,0 +1,32 @@
+var _ct = new Date();
+var _mbv_=0;
+function check_c()
+{
+$.get("ck.php"+'?t='+_ct.getTime(),{}, function(data){
+				if(data.length >0) {				
+					
+					if(jQuery.trim(data)!="_12345")
+					{
+						$("#cookie_alert").html($("#cookie_content").html());
+					}
+					
+				}
+			});
+}
+setTimeout(check_c,500);
+var c_num=0;			
+function check_user()
+{
+	var ct = new Date();
+	if(c_num % 3==0 && c_num<31)
+	{
+		strURL="api/check_user.php?_mbv_="+_mbv_+'&t='+ct.getTime();
+		$.get(strURL,{}, function(data){
+			if(data.length >0) {
+				console.log("ret="+data);
+			}
+		});
+	}
+	c_num++;
+}			
+setInterval(check_user, 1000*20);

@@ -1,15 +1,12 @@
 package com.example.car_rental.entity;
 
 import com.example.car_rental.entity.enums.CarStatusEnum;
-import com.example.car_rental.entity.enums.GenderEnum;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.DecimalMin;
 import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Date;
 import java.util.List;
 
 @Entity
@@ -28,9 +25,6 @@ public class Cars {
     @Column(name = "name")
     private String name;
 
-    @Column(name = "brand")
-    private String brand;
-
     @Column(name = "license_plate")
     private String licensePlate;
 
@@ -40,11 +34,15 @@ public class Cars {
     @Column(name = "deposit_amount")
     private BigDecimal depositAmount;
 
-    @Column(name = "status")
-    private CarStatusEnum status;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private CarStatusEnum status = CarStatusEnum.AVAILABLE;
 
     @Column(name = "description")
     private String description;
+
+    @Column(name = "trip_count")
+    private int tripCount;
 
     @Column(name = "created_at")
     private LocalDate createdAt;
@@ -57,4 +55,8 @@ public class Cars {
     @OneToMany(mappedBy = "car")
     @JsonIgnore
     private List<CarImages> carImages;
+
+    @OneToOne(mappedBy = "car", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private CarDetail carDetail;
 }

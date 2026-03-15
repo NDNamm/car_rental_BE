@@ -1,0 +1,174 @@
+//////////////////////////////////////Load dynamic banner ra website //////////////////////////////////////////////////
+function displayBannerNew(pageCode){
+	$.ajax({
+		url: root_url+'api/get_banners.php',
+		type: 'POST',
+		data: {pageCode:pageCode},
+		dataType: 'JSON',
+		success : function (data){			
+			for (let position in data) {
+				let item_pos = data[position];
+				let item_pos_html = $("#"+item_pos.pos_id);
+				if (item_pos_html.length) {
+					var arrdata_banners = item_pos.list_banner;
+					// if(item_pos.banner_pos_share > 1){ //vi tri share thi lay quay vong banner de hien thi
+					// 	// Lay vi tri hien tai tu localStorage
+					// 	let currentIndex = parseInt(localStorage.getItem('idx_banner_share_'+item_pos.pos_id)) || 0;
+					// 	let cur_banner_share = arrdata_banners[currentIndex];
+						
+					// 	// Cap nhat banner moi cho lan sau
+					// 	currentIndex = (currentIndex + 1) % arrdata_banners.length;
+					// 	localStorage.setItem('idx_banner_share_'+item_pos.pos_id, currentIndex);
+						
+					// 	//chi add 1 banner hien tai vao mang de hien thi
+					// 	arrdata_banners = [cur_banner_share];
+					// }
+					if(arrdata_banners.length > 0){
+						html_item_banner = "";
+						// console.log(item_pos.pos_id+"__"+item_pos.banner_pos_size);
+						let num_lop = item_pos.banner_pos_size;
+						if(arrdata_banners.length < item_pos.banner_pos_size){
+							num_lop = arrdata_banners.length;
+						}
+						for (var i=0; i<num_lop; i++) {
+							item_banner = arrdata_banners[i];
+							html_item_banner += '<div class="bn_item" onmousedown="click_ad('+item_banner.banner_id+')">';
+							html_item_banner += '<a target="blank_" href="'+item_banner.banner_link_url+'"><img src="'+item_banner.img_path+'" style="max-width:100%"></a></div>';
+						} 
+						item_pos_html.append(html_item_banner).addClass('has_banner');
+					}
+				}
+			}
+		}
+	});
+}
+
+///////////////////////////////////////////Load banner ra website/////////////////////////////////////////////////////
+bn_data='[{"bn_id":"65","bn_pos":"L_A","bn_link":"https:\/\/otoanhly.bonbanh.com","banner_share":"0","bn_type":"0","bn_file":"https:\/\/s.bonbanh.com\/ad\/anhly_12092016_2.gif","bn_bg":"","bn_content":""},{"bn_id":"242","bn_pos":"R_A1","bn_link":"http:\/\/chootohoabinh.bonbanh.com\/","banner_share":"0","bn_type":"0","bn_file":"https:\/\/s.bonbanh.com\/ad\/do-chootohoabinh_04012023.jpg","bn_bg":"","bn_content":""},{"bn_id":"240","bn_pos":"R_A1","bn_link":"https:\/\/mtauto.vn","banner_share":"0","bn_type":"0","bn_file":"https:\/\/s.bonbanh.com\/ad\/mtauto_14112022.gif","bn_bg":"","bn_content":""},{"bn_id":"253","bn_pos":"R_A2","bn_link":"https:\/\/www.gomxecu.vn","banner_share":"0","bn_type":"0","bn_file":"https:\/\/s.bonbanh.com\/ad\/gomxecu_20240105.gif","bn_bg":"","bn_content":""}]';
+function displayBanner(pageCode){
+	
+		var arrdata = JSON.parse(bn_data);
+		arr_length = arrdata.length; 
+		for (var i=0; i<arr_length; i++) {
+			position = arrdata[i].bn_pos;
+			if((pageCode == "home" && position.indexOf("_A") ==-1) || (pageCode == "oto" && position.indexOf("_B")) || (pageCode == "carDetail" && position.indexOf("_C"))){
+				continue;
+			}
+			//anh
+			if(arrdata[i].bn_type == "0"){
+				// $html_item = '<div style="width:100%;height:auto;margin-top:5px;float:left;" onmousedown="click_ad('+arrdata[i].banner_id+')"><span class="bbl" url="'+arrdata[i].banner_link+'" target="_blank" style="display:block;position:absolute;width:100%;height:100%;z-index:999"><img src="'+arrdata[i].banner_file+'"/></span></div>';
+				if(arrdata[i].bn_pos=="L_A")
+				{
+					$html_item = "<div class='bn_item' onmousedown='click_ad("+arrdata[i].bn_id+")'><a href='"+arrdata[i].bn_link+"' target='_blank'><img width=178 src='"+arrdata[i].bn_file+"' /></a></div>";
+				}else
+				{
+				$html_item = "<div class='bn_item' onmousedown='click_ad("+arrdata[i].bn_id+")'><a href='"+arrdata[i].bn_link+"' target='_blank'><img src='"+arrdata[i].bn_file+"' /></a></div>";
+				}
+				$('#'+arrdata[i].bn_pos).append($html_item);
+			}
+		    // console.log(arrdata[i].banner_name);
+		}
+	
+}
+
+////////////////////////////////////Load menu mở rộng và menu cấp 2------------------
+function display_horizaltal_menu(){
+	var menudata = JSON.parse(oto_menu_json);
+	arr_length = menudata.length; 
+	for (var menu_item=0; menu_item<arr_length; menu_item++) {
+		//menu extra
+		if(menudata[menu_item].extra == "1"){
+			html = '<li id="mp'+menudata[menu_item].id+'" class="menuparent add_menu" style="z-index: 999; display: none;"><span class="bbl mtop-item" url="'+menudata[menu_item].url+'">'+menudata[menu_item].name+'</span><ul></ul></li>';
+			$(".menuparent:last").after(html);
+		}
+		//menu cap 2
+		var sub_menu =$("#mp"+menudata[menu_item].id+" ul");
+		html_sub="";
+		var arr_menu_lv2 = menudata[menu_item].menu_lv2;
+		index=0;
+		for(var item_sub in arr_menu_lv2){
+			if (typeof arr_menu_lv2[item_sub].url != 'undefined')
+			{
+				if(parseInt(arr_menu_lv2[item_sub].order_number) >=1)
+				{
+					html_sub += '<li><a class="bbl hotmn " href="'+arr_menu_lv2[item_sub].url+'">'+arr_menu_lv2[item_sub].name+'</a></li>';
+				}else
+				{
+					html_sub += '<li><a class="bbl" href="'+arr_menu_lv2[item_sub].url+'">'+arr_menu_lv2[item_sub].name+'</a></li>';
+				}
+			}
+			
+		}
+		sub_menu.html(html_sub);
+	}
+	bind_url();
+}
+
+
+function display_vertical_menu(){
+	var menudata = JSON.parse(oto_menu_json);
+	arr_length = menudata.length; 
+	for (var menu_item=0; menu_item<arr_length; menu_item++) {
+		//menu extra
+		if(menudata[menu_item].extra == "1"){
+			html = '<li id="m'+menudata[menu_item].id+'" class="menuparent"><a class="mtop-item" href="'+menudata[menu_item].url+'">'+menudata[menu_item].name+'</a><ul></ul></li>';
+			$("#mk_g").append(html);
+		}
+		//menu cap 2
+		var sub_menu =$("#m"+menudata[menu_item].id+".menuparent ul");
+		html_sub="";
+		var arr_menu_lv2 = menudata[menu_item].menu_lv2;
+		arr_length_=arr_menu_lv2.length;
+		for (var item_sub=0; item_sub<arr_length_; item_sub++){
+			// html_sub += '<li><span class="bbl hotmn " url="'+arr_menu_lv2[item_sub].url+'">'+arr_menu_lv2[item_sub].name+'</span></li>';
+			html_sub += '<li id="m'+arr_menu_lv2[item_sub].id+'"><a href="'+arr_menu_lv2[item_sub].url+'">'+arr_menu_lv2[item_sub].name+'</a></li>';
+		}
+		sub_menu.html(html_sub);
+	}
+	
+}
+
+function display_city_data(){
+	var citydata = JSON.parse(cities_data);
+	mien_bac = citydata.menus1;
+	mien_trung = citydata.menus3;
+	mien_nam = citydata.menus2;
+
+	arr_length_1 = mien_bac.length;
+	arr_length_2 = mien_trung.length;
+	arr_length_3 = mien_nam.length;
+	html_bac=html_trung=html_nam="";
+	for (var item_sub=0; item_sub<arr_length_1; item_sub++){
+		html_bac += '<li>';
+		if(mien_bac[item_sub].index == "0")
+		{
+			html_bac += '<a title="Mua bán ô tô {$make_model} ở '+mien_bac[item_sub].name+'" href="'+mien_bac[item_sub].url+'" class="city-item" ><b>'+mien_bac[item_sub].name+'</b></a>';
+		}else{
+			html_bac += '<a class="bbl city-item" href="'+mien_bac[item_sub].url+'"  >'+mien_bac[item_sub].name+'</a>';
+		}
+		html_bac += '</li>';
+	}
+	$('#block_are1').append(html_bac);
+	for (var item_sub=0; item_sub<arr_length_2; item_sub++){
+		html_trung += '<li>';
+		if(mien_trung[item_sub].index == "0")
+		{
+			html_trung += '<a title="Mua bán ô tô {$make_model} ở '+mien_trung[item_sub].name+'" href="'+mien_trung[item_sub].url+'" class="city-item" ><b>'+mien_trung[item_sub].name+'</b></a>';
+		}else{
+			html_trung += '<a class="bbl city-item" href="'+mien_trung[item_sub].url+'"  >'+mien_trung[item_sub].name+'</a>';
+		}
+		html_trung += '</li>';
+	}
+	$('#block_are2').append(html_trung);
+	for (var item_sub=0; item_sub<arr_length_3; item_sub++){
+		html_nam += '<li>';
+		if(mien_nam[item_sub].index == "0")
+		{
+			html_nam += '<a title="Mua bán ô tô {$make_model} ở '+mien_nam[item_sub].name+'" href="'+mien_nam[item_sub].url+'" class="city-item" ><b>'+mien_nam[item_sub].name+'</b></a>';
+		}else{
+			html_nam += '<a class="bbl city-item" href="'+mien_nam[item_sub].url+'"  >'+mien_nam[item_sub].name+'</a>';
+		}
+		html_nam += '</li>';
+	}
+	$('#block_are3').append(html_nam);
+}

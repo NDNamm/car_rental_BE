@@ -47,6 +47,8 @@ CREATE TABLE verifications (
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
+
+
 CREATE TABLE categories (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -57,14 +59,43 @@ CREATE TABLE cars (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     category_id BIGINT,
     name VARCHAR(150) NOT NULL,
-    brand VARCHAR(100),
     license_plate VARCHAR(20) UNIQUE,
     price_per_day DECIMAL(10,2) NOT NULL,
     deposit_amount DECIMAL(10,2),
     status ENUM('AVAILABLE','RENTED','MAINTENANCE') DEFAULT 'AVAILABLE',
     description TEXT,
+	trip_count INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (category_id) REFERENCES categories(id)
+);
+
+
+CREATE TABLE car_details ( 
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    car_id BIGINT UNIQUE,
+    seat_count INT,
+    fuel_type VARCHAR(50),
+    transmission VARCHAR(50),
+    manufacture_year INT,
+    address VARCHAR(255),
+    city VARCHAR(100),
+    delivery_available BOOLEAN DEFAULT FALSE,
+    delivery_fee DECIMAL(10,2),
+    FOREIGN KEY (car_id) REFERENCES cars(id)
+);
+
+CREATE TABLE features (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE car_features (
+    car_detail_id BIGINT,
+    feature_id BIGINT,
+    PRIMARY KEY(car_detail_id, feature_id),
+
+    FOREIGN KEY (car_detail_id) REFERENCES car_details(id),
+    FOREIGN KEY (feature_id) REFERENCES features(id)
 );
 
 CREATE TABLE car_images (
