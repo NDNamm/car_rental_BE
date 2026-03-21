@@ -1,4 +1,4 @@
-package com.example.car_rental.dto.responseDTO;
+package com.example.car_rental.dto.requestDTO.CarRequest;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -6,10 +6,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
-public class FeatureResponse {
-    private Long id;
-    private String name;
+public class CarImageRequest {
+    private String imageUrl;
 }

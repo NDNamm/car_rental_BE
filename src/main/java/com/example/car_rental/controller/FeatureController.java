@@ -11,7 +11,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/feature")
+@RequestMapping("/api/features")
 public class FeatureController {
 
     private final FeatureService featureService;
@@ -24,7 +24,7 @@ public class FeatureController {
                 .build();
     }
 
-    @PostMapping(value = "/add")
+    @PostMapping(value = "")
     public ApiResponse<Void> addFeature(@RequestBody CarFeatureRequest request) {
 
         featureService.addFeature(request);
@@ -36,7 +36,7 @@ public class FeatureController {
     }
 
 
-    @PutMapping(value = "/update/{featureId}")
+    @PutMapping(value = "/{featureId}")
     public ApiResponse<Void> addFeature(@PathVariable(value = "featureId") Long featureId,
                                         @RequestBody CarFeatureRequest request) {
 
@@ -48,7 +48,7 @@ public class FeatureController {
                 .build();
     }
 
-    @DeleteMapping("/delete/{featureId}")
+    @DeleteMapping("/{featureId}")
     public ApiResponse<Void> deleteFeature(@PathVariable("featureId") Long featureId) {
 
         featureService.deleteFeature(featureId);

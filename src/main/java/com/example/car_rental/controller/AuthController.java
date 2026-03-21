@@ -64,13 +64,13 @@ public class AuthController {
 
     @PostMapping("/google-login")
     public ApiResponse<AuthResponse> loginWithGoogle(
-            @RequestBody String idToken,
+            @RequestBody String tokenId,
             HttpServletResponse response
     ) {
         return ApiResponse.<AuthResponse>builder()
                 .code(200)
                 .message("Google login successful")
-                .data(authService.loginWithGoogle(idToken, response))
+                .data(authService.loginWithGoogle(tokenId, response))
                 .build();
     }
 

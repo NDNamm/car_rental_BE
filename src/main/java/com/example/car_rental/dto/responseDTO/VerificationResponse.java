@@ -20,9 +20,9 @@ public class VerificationResponse {
     private String cccdFrontUrl;
     private String cccdBackUrl;
     private String licenseImageUrl;
-    private String publicIdCccdFront;
-    private String publicIdCccdBack;
-    private String publicIdLicense;
+//    private String publicIdCccdFront;
+//    private String publicIdCccdBack;
+//    private String publicIdLicense;
     private String licenseNumber;
     private VerStatusEnum status;
     private String note;

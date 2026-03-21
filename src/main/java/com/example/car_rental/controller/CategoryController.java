@@ -34,7 +34,7 @@ public class CategoryController {
                 .build();
     }
 
-    @PostMapping(value = "/add")
+    @PostMapping(value = "")
     public ApiResponse<Void> addCategory(@RequestBody  CategoryRequest request){
 
         categoryService.addCategory(request);
@@ -46,7 +46,7 @@ public class CategoryController {
     }
 
 
-    @PutMapping(value = "/update/{categoryId}")
+    @PutMapping(value = "/{categoryId}")
     public ApiResponse<Void> updateCategory(@PathVariable(value = "categoryId") Long categoryId,
                                             @RequestBody CategoryRequest request){
 
@@ -58,7 +58,7 @@ public class CategoryController {
                 .build();
     }
 
-    @DeleteMapping("/delete/{categoryId}")
+    @DeleteMapping("/{categoryId}")
     public ApiResponse<Void> deleteCategory( @PathVariable("categoryId") Long categoryId) {
 
         categoryService.deleteCategory(categoryId);

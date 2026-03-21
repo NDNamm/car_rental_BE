@@ -30,10 +30,10 @@ public class SecurityConfig {
                 .csrf(csrt -> csrt.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/auth/**", "/api/payment/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/cars/**", "/api/category/**","/api/feature/**", "/api/cars/**").permitAll()
-                        .requestMatchers("/api/verification/me/**","/api/user/me/**").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/api/verification/**", "/api/user/**", "/api/category/**","/api/feature/**", "/api/cars/**").hasRole("ADMIN")
+                        .requestMatchers("/api/verification/me/**","/api/users/me/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/verification/**", "/api/users/**", "/api/category/**","/api/feature/**", "/api/cars/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

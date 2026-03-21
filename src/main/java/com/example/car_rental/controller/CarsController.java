@@ -37,7 +37,7 @@ public class CarsController {
                 .build();
     }
 
-    @PostMapping(value = "/add", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<Void> addCar(@RequestPart("carRequest") String request,
                                     @RequestPart("images") MultipartFile[] images) throws JsonProcessingException {
 
@@ -52,7 +52,7 @@ public class CarsController {
     }
 
 
-    @PutMapping(value = "/update/{carId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PutMapping(value = "/{carId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<Void> addCar(@PathVariable(value = "carId") Long carId,
                                     @RequestPart(value = "carRequest", required = false) String request,
                                     @RequestPart(value = "images", required = false) MultipartFile[] images) throws JsonProcessingException {
@@ -67,7 +67,7 @@ public class CarsController {
                 .build();
     }
 
-    @DeleteMapping("/delete/{carId}")
+    @DeleteMapping("/{carId}")
     public ApiResponse<Void> deleteCar(@PathVariable("carId") Long carId) {
 
         carService.deleteCar(carId);

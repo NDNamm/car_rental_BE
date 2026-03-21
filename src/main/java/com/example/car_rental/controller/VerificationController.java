@@ -44,7 +44,7 @@ public class VerificationController {
     }
 
     @PostMapping(value = "/me", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ApiResponse<Void> update(@RequestPart(value = "updateVer", required = false) String requestJson,
+    public ApiResponse<Void> update(@RequestPart(value = "verificationRequest", required = false) String requestJson,
                                     @RequestPart(value = "cccdFront", required = false) MultipartFile cccdFront,
                                     @RequestPart(value = "cccdBack", required = false) MultipartFile cccdBack,
                                     @RequestPart(value = "license", required = false) MultipartFile license) throws JsonProcessingException {

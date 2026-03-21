@@ -16,7 +16,7 @@ import java.io.IOException;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/user")
+@RequestMapping("/api/users")
 public class UserController {
 
     private final UserService userService;
@@ -41,8 +41,9 @@ public class UserController {
 
     }
 
-    @PatchMapping("/{id}/role")
-    public ApiResponse<Void> updateRole(@PathVariable("user_id") Long userId, @RequestBody UpdateRoleRequest request) {
+    @PatchMapping("/{userId}/role")
+    public ApiResponse<Void> updateRole(@PathVariable("userId") Long userId,
+                                        @RequestBody UpdateRoleRequest request) {
         userService.updateRole(userId, request);
         return ApiResponse.<Void>builder()
                 .code(200)
@@ -62,7 +63,7 @@ public class UserController {
                 .build();
     }
 
-    @PostMapping("/me")
+    @PutMapping("/me")
     public ApiResponse<Void> editProfile(@RequestBody UserRequest request)  {
 
         userService.editProfile(request);
@@ -73,7 +74,7 @@ public class UserController {
     }
 
     @PatchMapping("/me/avatar")
-    public ApiResponse<Void> editAvatar(@RequestPart(value = "avatar") MultipartFile avatar) throws IOException {
+    public ApiResponse<Void> editAvatar(@RequestParam(value = "avatar") MultipartFile avatar) throws IOException {
         userService.editAvatar(avatar);
         return ApiResponse.<Void>builder()
                 .code(200)

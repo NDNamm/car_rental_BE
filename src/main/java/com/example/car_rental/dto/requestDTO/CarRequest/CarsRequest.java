@@ -25,6 +25,5 @@ public class CarsRequest {
     private int tripCount;
     private LocalDate createdAt;
     private Long categoryId;
-    private List<CarImages> carImages;
     private CarDetailRequest carDetailRequest;
 }
