@@ -59,4 +59,8 @@ public class Cars {
     @OneToOne(mappedBy = "car", cascade = CascadeType.ALL)
     @JsonIgnore
     private CarDetail carDetail;
+
+    @OneToMany(mappedBy = "car")
+    @JsonIgnore
+    private List<BookingDetails> bookingDetails;
 }

@@ -46,6 +46,10 @@ public enum ErrorCode {
     CAR_NOT_FOUND(8002,"Car not found", HttpStatus.NOT_FOUND),
     IMAGE_DELETE_FAILED(8003,"Failed to delete image", HttpStatus.INTERNAL_SERVER_ERROR),
 
+    BOOKING_NOT_FOUND(9001,"Booking not found", HttpStatus.NOT_FOUND),
+    BOOKING_ALREADY_CLOSED(9002,"Booking already closed", HttpStatus.BAD_REQUEST),
+    INVALID_STATUS_TRANSITION(9003,"Invalid status transition", HttpStatus.BAD_REQUEST),
+
     UPDATE_IMAGE_FAIL(6003, "Failed to update image", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final int code;

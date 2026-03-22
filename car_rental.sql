@@ -60,8 +60,8 @@ CREATE TABLE cars (
     category_id BIGINT,
     name VARCHAR(150) NOT NULL,
     license_plate VARCHAR(20) UNIQUE,
-    price_per_day DECIMAL(10,2) NOT NULL,
-    deposit_amount DECIMAL(10,2),
+    price_per_day DECIMAL(19,2) NOT NULL,
+    deposit_amount DECIMAL(19,2),
     status ENUM('AVAILABLE','RENTED','MAINTENANCE') DEFAULT 'AVAILABLE',
     description TEXT,
 	trip_count INT DEFAULT 0,
@@ -106,48 +106,60 @@ CREATE TABLE car_images (
     FOREIGN KEY (car_id) REFERENCES cars(id)
 );
 
-
-
 CREATE TABLE bookings (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    user_id BIGINT NOT NULL,
-    car_id BIGINT NOT NULL,
-    staff_id BIGINT,
+    booking_code varchar(20),
+    user_id BIGINT NOT NULL, 
+    customer_name VARCHAR(100),
+    customer_phone VARCHAR(20),
+    customer_email VARCHAR(100),-- Khách hàng
+    staff_id BIGINT,                  -- Nhân viên phụ trách duyệt đơn
     start_date DATETIME NOT NULL,
     end_date DATETIME NOT NULL,
-    total_price DECIMAL(10,2),
-    deposit_amount DECIMAL(10,2),
-    status ENUM('PENDING','CONFIRMED','RENTED','COMPLETED','CANCELLED') DEFAULT 'PENDING',
+    total_price DECIMAL(19,2),        -- Tổng tiền cả đơn (sum của các detail)
+    deposit_amount DECIMAL(19,2),     -- Tiền cọc tổng
+    status VARCHAR(20) DEFAULT 'PENDING', -- PENDING, CONFIRMED, RENTED, COMPLETED, CANCELLED
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (car_id) REFERENCES cars(id),
-    FOREIGN KEY (staff_id) REFERENCES users(id)
+    CONSTRAINT fk_booking_user FOREIGN KEY (user_id) REFERENCES users(id),
+    CONSTRAINT fk_booking_staff FOREIGN KEY (staff_id) REFERENCES users(id)
+);
+
+
+CREATE TABLE booking_details (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    booking_id BIGINT NOT NULL,
+    car_id BIGINT NOT NULL,
+    price_per_day DECIMAL(19,2) NOT NULL, -- Giá tại thời điểm đặt
+    sub_total DECIMAL(19,2),              -- price * số ngày
+    CONSTRAINT fk_detail_booking FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
+    CONSTRAINT fk_detail_car FOREIGN KEY (car_id) REFERENCES cars(id)
 );
 
 CREATE TABLE payments (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     booking_id BIGINT NOT NULL,
-    amount DECIMAL(10,2) NOT NULL,
-    payment_method ENUM('COD','VNPAY','MOMO'),
-    payment_type ENUM('DEPOSIT','FULL_PAYMENT','PENALTY'),
-    status ENUM('PENDING','SUCCESS','FAILED') DEFAULT 'PENDING',
+    amount DECIMAL(19,2) NOT NULL,
+    payment_method VARCHAR(20),       -- COD, VNPAY, MOMO
+    payment_type VARCHAR(20),         -- DEPOSIT (Cọc), FULL_PAYMENT (Hết), PENALTY (Phạt)
+    status VARCHAR(20) DEFAULT 'PENDING', -- PENDING, SUCCESS, FAILED
     transaction_code VARCHAR(100),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (booking_id) REFERENCES bookings(id)
+    CONSTRAINT fk_payment_booking FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE
 );
 
 CREATE TABLE car_handovers (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    booking_id BIGINT,
-    staff_id BIGINT,
-    handover_time DATETIME,
-    return_time DATETIME,
-    car_condition_before TEXT,
-    car_condition_after TEXT,
+    booking_detail_id BIGINT NOT NULL, -- Bàn giao cụ thể từng xe trong đơn
+    staff_id BIGINT,                  -- Nhân viên thực hiện bàn giao
+    handover_time DATETIME,           -- Lúc giao xe cho khách
+    return_time DATETIME,             -- Lúc khách trả xe
+    car_condition_before TEXT,        -- Tình trạng lúc giao (xước, xăng...)
+    car_condition_after TEXT,         -- Tình trạng lúc nhận lại
     note TEXT,
-    FOREIGN KEY (booking_id) REFERENCES bookings(id),
-    FOREIGN KEY (staff_id) REFERENCES users(id)
+    CONSTRAINT fk_handover_detail FOREIGN KEY (booking_detail_id) REFERENCES booking_details(id),
+    CONSTRAINT fk_handover_staff FOREIGN KEY (staff_id) REFERENCES users(id)
 );
+
 
 -- CREATE TABLE incidents (
 --     id BIGINT AUTO_INCREMENT PRIMARY KEY,

@@ -1,13 +1,13 @@
 package com.example.car_rental.entity;
 
-import com.example.car_rental.entity.enums.BookingEnum;
-import com.example.car_rental.entity.enums.VerStatusEnum;
+import com.example.car_rental.entity.enums.BookingStatusEnum;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
 @Getter
@@ -21,6 +21,18 @@ public class Bookings {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "booking_code", unique = true, length = 20)
+    private String bookingCode;
+
+    @Column(name = "customer_phone")
+    private String customerPhone;
+
+    @Column(name = "customer_email")
+    private String customerEmail;
+
+    @Column(name = "customer_name")
+    private String customerName;
 
     @Column(name = "start_date")
     private LocalDate startDate;
@@ -36,7 +48,7 @@ public class Bookings {
 
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
-    private BookingEnum status;
+    private BookingStatusEnum status;
 
     @Column(name = "created_at")
     private LocalDate createdAt;
@@ -48,11 +60,6 @@ public class Bookings {
 
     @ManyToOne
     @JsonIgnore
-    @JoinColumn(name = "car_id")
-    private Cars car;
-
-    @ManyToOne
-    @JsonIgnore
     @JoinColumn(name = "staff_id")
     private Users userStaff;
 
@@ -61,4 +68,8 @@ public class Bookings {
 
     @OneToOne(mappedBy = "booking", cascade = CascadeType.ALL)
     private CarHandovers carHandovers;
+
+    @OneToMany
+    @JsonIgnore
+    private List<BookingDetails> bookingDetailsList;
 }

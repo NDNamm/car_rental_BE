@@ -3,7 +3,7 @@ package com.example.car_rental.entity.enums;
 import lombok.Getter;
 
 @Getter
-public enum BookingEnum {
+public enum BookingStatusEnum {
     PENDING,
     CONFIRMED,
     RENTED,

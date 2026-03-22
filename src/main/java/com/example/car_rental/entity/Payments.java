@@ -1,6 +1,5 @@
 package com.example.car_rental.entity;
 
-import com.example.car_rental.entity.enums.BookingEnum;
 import com.example.car_rental.entity.enums.PaymentMethodEnum;
 import com.example.car_rental.entity.enums.PaymentStatusEnum;
 import com.example.car_rental.entity.enums.PaymentTypeEnum;

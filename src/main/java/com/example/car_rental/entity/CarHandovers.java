@@ -1,11 +1,9 @@
 package com.example.car_rental.entity;
 
-import com.example.car_rental.entity.enums.BookingEnum;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
