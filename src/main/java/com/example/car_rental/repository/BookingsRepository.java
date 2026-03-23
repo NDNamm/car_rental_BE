@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
+
 @Repository
 public interface BookingsRepository extends JpaRepository<Bookings, Long> {
     @Query("""
@@ -24,4 +26,26 @@ public interface BookingsRepository extends JpaRepository<Bookings, Long> {
             @Param("status") String status,
             Pageable pageable
     );
+
+    @Query("""
+                SELECT b FROM Bookings b WHERE b.user.email = :email
+                  AND (:bookingCode IS NULL OR LOWER(b.bookingCode) LIKE LOWER(CONCAT('%', :bookingCode, '%')))
+                  AND (:status IS NULL OR LOWER(b.status) LIKE LOWER(CONCAT('%', :status, '%')))
+            """)
+    Page<Bookings> findBookingsByUser(
+            @Param("email") String email,
+            @Param("bookingCode") String bookingCode,
+            @Param("status") String status,
+            Pageable pageable);
+
+    @Query("SELECT COUNT(bd) FROM BookingDetails bd " +
+                  "WHERE bd.car.id = :carId " +
+                  "AND bd.booking.id <> :currentBookingId " + // Loại trừ chính đơn hàng đang sửa
+                  "AND bd.booking.status <> 'CANCELLED' " +   // Không tính các đơn đã hủy
+                  "AND :startDate <= bd.endDate " +
+                  "AND bd.startDate <= :endDate")
+    long countOverlappingBookings(@Param("carId") Long carId,
+                                  @Param("currentBookingId") Long currentBookingId,
+                                  @Param("startDate") LocalDate startDate,
+                                  @Param("endDate") LocalDate endDate);
 }

@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Data
 @NoArgsConstructor
@@ -15,7 +16,11 @@ import java.math.BigDecimal;
 public class BookingDetailResponse {
     private Long id;
     private Long bookingId;
+    private Integer rentalDays;
+    private LocalDate startDate;
+    private LocalDate endDate;
     private BigDecimal pricePerDay;
     private BigDecimal subTotal;
+    private BigDecimal depositAmount;
     private CarResponse carResponse;
 }

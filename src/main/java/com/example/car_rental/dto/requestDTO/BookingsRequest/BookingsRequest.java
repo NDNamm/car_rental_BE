@@ -20,12 +20,11 @@ public class BookingsRequest {
     private String customerPhone;
     private String customerEmail;
     private String customerName;
-    private LocalDate startDate;
-    private LocalDate endDate;
     private BigDecimal totalPrice;
-    private BigDecimal depositAmount;
+    private BigDecimal totalDepositAmount;
     private BookingStatusEnum status;
     private LocalDate createdAt;
     private String nameStaff;
-    private List<BookingDetailResponse> bookingDetailsResponse;
+    private String note;
+    private List<BookingDetailRequest> bookingDetailsRequest;
 }

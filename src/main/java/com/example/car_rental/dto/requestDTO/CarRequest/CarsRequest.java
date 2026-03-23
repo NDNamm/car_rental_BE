@@ -15,7 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CarsRequest {
-
+    private Long id;
     private String name;
     private String licensePlate;
     private BigDecimal pricePerDay;

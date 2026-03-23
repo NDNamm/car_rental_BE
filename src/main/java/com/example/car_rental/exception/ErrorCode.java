@@ -45,10 +45,15 @@ public enum ErrorCode {
     CAR_EXISTED(8001,"Car already exists", HttpStatus.BAD_REQUEST),
     CAR_NOT_FOUND(8002,"Car not found", HttpStatus.NOT_FOUND),
     IMAGE_DELETE_FAILED(8003,"Failed to delete image", HttpStatus.INTERNAL_SERVER_ERROR),
-
+    CAR_NOT_AVAILABLE(8004, "Car not AVAILABLE", HttpStatus.BAD_REQUEST),
+    INVALID_DATE_RANGE(8005,"INVALID_DATE_RANGE", HttpStatus.BAD_REQUEST),
+    CAR_ALREADY_BOOKED(8006, "CAR_ALREADY_BOOKED", HttpStatus.BAD_REQUEST),
     BOOKING_NOT_FOUND(9001,"Booking not found", HttpStatus.NOT_FOUND),
     BOOKING_ALREADY_CLOSED(9002,"Booking already closed", HttpStatus.BAD_REQUEST),
     INVALID_STATUS_TRANSITION(9003,"Invalid status transition", HttpStatus.BAD_REQUEST),
+    CAR_ALREADY_BOOKED_IN_THIS_PERIOD(9004, "CAR_ALREADY_BOOKED_IN_THIS_PERIOD", HttpStatus.BAD_REQUEST),
+
+    DETAIL_NOT_FOUND(10001,"Booking detail not found", HttpStatus.NOT_FOUND),
 
     UPDATE_IMAGE_FAIL(6003, "Failed to update image", HttpStatus.INTERNAL_SERVER_ERROR);
 

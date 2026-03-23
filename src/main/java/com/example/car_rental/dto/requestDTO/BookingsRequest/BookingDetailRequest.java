@@ -1,18 +1,23 @@
 package com.example.car_rental.dto.requestDTO.BookingsRequest;
 
+import com.example.car_rental.dto.requestDTO.CarRequest.CarsRequest;
 import com.example.car_rental.dto.responseDTO.CarResponse.CarResponse;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class BookingDetailRequest {
+    private Long id;
     private Long bookingId;
+    private LocalDate startDate;
+    private LocalDate endDate;
     private BigDecimal pricePerDay;
     private BigDecimal subTotal;
-    private CarResponse carResponses;
+    private BigDecimal depositAmount;
+    private CarsRequest carsRequest;
 }

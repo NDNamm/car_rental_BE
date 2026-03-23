@@ -114,8 +114,6 @@ CREATE TABLE bookings (
     customer_phone VARCHAR(20),
     customer_email VARCHAR(100),-- Khách hàng
     staff_id BIGINT,                  -- Nhân viên phụ trách duyệt đơn
-    start_date DATETIME NOT NULL,
-    end_date DATETIME NOT NULL,
     total_price DECIMAL(19,2),        -- Tổng tiền cả đơn (sum của các detail)
     deposit_amount DECIMAL(19,2),     -- Tiền cọc tổng
     status VARCHAR(20) DEFAULT 'PENDING', -- PENDING, CONFIRMED, RENTED, COMPLETED, CANCELLED
@@ -129,11 +127,16 @@ CREATE TABLE booking_details (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     booking_id BIGINT NOT NULL,
     car_id BIGINT NOT NULL,
+    rental_days bigint not null,
     price_per_day DECIMAL(19,2) NOT NULL, -- Giá tại thời điểm đặt
     sub_total DECIMAL(19,2),              -- price * số ngày
     CONSTRAINT fk_detail_booking FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
     CONSTRAINT fk_detail_car FOREIGN KEY (car_id) REFERENCES cars(id)
 );
+
+alter table booking_details 
+add start_date DATETIME NOT NULL,
+add end_date DATETIME NOT NULL;
 
 CREATE TABLE payments (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,

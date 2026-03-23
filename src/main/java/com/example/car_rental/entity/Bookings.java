@@ -34,17 +34,14 @@ public class Bookings {
     @Column(name = "customer_name")
     private String customerName;
 
-    @Column(name = "start_date")
-    private LocalDate startDate;
-
-    @Column(name = "end_date")
-    private LocalDate endDate;
+    @Column(name = "note")
+    private String note;
 
     @Column(name = "total_price")
     private BigDecimal totalPrice;
 
-    @Column(name = "deposit_amount")
-    private BigDecimal depositAmount;
+    @Column(name = "total_deposit_amount")
+    private BigDecimal totalDepositAmount;
 
     @Column(name = "status")
     @Enumerated(EnumType.STRING)

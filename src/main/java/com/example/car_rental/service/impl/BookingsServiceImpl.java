@@ -1,5 +1,6 @@
 package com.example.car_rental.service.impl;
 
+import com.example.car_rental.dto.requestDTO.BookingsRequest.BookingDetailRequest;
 import com.example.car_rental.dto.requestDTO.BookingsRequest.BookingStatusRequest;
 import com.example.car_rental.dto.requestDTO.BookingsRequest.BookingsRequest;
 import com.example.car_rental.dto.responseDTO.BookingResponse.BookingDetailResponse;
@@ -9,12 +10,15 @@ import com.example.car_rental.dto.responseDTO.CarResponse.CarResponse;
 import com.example.car_rental.entity.BookingDetails;
 import com.example.car_rental.entity.Bookings;
 import com.example.car_rental.entity.Cars;
+import com.example.car_rental.entity.Users;
 import com.example.car_rental.entity.enums.BookingStatusEnum;
 import com.example.car_rental.entity.enums.CarStatusEnum;
 import com.example.car_rental.exception.AppException;
 import com.example.car_rental.exception.ErrorCode;
+import com.example.car_rental.repository.BookingDetailRepository;
 import com.example.car_rental.repository.BookingsRepository;
 import com.example.car_rental.repository.CarRepository;
+import com.example.car_rental.repository.UserRepository;
 import com.example.car_rental.service.BookingsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -24,8 +28,13 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,6 +43,9 @@ public class BookingsServiceImpl implements BookingsService {
 
     final BookingsRepository bookingsRepository;
     final CarRepository carRepository;
+    final UserRepository userRepository;
+    final BookingDetailRepository bookingDetailRepository;
+
 
     @Override
     public Page<BookingsResponse> getAllBookings(String bookingCode, String name, String phoneNumber, String status, int page, int size) {
@@ -58,10 +70,8 @@ public class BookingsServiceImpl implements BookingsService {
                 .customerEmail(booking.getCustomerEmail())
                 .customerName(booking.getCustomerName())
                 .customerPhone(booking.getCustomerPhone())
-                .startDate(booking.getStartDate())
-                .endDate(booking.getEndDate())
                 .totalPrice(booking.getTotalPrice())
-                .depositAmount(booking.getDepositAmount())
+                .totalDepositAmount(booking.getTotalDepositAmount())
                 .status(booking.getStatus())
                 .bookingDetailsResponse(getBookingDetails(booking.getBookingDetailsList()))
                 .build());
@@ -83,9 +93,12 @@ public class BookingsServiceImpl implements BookingsService {
             // 3. Build BookingDetailResponse
             return BookingDetailResponse.builder()
                     .id(detail.getId())
+                    .rentalDays(detail.getRentalDays())
+                    .startDate(detail.getStartDate())
+                    .endDate(detail.getEndDate())
                     .pricePerDay(detail.getPricePerDay())
                     .subTotal(detail.getSubTotal())
-                    // Lưu ý: nên là carResponse (số ít)
+                    .depositAmount(detail.getDepositAmount())
                     .carResponse(CarResponse.builder()
                             .id(currentCar.getId())
                             .name(currentCar.getName())
@@ -129,53 +142,197 @@ public class BookingsServiceImpl implements BookingsService {
         bookingsRepository.save(booking);
 
 
-//        // Nếu đơn chuyển sang "Đang thuê" -> Khóa xe lại (BUSY)
-//        if (next == BookingStatusEnum.RENTED) {
-//            booking.getBookingDetailsList().forEach(detail -> {
-//                Cars car = detail.getCar();
-//                car.setStatus(CarStatusEnum.RENTED);
-//                carsRepository.save(car);
-//            });
-//        }
-//
-//        // Nếu đơn chuyển sang "Hoàn thành" hoặc "Hủy" -> Giải phóng xe (AVAILABLE)
-//        if (next == BookingStatusEnum.COMPLETED || next == BookingStatusEnum.CANCELLED) {
-//            booking.getBookingDetailsList().forEach(detail -> {
-//                Cars car = detail.getCar();
-//                car.setStatus(CarStatusEnum.AVAILABLE);
-//                carsRepository.save(car);
-//            });
-//        }
+        // Nếu đơn chuyển sang "Đang thuê" -> Khóa xe lại (BUSY)
+        if (next == BookingStatusEnum.RENTED) {
+            booking.getBookingDetailsList().forEach(detail -> {
+                Cars car = detail.getCar();
+                car.setStatus(CarStatusEnum.RENTED);
+                carRepository.save(car);
+            });
+        }
+
+        // Nếu đơn chuyển sang "Hoàn thành" hoặc "Hủy" -> Giải phóng xe (AVAILABLE)
+        if (next == BookingStatusEnum.COMPLETED || next == BookingStatusEnum.CANCELLED) {
+            booking.getBookingDetailsList().forEach(detail -> {
+                Cars car = detail.getCar();
+                car.setStatus(CarStatusEnum.AVAILABLE);
+                carRepository.save(car);
+            });
+        }
     }
 
 
     @Override
     public void deleteBooking(Long bookingId) {
+        Bookings booking = bookingsRepository.findById(bookingId)
+                .orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
 
+        bookingsRepository.delete(booking);
+    }
+
+
+    //USER
+    @Override
+    @Transactional
+    public void addBooking(String email, BookingsRequest bookingsRequest) {
+        Users user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        Bookings booking = Bookings.builder()
+                .user(user)
+                .bookingCode("BK_" + UUID.randomUUID().toString().substring(0, 8).toUpperCase())
+                .status(BookingStatusEnum.PENDING)
+                .customerEmail(bookingsRequest.getCustomerEmail() == null
+                        ? email
+                        : bookingsRequest.getCustomerEmail())
+
+                .customerName(bookingsRequest.getCustomerName() == null
+                        ? user.getFullName()
+                        : bookingsRequest.getCustomerName())
+
+                .customerPhone(bookingsRequest.getCustomerPhone() == null
+                        ? user.getPhoneNumber()
+                        : bookingsRequest.getCustomerPhone())
+                .createdAt(LocalDate.now())
+                .build();
+
+        List<BookingDetails> detailsList = new ArrayList<>();
+        BigDecimal totalOrderPrice = BigDecimal.ZERO;
+        BigDecimal totalDeposit = BigDecimal.ZERO;
+
+        for (BookingDetailRequest detailReq : bookingsRequest.getBookingDetailsRequest()) {
+            Cars car = carRepository.findById(detailReq.getCarsRequest().getId())
+                    .orElseThrow(() -> new AppException(ErrorCode.CAR_NOT_FOUND));
+
+            if (car.getStatus() != CarStatusEnum.AVAILABLE) {
+                throw new AppException(ErrorCode.CAR_NOT_AVAILABLE);
+            }
+
+            // Tính số ngày thuê cho xe này
+            long days = calculateRentalDays(detailReq.getStartDate(), detailReq.getEndDate());
+            // Tính thành tiền (Giá x Ngày)
+            BigDecimal subTotal = car.getPricePerDay().multiply(BigDecimal.valueOf(days));
+
+            BookingDetails bookingDetail = BookingDetails.builder()
+                    .car(car)
+                    .booking(booking)
+                    .startDate(detailReq.getStartDate())
+                    .endDate(detailReq.getEndDate())
+                    .rentalDays((int) days)
+                    .pricePerDay(car.getPricePerDay())
+                    .depositAmount(car.getDepositAmount())
+                    .subTotal(subTotal)
+                    .build();
+
+            detailsList.add(bookingDetail);
+
+            totalOrderPrice = totalOrderPrice.add(subTotal);
+            totalDeposit = totalDeposit.add(detailReq.getDepositAmount());
+
+        }
+
+        booking.setBookingDetailsList(detailsList);
+        booking.setTotalPrice(totalOrderPrice);
+        booking.setTotalDepositAmount(totalDeposit);
+
+        bookingsRepository.save(booking);
     }
 
     @Override
-    public Long addBooking(BookingsRequest bookingsRequest) {
-        return 0L;
+    @Transactional
+    public void updateBooking(String email, BookingsRequest bookingsRequest, Long bookingId) {
+        Bookings booking = bookingsRepository.findById(bookingId)
+                .orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
+
+        if (!booking.getUser().getEmail().equals(email)) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
+
+        if(booking.getStatus() != BookingStatusEnum.PENDING){
+            throw new AppException(ErrorCode.CAR_NOT_AVAILABLE);
+        }
+
+        BigDecimal newTotalPrice = BigDecimal.ZERO;
+        BigDecimal newTotalDeposit = BigDecimal.ZERO;
+
+        for (BookingDetailRequest detailReq : bookingsRequest.getBookingDetailsRequest()) {
+            BookingDetails detail = bookingDetailRepository.findById(detailReq.getId())
+                    .orElseThrow(() -> new AppException(ErrorCode.DETAIL_NOT_FOUND));
+
+            // Kiểm tra trùng lịch (loại trừ chính đơn hàng hiện tại)
+            validateCarAvailability(detailReq.getCarsRequest().getId(), bookingId,
+                    detailReq.getStartDate(), detailReq.getEndDate());
+
+            long days = calculateRentalDays(detailReq.getStartDate(), detailReq.getEndDate());
+
+            // Cập nhật thông tin mới
+            detail.setStartDate(detailReq.getStartDate());
+            detail.setEndDate(detailReq.getEndDate());
+            detail.setRentalDays((int) days);
+
+            // Nếu đổi xe, cập nhật lại giá và tiền cọc
+            Cars car = carRepository.findById(detailReq.getCarsRequest().getId()).get();
+            detail.setCar(car);
+            detail.setPricePerDay(car.getPricePerDay());
+            detail.setDepositAmount(car.getDepositAmount());
+
+            BigDecimal subTotal = car.getPricePerDay().multiply(BigDecimal.valueOf(days));
+            detail.setSubTotal(subTotal);
+
+            newTotalPrice = newTotalPrice.add(subTotal);
+            newTotalDeposit = newTotalDeposit.add(car.getDepositAmount());
+        }
+
+        if (bookingsRequest.getCustomerName() != null && !bookingsRequest.getCustomerName().isBlank()) {
+            booking.setCustomerName(bookingsRequest.getCustomerName());
+        }
+
+        if (bookingsRequest.getCustomerPhone() != null && !bookingsRequest.getCustomerPhone().isBlank()) {
+            booking.setCustomerPhone(bookingsRequest.getCustomerPhone());
+        }
+        booking.setTotalPrice(newTotalPrice);
+        booking.setTotalDepositAmount(newTotalDeposit);
+
+        bookingsRepository.save(booking);
+    }
+
+    // Hàm tính số ngày thuê
+    private long calculateRentalDays(LocalDate start, LocalDate end) {
+        if (start == null || end == null || end.isBefore(start)) {
+            throw new AppException(ErrorCode.INVALID_DATE_RANGE);
+        }
+        long days = ChronoUnit.DAYS.between(start, end);
+        return (days == 0) ? 1 : days;
+    }
+
+    // Hàm kiểm tra trùng lịch (Overlap)
+    private void validateCarAvailability(Long carId, Long currentBookingId, LocalDate start, LocalDate end) {
+        long overlapCount = bookingDetailRepository.countOverlappingBookings(
+                carId, currentBookingId, start, end);
+
+        if (overlapCount > 0) {
+            throw new AppException(ErrorCode.CAR_ALREADY_BOOKED);
+        }
     }
 
     @Override
-    public void updateBooking(BookingsRequest bookingsRequest, Long bookingId) {
+    public Page<BookingsResponse> getAllBookingUser(String email, String bookingCode, String status, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Bookings> bookingsPage = bookingsRepository.findBookingsByUser(email, bookingCode, status, pageable);
 
-    }
-
-    @Override
-    public Page<BookingsResponse> getAllBookingUser(String bookingCode, String status, int page, int size) {
-        return null;
-    }
-
-    @Override
-    public void updateBookingUser(BookingsRequest bookingsRequest, Long bookingId) {
-
+        return getBooking(bookingsPage);
     }
 
     @Override
     public void cancelBooking(Long bookingId) {
+        Bookings booking = bookingsRepository.findById(bookingId)
+                .orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
 
+        if(booking.getStatus() != BookingStatusEnum.PENDING){
+            throw new AppException(ErrorCode.CAR_NOT_AVAILABLE);
+        }
+
+        booking.setStatus(BookingStatusEnum.CANCELLED);
+        bookingsRepository.save(booking);
     }
 }

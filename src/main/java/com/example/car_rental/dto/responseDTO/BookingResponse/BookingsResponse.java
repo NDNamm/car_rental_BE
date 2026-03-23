@@ -20,12 +20,11 @@ public class BookingsResponse {
     private String customerPhone;
     private String customerEmail;
     private String customerName;
-    private LocalDate startDate;
-    private LocalDate endDate;
     private BigDecimal totalPrice;
-    private BigDecimal depositAmount;
+    private BigDecimal totalDepositAmount;
     private BookingStatusEnum status;
     private LocalDate createdAt;
     private String nameStaff;
+    private String note;
     private List<BookingDetailResponse> bookingDetailsResponse;
 }
