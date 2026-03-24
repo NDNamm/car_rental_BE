@@ -36,8 +36,8 @@ public class CarHandovers {
 
     @OneToOne
     @JsonIgnore
-    @JoinColumn(name = "booking_id")
-    private Bookings booking;
+    @JoinColumn(name = "booking_detail_id")
+    private BookingDetails bookingDetails;
 
     @OneToOne
     @JsonIgnore

@@ -6,6 +6,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -21,13 +22,13 @@ public class BookingDetails {
     private Long id;
 
     @Column(name = "rental_days")
-    private Integer rentalDays;
+    private Long rentalDays;
 
     @Column(name = "start_date")
-    private LocalDate startDate;
+    private LocalDateTime startDate;
 
     @Column(name = "end_date")
-    private LocalDate endDate;
+    private LocalDateTime endDate;
 
     @Column(name = "price_per_day", precision = 19, scale = 2)
     private BigDecimal pricePerDay;
@@ -46,5 +47,8 @@ public class BookingDetails {
     @ManyToOne
     @JoinColumn(name = "car_id")
     private Cars car;
+
+    @OneToOne(mappedBy = "bookingDetails", cascade = CascadeType.ALL)
+    private CarHandovers carHandovers;
 
 }

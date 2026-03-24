@@ -63,10 +63,7 @@ public class Bookings {
     @OneToOne(mappedBy = "booking", cascade = CascadeType.ALL)
     private Payments payment;
 
-    @OneToOne(mappedBy = "booking", cascade = CascadeType.ALL)
-    private CarHandovers carHandovers;
-
-    @OneToMany
+    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<BookingDetails> bookingDetailsList;
 }

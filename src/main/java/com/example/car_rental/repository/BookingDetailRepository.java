@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Repository
 public interface BookingDetailRepository extends JpaRepository<BookingDetails, Long> {
@@ -22,6 +23,6 @@ public interface BookingDetailRepository extends JpaRepository<BookingDetails, L
                   "AND bd.startDate <= :endDate")
     long countOverlappingBookings(@Param("carId") Long carId,
                                   @Param("currentBookingId") Long currentBookingId,
-                                  @Param("startDate") LocalDate startDate,
-                                  @Param("endDate") LocalDate endDate);
+                                  @Param("startDate") LocalDateTime startDate,
+                                  @Param("endDate") LocalDateTime endDate);
 }

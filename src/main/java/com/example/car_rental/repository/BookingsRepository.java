@@ -14,15 +14,15 @@ import java.time.LocalDate;
 public interface BookingsRepository extends JpaRepository<Bookings, Long> {
     @Query("""
                 SELECT b FROM Bookings b
-                WHERE (:name IS NULL OR LOWER(o.name) LIKE LOWER(CONCAT('%', :name, '%')))
-                  AND (:phoneNumber IS NULL OR LOWER(b.phoneNumber) LIKE LOWER(CONCAT('%', :phoneNumber, '%')))
+                WHERE (:name IS NULL OR LOWER(b.customerName) LIKE LOWER(CONCAT('%', :customerName, '%')))
+                  AND (:phoneNumber IS NULL OR LOWER(b.customerPhone) LIKE LOWER(CONCAT('%', :customerPhone, '%')))
                   AND (:bookingCode IS NULL OR LOWER(b.bookingCode) LIKE LOWER(CONCAT('%', :bookingCode, '%')))
                   AND (:status IS NULL OR LOWER(b.status) LIKE LOWER(CONCAT('%', :status, '%')))
             """)
     Page<Bookings> searchBookings(
             @Param("bookingCode") String bookingCode,
-            @Param("name") String name,
-            @Param("phoneNumber") String phoneNumber,
+            @Param("customerName") String customerName,
+            @Param("customerPhone") String customerPhone,
             @Param("status") String status,
             Pageable pageable
     );
@@ -38,14 +38,4 @@ public interface BookingsRepository extends JpaRepository<Bookings, Long> {
             @Param("status") String status,
             Pageable pageable);
 
-    @Query("SELECT COUNT(bd) FROM BookingDetails bd " +
-                  "WHERE bd.car.id = :carId " +
-                  "AND bd.booking.id <> :currentBookingId " + // Loại trừ chính đơn hàng đang sửa
-                  "AND bd.booking.status <> 'CANCELLED' " +   // Không tính các đơn đã hủy
-                  "AND :startDate <= bd.endDate " +
-                  "AND bd.startDate <= :endDate")
-    long countOverlappingBookings(@Param("carId") Long carId,
-                                  @Param("currentBookingId") Long currentBookingId,
-                                  @Param("startDate") LocalDate startDate,
-                                  @Param("endDate") LocalDate endDate);
 }

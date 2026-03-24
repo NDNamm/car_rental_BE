@@ -27,9 +27,11 @@ public class Payments {
     private BigDecimal amount;
 
     @Column(name = "payment_method")
+    @Enumerated(EnumType.STRING)
     private PaymentMethodEnum paymentMethodEnum;
 
     @Column(name = "payment_type")
+    @Enumerated(EnumType.STRING)
     private PaymentTypeEnum paymentTypeEnum;
 
     @Column(name = "status")

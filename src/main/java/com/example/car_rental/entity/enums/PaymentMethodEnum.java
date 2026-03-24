@@ -6,5 +6,6 @@ import lombok.Getter;
 public enum PaymentMethodEnum {
     CASH,
     VNPAY,
-    MOMO;
+    MOMO,
+    BANK_TRANSFER;
 }

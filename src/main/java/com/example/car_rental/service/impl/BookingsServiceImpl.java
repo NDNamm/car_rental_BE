@@ -7,18 +7,13 @@ import com.example.car_rental.dto.responseDTO.BookingResponse.BookingDetailRespo
 import com.example.car_rental.dto.responseDTO.BookingResponse.BookingsResponse;
 import com.example.car_rental.dto.responseDTO.CarResponse.CarImageResponse;
 import com.example.car_rental.dto.responseDTO.CarResponse.CarResponse;
-import com.example.car_rental.entity.BookingDetails;
-import com.example.car_rental.entity.Bookings;
-import com.example.car_rental.entity.Cars;
-import com.example.car_rental.entity.Users;
+import com.example.car_rental.entity.*;
 import com.example.car_rental.entity.enums.BookingStatusEnum;
 import com.example.car_rental.entity.enums.CarStatusEnum;
+import com.example.car_rental.entity.enums.PaymentStatusEnum;
 import com.example.car_rental.exception.AppException;
 import com.example.car_rental.exception.ErrorCode;
-import com.example.car_rental.repository.BookingDetailRepository;
-import com.example.car_rental.repository.BookingsRepository;
-import com.example.car_rental.repository.CarRepository;
-import com.example.car_rental.repository.UserRepository;
+import com.example.car_rental.repository.*;
 import com.example.car_rental.service.BookingsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -30,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -45,6 +41,7 @@ public class BookingsServiceImpl implements BookingsService {
     final CarRepository carRepository;
     final UserRepository userRepository;
     final BookingDetailRepository bookingDetailRepository;
+    final PaymentsRepository paymentsRepository;
 
 
     @Override
@@ -174,13 +171,14 @@ public class BookingsServiceImpl implements BookingsService {
     //USER
     @Override
     @Transactional
-    public void addBooking(String email, BookingsRequest bookingsRequest) {
+    public String addBooking(String email, BookingsRequest bookingsRequest) {
         Users user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
+        String bookingCode =  "BK_" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         Bookings booking = Bookings.builder()
                 .user(user)
-                .bookingCode("BK_" + UUID.randomUUID().toString().substring(0, 8).toUpperCase())
+                .bookingCode(bookingCode)
                 .status(BookingStatusEnum.PENDING)
                 .customerEmail(bookingsRequest.getCustomerEmail() == null
                         ? email
@@ -218,7 +216,7 @@ public class BookingsServiceImpl implements BookingsService {
                     .booking(booking)
                     .startDate(detailReq.getStartDate())
                     .endDate(detailReq.getEndDate())
-                    .rentalDays((int) days)
+                    .rentalDays(days)
                     .pricePerDay(car.getPricePerDay())
                     .depositAmount(car.getDepositAmount())
                     .subTotal(subTotal)
@@ -235,7 +233,17 @@ public class BookingsServiceImpl implements BookingsService {
         booking.setTotalPrice(totalOrderPrice);
         booking.setTotalDepositAmount(totalDeposit);
 
-        bookingsRepository.save(booking);
+        Bookings savedBooking = bookingsRepository.save(booking);
+
+        paymentsRepository.save(Payments.builder()
+                .booking(savedBooking)
+                .amount(totalDeposit)
+                .status(PaymentStatusEnum.UNPAID)
+                .build());
+
+        //Trả về Link QR để Frontend hiển thị luôn
+        return String.format("https://img.vietqr.io/image/%s-%s-compact2.png?amount=%s&addInfo=%s",
+                "MB", "0936106205", totalDeposit.toPlainString(), bookingCode);
     }
 
     @Override
@@ -268,7 +276,7 @@ public class BookingsServiceImpl implements BookingsService {
             // Cập nhật thông tin mới
             detail.setStartDate(detailReq.getStartDate());
             detail.setEndDate(detailReq.getEndDate());
-            detail.setRentalDays((int) days);
+            detail.setRentalDays(days);
 
             // Nếu đổi xe, cập nhật lại giá và tiền cọc
             Cars car = carRepository.findById(detailReq.getCarsRequest().getId()).get();
@@ -297,7 +305,7 @@ public class BookingsServiceImpl implements BookingsService {
     }
 
     // Hàm tính số ngày thuê
-    private long calculateRentalDays(LocalDate start, LocalDate end) {
+    private long calculateRentalDays(LocalDateTime start, LocalDateTime end) {
         if (start == null || end == null || end.isBefore(start)) {
             throw new AppException(ErrorCode.INVALID_DATE_RANGE);
         }
@@ -306,7 +314,7 @@ public class BookingsServiceImpl implements BookingsService {
     }
 
     // Hàm kiểm tra trùng lịch (Overlap)
-    private void validateCarAvailability(Long carId, Long currentBookingId, LocalDate start, LocalDate end) {
+    private void validateCarAvailability(Long carId, Long currentBookingId, LocalDateTime start, LocalDateTime end) {
         long overlapCount = bookingDetailRepository.countOverlappingBookings(
                 carId, currentBookingId, start, end);
 
@@ -324,9 +332,13 @@ public class BookingsServiceImpl implements BookingsService {
     }
 
     @Override
-    public void cancelBooking(Long bookingId) {
+    public void cancelBooking(String email ,Long bookingId) {
         Bookings booking = bookingsRepository.findById(bookingId)
                 .orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
+
+        if (!booking.getUser().getEmail().equals(email)) {
+            throw new AppException(ErrorCode.UNAUTHORIZED);
+        }
 
         if(booking.getStatus() != BookingStatusEnum.PENDING){
             throw new AppException(ErrorCode.CAR_NOT_AVAILABLE);
