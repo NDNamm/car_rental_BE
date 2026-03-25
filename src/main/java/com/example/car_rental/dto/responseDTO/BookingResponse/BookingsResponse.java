@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -26,5 +27,6 @@ public class BookingsResponse {
     private LocalDate createdAt;
     private String nameStaff;
     private String note;
+    private LocalDateTime paymentDeadline;
     private List<BookingDetailResponse> bookingDetailsResponse;
 }

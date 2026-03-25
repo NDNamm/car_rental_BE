@@ -16,7 +16,6 @@ import java.time.LocalDateTime;
 @Builder
 public class BookingDetailResponse {
     private Long id;
-    private Long bookingId;
     private Long rentalDays;
     private LocalDateTime startDate;
     private LocalDateTime endDate;

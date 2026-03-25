@@ -9,6 +9,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -23,30 +24,30 @@ public class Payments {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "amount")
+    @Column(name = "amount", precision = 19, scale = 2)
     private BigDecimal amount;
 
     @Column(name = "payment_method")
     @Enumerated(EnumType.STRING)
-    private PaymentMethodEnum paymentMethodEnum;
+    private PaymentMethodEnum paymentMethod;
 
     @Column(name = "payment_type")
     @Enumerated(EnumType.STRING)
-    private PaymentTypeEnum paymentTypeEnum;
+    private PaymentTypeEnum paymentType;
 
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
     private PaymentStatusEnum status;
 
-    @Column(name = "transaction_code")
+    @Column(name = "transaction_code", unique = true)
     private String transactionCode;
 
     @Column(name = "created_at")
-    private LocalDate createdAt;
+    private LocalDateTime createdAt;
 
     @OneToOne
     @JsonIgnore
-    @JoinColumn(name = "booking_id")
+    @JoinColumn(name = "booking_id", referencedColumnName = "id")
     private Bookings booking;
 
 }

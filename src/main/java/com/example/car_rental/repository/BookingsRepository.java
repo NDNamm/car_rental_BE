@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 @Repository
 public interface BookingsRepository extends JpaRepository<Bookings, Long> {
@@ -38,4 +39,5 @@ public interface BookingsRepository extends JpaRepository<Bookings, Long> {
             @Param("status") String status,
             Pageable pageable);
 
+    Optional<Bookings> findByBookingCode(String bookingCode);
 }

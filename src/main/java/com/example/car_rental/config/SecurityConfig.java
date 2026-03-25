@@ -30,10 +30,23 @@ public class SecurityConfig {
                 .csrf(csrt -> csrt.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/api/payment/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/cars/**", "/api/category/**","/api/feature/**", "/api/cars/**").permitAll()
-                        .requestMatchers("/api/verification/me/**","/api/users/me/**,/api/bookings/me/**").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/api/verification/**", "/api/users/**", "/api/category/**","/api/feature/**", "/api/cars/**","/api/bookings/**").hasRole("ADMIN")
+
+                        .requestMatchers("/api/auth/**", "/api/webhooks/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/cars/**", "/api/category/**", "/api/feature/**").permitAll()
+
+                        .requestMatchers("/api/verification/me/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/users/me/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/bookings/me/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/payment/**").hasAnyRole("USER", "ADMIN")
+
+
+                        .requestMatchers("/api/verification/**").hasRole("ADMIN")
+                        .requestMatchers("/api/users/**").hasRole("ADMIN")
+                        .requestMatchers("/api/bookings/**").hasRole("ADMIN")
+                        .requestMatchers("/api/cars/**").hasRole("ADMIN")
+                        .requestMatchers("/api/category/**").hasRole("ADMIN")
+                        .requestMatchers("/api/feature/**").hasRole("ADMIN")
+
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

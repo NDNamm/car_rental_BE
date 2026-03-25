@@ -7,6 +7,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -49,6 +50,9 @@ public class Bookings {
 
     @Column(name = "created_at")
     private LocalDate createdAt;
+
+    @Column(name = "payment_deadline")
+    private LocalDateTime paymentDeadline;
 
     @ManyToOne
     @JsonIgnore

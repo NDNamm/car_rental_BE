@@ -20,10 +20,10 @@ public class BookingController {
 
     //ADMIN
     @GetMapping("")
-    public ApiResponse<Page<BookingsResponse>> getAllBookings(@RequestParam String bookingCode,
-                                                              @RequestParam String name,
-                                                              @RequestParam String phone,
-                                                              @RequestParam String status,
+    public ApiResponse<Page<BookingsResponse>> getAllBookings(@RequestParam(required = false) String bookingCode,
+                                                              @RequestParam(required = false) String name,
+                                                              @RequestParam(required = false) String phone,
+                                                              @RequestParam(required = false) String status,
                                                               @RequestParam(defaultValue = "0", required = false) int page,
                                                               @RequestParam(defaultValue = "5") int size) {
 
@@ -34,7 +34,8 @@ public class BookingController {
     }
 
     @PatchMapping("/{bookingId}")
-    public ApiResponse<Void> updateStatus(@PathVariable(value = "bookingId") Long bookingId, BookingStatusRequest request) {
+    public ApiResponse<Void> updateStatus(@PathVariable(value = "bookingId") Long bookingId,
+                                          @RequestBody BookingStatusRequest request) {
 
         bookingsService.updateBookingsStatus(request, bookingId);
         return ApiResponse.<Void>builder()
@@ -70,12 +71,13 @@ public class BookingController {
     }
 
     @PostMapping("/me")
-    public ApiResponse<Void> addBooking(@RequestBody BookingsRequest request) {
+    public ApiResponse<String> addBooking(@RequestBody BookingsRequest request) {
 
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        bookingsService.addBooking(email, request);
-        return ApiResponse.<Void>builder()
+
+        return ApiResponse.<String>builder()
                 .code(200)
+                .data(bookingsService.addBooking(email, request))
                 .message("Add booking successful")
                 .build();
     }

@@ -14,8 +14,6 @@ public class BookingStatusRequest {
 
     @NotNull(message = "Trạng thái mới không được để trống")
     private BookingStatusEnum status;
-
     private String reason;
-
     private String note;
 }

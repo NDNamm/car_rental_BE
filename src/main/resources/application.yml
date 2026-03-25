@@ -11,7 +11,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: none
-    show-sql: true
+    show-sql: false
     database-platform: org.hibernate.dialect.MySQLDialect
     properties:
       hibernate:
@@ -42,14 +42,14 @@ sepay:
   booking:
     prefix: BK_
 
-logging:
-  level:
-    org:
-      hibernate:
-        orm:
-          jdbc:
-            bind: TRACE
-        SQL: DEBUG
+#logging:
+#  level:
+#    org:
+#      hibernate:
+#        orm:
+#          jdbc:
+#            bind: TRACE
+#        SQL: DEBUG
 
 server:
   port: 8080

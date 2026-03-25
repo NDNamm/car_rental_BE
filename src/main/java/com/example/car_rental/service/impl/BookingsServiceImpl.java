@@ -8,13 +8,12 @@ import com.example.car_rental.dto.responseDTO.BookingResponse.BookingsResponse;
 import com.example.car_rental.dto.responseDTO.CarResponse.CarImageResponse;
 import com.example.car_rental.dto.responseDTO.CarResponse.CarResponse;
 import com.example.car_rental.entity.*;
-import com.example.car_rental.entity.enums.BookingStatusEnum;
-import com.example.car_rental.entity.enums.CarStatusEnum;
-import com.example.car_rental.entity.enums.PaymentStatusEnum;
+import com.example.car_rental.entity.enums.*;
 import com.example.car_rental.exception.AppException;
 import com.example.car_rental.exception.ErrorCode;
 import com.example.car_rental.repository.*;
 import com.example.car_rental.service.BookingsService;
+import com.example.car_rental.service.PaymentsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -42,6 +41,7 @@ public class BookingsServiceImpl implements BookingsService {
     final UserRepository userRepository;
     final BookingDetailRepository bookingDetailRepository;
     final PaymentsRepository paymentsRepository;
+    final PaymentsService paymentsService;
 
 
     @Override
@@ -70,6 +70,7 @@ public class BookingsServiceImpl implements BookingsService {
                 .totalPrice(booking.getTotalPrice())
                 .totalDepositAmount(booking.getTotalDepositAmount())
                 .status(booking.getStatus())
+                .createdAt(booking.getCreatedAt())
                 .bookingDetailsResponse(getBookingDetails(booking.getBookingDetailsList()))
                 .build());
     }
@@ -99,6 +100,10 @@ public class BookingsServiceImpl implements BookingsService {
                     .carResponse(CarResponse.builder()
                             .id(currentCar.getId())
                             .name(currentCar.getName())
+                            .licensePlate(currentCar.getLicensePlate())
+                            .pricePerDay(currentCar.getPricePerDay())
+                            .depositAmount(currentCar.getDepositAmount())
+                            .categoryName(currentCar.getCategory().getName())
                             .carImageResponses(carImages)
                             .build())
                     .build();
@@ -156,6 +161,14 @@ public class BookingsServiceImpl implements BookingsService {
                 carRepository.save(car);
             });
         }
+
+        if(next == BookingStatusEnum.COMPLETED){
+            booking.getBookingDetailsList().forEach(detail -> {
+                Cars car = detail.getCar();
+                car.setTripCount(car.getTripCount() + 1);
+                carRepository.save(car);
+            });
+        }
     }
 
 
@@ -192,6 +205,7 @@ public class BookingsServiceImpl implements BookingsService {
                         ? user.getPhoneNumber()
                         : bookingsRequest.getCustomerPhone())
                 .createdAt(LocalDate.now())
+                .paymentDeadline(LocalDateTime.now().plusDays(1))
                 .build();
 
         List<BookingDetails> detailsList = new ArrayList<>();
@@ -205,6 +219,9 @@ public class BookingsServiceImpl implements BookingsService {
             if (car.getStatus() != CarStatusEnum.AVAILABLE) {
                 throw new AppException(ErrorCode.CAR_NOT_AVAILABLE);
             }
+
+            car.setStatus(CarStatusEnum.RENTED);
+            carRepository.save(car);
 
             // Tính số ngày thuê cho xe này
             long days = calculateRentalDays(detailReq.getStartDate(), detailReq.getEndDate());
@@ -239,11 +256,13 @@ public class BookingsServiceImpl implements BookingsService {
                 .booking(savedBooking)
                 .amount(totalDeposit)
                 .status(PaymentStatusEnum.UNPAID)
+                .paymentMethod(PaymentMethodEnum.BANK_TRANSFER)
+                .paymentType(PaymentTypeEnum.DEPOSIT)
                 .build());
 
+
         //Trả về Link QR để Frontend hiển thị luôn
-        return String.format("https://img.vietqr.io/image/%s-%s-compact2.png?amount=%s&addInfo=%s",
-                "MB", "0936106205", totalDeposit.toPlainString(), bookingCode);
+        return paymentsService.generateQrUrl(booking);
     }
 
     @Override
