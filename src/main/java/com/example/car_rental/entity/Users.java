@@ -7,6 +7,7 @@ import lombok.*;
 
 import java.time.LocalDate;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Getter
@@ -59,4 +60,12 @@ public class Users {
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private CarHandovers carHandovers;
+
+    @OneToMany(mappedBy = "user")
+    @JsonIgnore
+    private List<Bookings> myBookings;
+
+    @OneToMany(mappedBy = "staff")
+    @JsonIgnore
+    private List<Bookings> staffBookings;
 }

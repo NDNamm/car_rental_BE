@@ -19,6 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,6 +43,7 @@ public class BookingsServiceImpl implements BookingsService {
     final BookingDetailRepository bookingDetailRepository;
     final PaymentsRepository paymentsRepository;
     final PaymentsService paymentsService;
+    final VerificationRepository verificationRepository;
 
 
     @Override
@@ -113,8 +115,16 @@ public class BookingsServiceImpl implements BookingsService {
     @Override
     @Transactional
     public void updateBookingsStatus(BookingStatusRequest request, Long bookingId) {
+
+        // id staff
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        Users staff = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
         Bookings booking = bookingsRepository.findById(bookingId)
                 .orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
+
+        booking.setStaff(staff);
 
         if (booking.getStatus() == BookingStatusEnum.CANCELLED || booking.getStatus() == BookingStatusEnum.COMPLETED) {
             throw new AppException(ErrorCode.BOOKING_ALREADY_CLOSED);
@@ -129,10 +139,9 @@ public class BookingsServiceImpl implements BookingsService {
 
             case CONFIRMED -> next == BookingStatusEnum.RENTED || next == BookingStatusEnum.CANCELLED;
 
-            case RENTED -> next == BookingStatusEnum.COMPLETED; // Đang thuê thì bắt buộc phải trả xe mới xong
+            case RENTED -> next == BookingStatusEnum.COMPLETED;
 
-            case COMPLETED, CANCELLED -> false; // Đã xong hoặc đã hủy thì cấm sửa đổi
-
+            case COMPLETED, CANCELLED -> false;
             default -> false;
         };
 
@@ -140,11 +149,10 @@ public class BookingsServiceImpl implements BookingsService {
             throw new AppException(ErrorCode.INVALID_STATUS_TRANSITION);
         }
 
+
         booking.setStatus(next);
         bookingsRepository.save(booking);
 
-
-        // Nếu đơn chuyển sang "Đang thuê" -> Khóa xe lại (BUSY)
         if (next == BookingStatusEnum.RENTED) {
             booking.getBookingDetailsList().forEach(detail -> {
                 Cars car = detail.getCar();
@@ -153,7 +161,6 @@ public class BookingsServiceImpl implements BookingsService {
             });
         }
 
-        // Nếu đơn chuyển sang "Hoàn thành" hoặc "Hủy" -> Giải phóng xe (AVAILABLE)
         if (next == BookingStatusEnum.COMPLETED || next == BookingStatusEnum.CANCELLED) {
             booking.getBookingDetailsList().forEach(detail -> {
                 Cars car = detail.getCar();
@@ -162,7 +169,7 @@ public class BookingsServiceImpl implements BookingsService {
             });
         }
 
-        if(next == BookingStatusEnum.COMPLETED){
+        if (next == BookingStatusEnum.COMPLETED) {
             booking.getBookingDetailsList().forEach(detail -> {
                 Cars car = detail.getCar();
                 car.setTripCount(car.getTripCount() + 1);
@@ -188,7 +195,14 @@ public class BookingsServiceImpl implements BookingsService {
         Users user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        String bookingCode =  "BK_" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        Verifications verification = verificationRepository.findVerificationByUser(user)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_VERIFIED));
+
+        if (verification.getStatus() != VerStatusEnum.APPROVED) {
+            throw new AppException(ErrorCode.VERIFICATION_PENDING_OR_REJECTED);
+        }
+
+        String bookingCode = "BK_" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         Bookings booking = Bookings.builder()
                 .user(user)
                 .bookingCode(bookingCode)
@@ -258,8 +272,9 @@ public class BookingsServiceImpl implements BookingsService {
                 .status(PaymentStatusEnum.UNPAID)
                 .paymentMethod(PaymentMethodEnum.BANK_TRANSFER)
                 .paymentType(PaymentTypeEnum.DEPOSIT)
+                .createdAt(LocalDateTime.now())
+                .paymentContent(bookingCode)
                 .build());
-
 
         //Trả về Link QR để Frontend hiển thị luôn
         return paymentsService.generateQrUrl(booking);
@@ -275,7 +290,7 @@ public class BookingsServiceImpl implements BookingsService {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
 
-        if(booking.getStatus() != BookingStatusEnum.PENDING){
+        if (booking.getStatus() != BookingStatusEnum.PENDING) {
             throw new AppException(ErrorCode.CAR_NOT_AVAILABLE);
         }
 
@@ -351,7 +366,7 @@ public class BookingsServiceImpl implements BookingsService {
     }
 
     @Override
-    public void cancelBooking(String email ,Long bookingId) {
+    public void cancelBooking(String email, Long bookingId) {
         Bookings booking = bookingsRepository.findById(bookingId)
                 .orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
 
@@ -359,7 +374,7 @@ public class BookingsServiceImpl implements BookingsService {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
 
-        if(booking.getStatus() != BookingStatusEnum.PENDING){
+        if (booking.getStatus() != BookingStatusEnum.PENDING) {
             throw new AppException(ErrorCode.CAR_NOT_AVAILABLE);
         }
 

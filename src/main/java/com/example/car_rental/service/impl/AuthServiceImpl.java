@@ -25,10 +25,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.Collections;
 
 @Service
@@ -91,11 +93,17 @@ public class AuthServiceImpl implements AuthService {
             throw new AppException(ErrorCode.PASSWORD_NOT_MATCH);
         }
 
-        Users user = new Users();
-        user.setEmail(request.getEmail());
-        user.setFullName(request.getFullName());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRole(roleRepository.findByRoleName("USER").orElseThrow());
+        Users user = Users.builder()
+                .email(request.getEmail())
+                .fullName(request.getFullName())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .createdAt(LocalDate.now())
+                .role(roleRepository.findByRoleName("USER")
+                        .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND)))
+                .build();
+
+
+
 
         userRepository.save(user);
 
@@ -177,6 +185,7 @@ public class AuthServiceImpl implements AuthService {
             String newAccessToken = jwtUtils.generateAccessToken(email, role);
 
             return AuthResponse.builder()
+                    .email(email)
                     .token(newAccessToken)
                     .build();
 
@@ -208,15 +217,17 @@ public class AuthServiceImpl implements AuthService {
             String pictureUrl = (String) payload.get("picture");
 
             Users user = userRepository.findByEmail(email).orElseGet(() -> {
-                Roles role = roleRepository.findByRoleName("USER")
-                        .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_EXISTED));
 
-                Users newUser = new Users();
-                newUser.setEmail(email);
-                newUser.setFullName(name);
-                newUser.setAvatarUrl(pictureUrl);
-                newUser.setPassword(passwordEncoder.encode("GOOGLE_LOGIN"));
-                newUser.setRole(role);
+                Users newUser = Users.builder()
+                        .email(email)
+                        .fullName(name)
+                        .avatarUrl(pictureUrl)
+                        .password(passwordEncoder.encode("GOOGLE_LOGIN"))
+                        .createdAt(LocalDate.now())
+                        .role(roleRepository.findByRoleName("USER")
+                                .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND)))
+                        .build();
+
 
                 return userRepository.save(newUser);
             });

@@ -2,6 +2,7 @@ create database car_rental;
 
 use car_rental;
 
+
 create table role(
      id bigint auto_increment primary key,
      role_name varchar(15)
@@ -115,9 +116,11 @@ CREATE TABLE bookings (
     customer_email VARCHAR(100),-- Khách hàng
     staff_id BIGINT,                  -- Nhân viên phụ trách duyệt đơn
     total_price DECIMAL(19,2),        -- Tổng tiền cả đơn (sum của các detail)
-    deposit_amount DECIMAL(19,2),     -- Tiền cọc tổng
+    total_deposit_amount DECIMAL(19,2),     -- Tiền cọc tổng
     status VARCHAR(20) DEFAULT 'PENDING', -- PENDING, CONFIRMED, RENTED, COMPLETED, CANCELLED
+    note TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    payment_deadline DATETIME,
     CONSTRAINT fk_booking_user FOREIGN KEY (user_id) REFERENCES users(id),
     CONSTRAINT fk_booking_staff FOREIGN KEY (staff_id) REFERENCES users(id)
 );
@@ -127,28 +130,44 @@ CREATE TABLE booking_details (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     booking_id BIGINT NOT NULL,
     car_id BIGINT NOT NULL,
+    start_date DATETIME NOT NULL,
+    end_date DATETIME NOT NULL,
     rental_days bigint not null,
     price_per_day DECIMAL(19,2) NOT NULL, -- Giá tại thời điểm đặt
     sub_total DECIMAL(19,2),              -- price * số ngày
+    deposit_amount DECIMAL(19,2),
     CONSTRAINT fk_detail_booking FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
     CONSTRAINT fk_detail_car FOREIGN KEY (car_id) REFERENCES cars(id)
 );
-
-alter table booking_details 
-add start_date DATETIME NOT NULL,
-add end_date DATETIME NOT NULL;
 
 CREATE TABLE payments (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     booking_id BIGINT NOT NULL,
     amount DECIMAL(19,2) NOT NULL,
-    payment_method VARCHAR(20),       -- COD, VNPAY, MOMO
+    payment_method VARCHAR(50) DEFAULT 'BANK_TRANSFER',       -- COD, VNPAY, MOMO
     payment_type VARCHAR(20),         -- DEPOSIT (Cọc), FULL_PAYMENT (Hết), PENALTY (Phạt)
     status VARCHAR(20) DEFAULT 'PENDING', -- PENDING, SUCCESS, FAILED
-    transaction_code VARCHAR(100),
+    transaction_code VARCHAR(100) UNIQUE,
+    payment_content TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_payment_booking FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE
 );
+
+CREATE TABLE refunds (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    hours_before INT,
+    booking_code varchar(20),
+    booking_id BIGINT UNIQUE,
+    cancel_percent INT,
+    qr_code varchar(255),
+    public_id varchar(255),
+    amount decimal(19,2),
+    note Text,
+    status VARCHAR(20) DEFAULT 'PENDING',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_refund_booking FOREIGN KEY (booking_id) REFERENCES bookings(id)
+);
+
 
 CREATE TABLE car_handovers (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -195,11 +214,7 @@ CREATE TABLE car_handovers (
 --     FOREIGN KEY (vehicle_id) REFERENCES vehicles(id)
 -- );
 
--- CREATE TABLE cancel_policies (
---     id BIGINT AUTO_INCREMENT PRIMARY KEY,
---     hours_before INT,
---     refund_percent INT
--- );
+
 
 
 INSERT INTO role (role_name) VALUES ('ADMIN'),('STAFF'),('USER');

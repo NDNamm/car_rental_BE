@@ -13,7 +13,7 @@ public enum ErrorCode {
     EMAIL_EXISTED(1011, "Email already exists", HttpStatus.CONFLICT),
 
     USER_NOT_FOUND(1003, "User not found", HttpStatus.NOT_FOUND),
-    ROLE_NOT_EXISTED(1010, "Role not found", HttpStatus.NOT_FOUND),
+    ROLE_NOT_FOUND(1010, "Role not found", HttpStatus.NOT_FOUND),
 
     INVALID_CREDENTIALS(1012, "Invalid email or password", HttpStatus.UNAUTHORIZED),
 
@@ -35,6 +35,8 @@ public enum ErrorCode {
     ALREADY_VERIFIED(5002, "User already verified", HttpStatus.BAD_REQUEST),
     INVALID_VERIFICATION_STATUS(5003, "Invalid verification status", HttpStatus.BAD_REQUEST),
     CANNOT_UPDATE_NAME_AFTER_VERIFICATION(5004, "Cannot update name after verification", HttpStatus.BAD_REQUEST),
+    USER_NOT_VERIFIED(5005,"USER_NOT_VERIFIED", HttpStatus.BAD_REQUEST),
+    VERIFICATION_PENDING_OR_REJECTED(5006,"VERIFICATION_PENDING_OR_REJECTED",HttpStatus.BAD_REQUEST),
 
     CATEGORY_EXISTED(6001,"Category already exists", HttpStatus.BAD_REQUEST),
     CATEGORY_NOT_FOUND(6002,"Category not found", HttpStatus.NOT_FOUND),
@@ -53,6 +55,7 @@ public enum ErrorCode {
     INVALID_STATUS_TRANSITION(9003,"Invalid status transition", HttpStatus.BAD_REQUEST),
     CAR_ALREADY_BOOKED_IN_THIS_PERIOD(9004, "CAR_ALREADY_BOOKED_IN_THIS_PERIOD", HttpStatus.BAD_REQUEST),
     BOOKING_ALREADY_PROCESSED(9005,"BOOKING_ALREADY_PROCESSED",HttpStatus.BAD_REQUEST),
+    CAR_ALREADY_PICKED_UP_CANNOT_CANCEL(9006,"CAR_ALREADY_PICKED_UP_CANNOT_CANCEL",HttpStatus.BAD_REQUEST),
 
     DETAIL_NOT_FOUND(10001,"Booking detail not found", HttpStatus.NOT_FOUND),
 

@@ -49,7 +49,7 @@ public class Bookings {
     private BookingStatusEnum status;
 
     @Column(name = "created_at")
-    private LocalDate createdAt;
+    private LocalDateTime createdAt;
 
     @Column(name = "payment_deadline")
     private LocalDateTime paymentDeadline;
@@ -62,7 +62,7 @@ public class Bookings {
     @ManyToOne
     @JsonIgnore
     @JoinColumn(name = "staff_id")
-    private Users userStaff;
+    private Users staff;
 
     @OneToOne(mappedBy = "booking", cascade = CascadeType.ALL)
     private Payments payment;
@@ -70,4 +70,7 @@ public class Bookings {
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<BookingDetails> bookingDetailsList;
+
+    @OneToOne(mappedBy = "booking", cascade = CascadeType.ALL)
+    private Refunds refunds;
 }

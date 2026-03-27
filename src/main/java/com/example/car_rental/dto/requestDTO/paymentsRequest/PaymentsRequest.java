@@ -16,6 +16,7 @@ import java.time.LocalDate;
 public class PaymentsRequest {
 
     private BigDecimal amount;
+    private String paymentContent;
     private PaymentMethodEnum paymentMethodEnum;
     private PaymentTypeEnum paymentTypeEnum;
     private PaymentStatusEnum status;
