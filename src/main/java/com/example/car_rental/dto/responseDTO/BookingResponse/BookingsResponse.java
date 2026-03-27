@@ -24,7 +24,7 @@ public class BookingsResponse {
     private BigDecimal totalPrice;
     private BigDecimal totalDepositAmount;
     private BookingStatusEnum status;
-    private LocalDate createdAt;
+    private LocalDateTime createdAt;
     private String nameStaff;
     private String note;
     private LocalDateTime paymentDeadline;
