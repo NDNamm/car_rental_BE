@@ -18,6 +18,7 @@ public class RefundResponse {
     private Long id;
     private String bookingCode;
     private BigDecimal amount;
+    private String reason;
     private Long hoursBefore;
     private int cancelPercent;
     private RefundStatus status;

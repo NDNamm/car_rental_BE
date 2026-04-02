@@ -19,10 +19,10 @@ import java.time.LocalDateTime;
 public class RefundRequest {
 
     private String bookingCode;
+    private String reason;
     private BigDecimal amount;
     private Long hoursBefore;
     private int cancelPercent;
-    private PaymentTypeEnum paymentType;
     private String publicId;
     private String qrCodeUrl;
     private String note;

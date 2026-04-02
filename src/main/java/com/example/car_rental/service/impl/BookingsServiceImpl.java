@@ -44,6 +44,7 @@ public class BookingsServiceImpl implements BookingsService {
     final PaymentsRepository paymentsRepository;
     final PaymentsService paymentsService;
     final VerificationRepository verificationRepository;
+    final CarHandoverRepository carHandoverRepository;
 
 
     @Override
@@ -58,12 +59,12 @@ public class BookingsServiceImpl implements BookingsService {
             bookingsPage = bookingsRepository.searchBookings(bookingCode, name, phoneNumber, status, pageable);
         }
 
-        return getBooking(bookingsPage);
+        return bookingsPage.map(this::getBooking);
     }
 
-    private Page<BookingsResponse> getBooking(Page<Bookings> bookingsPage) {
+    private BookingsResponse getBooking(Bookings booking) {
 
-        return bookingsPage.map(booking -> BookingsResponse.builder()
+        return  BookingsResponse.builder()
                 .id(booking.getId())
                 .bookingCode(booking.getBookingCode())
                 .customerEmail(booking.getCustomerEmail())
@@ -74,7 +75,7 @@ public class BookingsServiceImpl implements BookingsService {
                 .status(booking.getStatus())
                 .createdAt(booking.getCreatedAt())
                 .bookingDetailsResponse(getBookingDetails(booking.getBookingDetailsList()))
-                .build());
+                .build();
     }
 
     private List<BookingDetailResponse> getBookingDetails(List<BookingDetails> bookingDetailsList) {
@@ -115,16 +116,12 @@ public class BookingsServiceImpl implements BookingsService {
     @Override
     @Transactional
     public void updateBookingsStatus(BookingStatusRequest request, Long bookingId) {
-
-        // id staff
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         Users staff = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         Bookings booking = bookingsRepository.findById(bookingId)
                 .orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
-
-        booking.setStaff(staff);
 
         if (booking.getStatus() == BookingStatusEnum.CANCELLED || booking.getStatus() == BookingStatusEnum.COMPLETED) {
             throw new AppException(ErrorCode.BOOKING_ALREADY_CLOSED);
@@ -134,48 +131,62 @@ public class BookingsServiceImpl implements BookingsService {
         BookingStatusEnum next = request.getStatus();
         if (current == next) return;
 
+        // Kiểm tra tính hợp lệ của việc chuyển trạng thái
         boolean isValid = switch (current) {
             case PENDING -> next == BookingStatusEnum.CONFIRMED || next == BookingStatusEnum.CANCELLED;
-
             case CONFIRMED -> next == BookingStatusEnum.RENTED || next == BookingStatusEnum.CANCELLED;
-
             case RENTED -> next == BookingStatusEnum.COMPLETED;
-
-            case COMPLETED, CANCELLED -> false;
             default -> false;
         };
 
-        if (!isValid) {
-            throw new AppException(ErrorCode.INVALID_STATUS_TRANSITION);
-        }
-
+        if (!isValid) throw new AppException(ErrorCode.INVALID_STATUS_TRANSITION);
 
         booking.setStatus(next);
+        booking.setStaff(staff);
         bookingsRepository.save(booking);
 
-        if (next == BookingStatusEnum.RENTED) {
-            booking.getBookingDetailsList().forEach(detail -> {
-                Cars car = detail.getCar();
+        // XỬ LÝ LOGIC CHI TIẾT THEO TRẠNG THÁI MỚI
+        booking.getBookingDetailsList().forEach(detail -> {
+            Cars car = detail.getCar();
+
+            // TRƯỜNG HỢP: GIAO XE CHO KHÁCH
+            if (next == BookingStatusEnum.RENTED) {
                 car.setStatus(CarStatusEnum.RENTED);
-                carRepository.save(car);
-            });
-        }
 
-        if (next == BookingStatusEnum.COMPLETED || next == BookingStatusEnum.CANCELLED) {
-            booking.getBookingDetailsList().forEach(detail -> {
-                Cars car = detail.getCar();
+                // Tìm hoặc tạo mới biên bản (Lúc này chắc chắn là tạo mới vì mới bắt đầu đi)
+                CarHandovers handover = carHandoverRepository.findByBookingDetails_Id(detail.getId())
+                        .orElse(new CarHandovers());
+
+                handover.setReason(request.getReason());
+                handover.setHandoverTime(LocalDateTime.now()); // GIỜ GIAO XE
+                handover.setCarConditionAfter(request.getNote()); // Tình trạng sau khi bàn giao
+                handover.setStaff(staff);
+                handover.setBookingDetails(detail);
+                carHandoverRepository.save(handover);
+            }
+
+            // TRƯỜNG HỢP: KHÁCH TRẢ XE (HOÀN THÀNH)
+            else if (next == BookingStatusEnum.COMPLETED) {
                 car.setStatus(CarStatusEnum.AVAILABLE);
-                carRepository.save(car);
-            });
-        }
-
-        if (next == BookingStatusEnum.COMPLETED) {
-            booking.getBookingDetailsList().forEach(detail -> {
-                Cars car = detail.getCar();
                 car.setTripCount(car.getTripCount() + 1);
-                carRepository.save(car);
-            });
-        }
+
+                // TÌM LẠI biên bản đã tạo lúc Giao xe để cập nhật
+                CarHandovers handover = carHandoverRepository.findByBookingDetails_Id(detail.getId())
+                        .orElseThrow(() -> new AppException(ErrorCode.HANDOVER_NOT_FOUND));
+
+                handover.setReturnTime(LocalDateTime.now());
+                handover.setCarConditionBefore(request.getNote());
+                handover.setStaff(staff);
+                carHandoverRepository.save(handover);
+            }
+
+            // TRƯỜNG HỢP: HỦY ĐƠN
+            else if (next == BookingStatusEnum.CANCELLED) {
+                car.setStatus(CarStatusEnum.AVAILABLE);
+            }
+
+            carRepository.save(car);
+        });
     }
 
 
@@ -195,7 +206,7 @@ public class BookingsServiceImpl implements BookingsService {
         Users user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        Verifications verification = verificationRepository.findVerificationByUser(user)
+        Verifications verification = verificationRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_VERIFIED));
 
         if (verification.getStatus() != VerStatusEnum.APPROVED) {
@@ -218,7 +229,7 @@ public class BookingsServiceImpl implements BookingsService {
                 .customerPhone(bookingsRequest.getCustomerPhone() == null
                         ? user.getPhoneNumber()
                         : bookingsRequest.getCustomerPhone())
-                .createdAt(LocalDate.now())
+                .createdAt(LocalDateTime.now())
                 .paymentDeadline(LocalDateTime.now().plusDays(1))
                 .build();
 
@@ -362,7 +373,7 @@ public class BookingsServiceImpl implements BookingsService {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Bookings> bookingsPage = bookingsRepository.findBookingsByUser(email, bookingCode, status, pageable);
 
-        return getBooking(bookingsPage);
+        return bookingsPage.map(this::getBooking);
     }
 
     @Override
@@ -380,5 +391,10 @@ public class BookingsServiceImpl implements BookingsService {
 
         booking.setStatus(BookingStatusEnum.CANCELLED);
         bookingsRepository.save(booking);
+    }
+
+    @Override
+    public BookingsResponse getBooking(Long bookingId) {
+        return null;
     }
 }

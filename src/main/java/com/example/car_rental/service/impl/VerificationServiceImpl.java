@@ -38,10 +38,8 @@ public class VerificationServiceImpl implements VerificationService {
         Users user = userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        Verifications verification = verificationRepository.findVerificationByUserId(user.getId());
-        if (verification == null) {
-            throw new AppException(ErrorCode.VERIFICATION_NOT_FOUND);
-        }
+        Verifications verification = verificationRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_VERIFIED));
 
         try {
             VerStatusEnum newStatus = VerStatusEnum.valueOf(request.getStatus().toUpperCase());
@@ -68,11 +66,8 @@ public class VerificationServiceImpl implements VerificationService {
         Users user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        Verifications verification = verificationRepository.findVerificationByUserId(user.getId());
-
-        if (verification == null) {
-            throw new AppException(ErrorCode.VERIFICATION_NOT_FOUND);
-        }
+        Verifications verification = verificationRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_VERIFIED));
 
         return VerificationResponse.builder()
                 .id(verification.getId())
@@ -99,12 +94,8 @@ public class VerificationServiceImpl implements VerificationService {
         Users user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        Verifications verification = verificationRepository.findVerificationByUserId(user.getId());
-
-        if (verification == null) {
-            verification = new Verifications();
-            verification.setUser(user);
-        }
+        Verifications verification = verificationRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_VERIFIED));
 
         if (verification.getStatus() == VerStatusEnum.APPROVED) {
             throw new AppException(ErrorCode.ALREADY_VERIFIED);
@@ -140,7 +131,7 @@ public class VerificationServiceImpl implements VerificationService {
                 verification.setLicenseImageUrl(LicenseImageUrl.get("url"));
                 verification.setPublicIdLicense(LicenseImageUrl.get("public_id"));
             }
-        }catch (IOException e){
+        } catch (IOException e) {
             throw new AppException(ErrorCode.UPDATE_IMAGE_FAIL);
         }
 

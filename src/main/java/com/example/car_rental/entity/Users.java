@@ -55,10 +55,10 @@ public class Users {
     @JoinColumn(name = "role_id")
     private Roles role;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Verifications verification;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "staff", cascade = CascadeType.ALL)
     private CarHandovers carHandovers;
 
     @OneToMany(mappedBy = "user")

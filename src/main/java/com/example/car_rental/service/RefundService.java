@@ -9,8 +9,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface RefundService {
     //USER
+    RefundResponse getRefundUser(String email,Long refundId);
     RefundResponse cancelRefund( Long bookingId , RefundRequest request, MultipartFile qrCode);
 
     //ADMIN
-    RefundResponse updateStatus(Long bookingId , RefundRequest request);
+    RefundResponse updateStatus(Long refundId , RefundRequest request, MultipartFile adminProofImage );
+    Page<RefundResponse> getAllRefund(String bookingCode, String status, int page, int size);
 }

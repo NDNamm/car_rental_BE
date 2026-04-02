@@ -1,11 +1,8 @@
 package com.example.car_rental.entity;
 
-import com.example.car_rental.entity.enums.PaymentMethodEnum;
-import com.example.car_rental.entity.enums.PaymentStatusEnum;
-import com.example.car_rental.entity.enums.PaymentTypeEnum;
 import com.example.car_rental.entity.enums.RefundStatus;
 import jakarta.persistence.*;
-import jdk.jshell.Snippet;
+
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -26,6 +23,9 @@ public class Refunds {
 
     @Column(name = "booking_code", unique = true, length = 20)
     private String bookingCode;
+
+    @Column(name = "reason")
+    private String reason;
 
     @Column(name = "amount", precision = 19, scale = 2)
     private BigDecimal amount;

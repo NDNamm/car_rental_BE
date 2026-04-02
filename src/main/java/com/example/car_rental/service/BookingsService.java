@@ -15,7 +15,8 @@ public interface BookingsService {
     //USER
     String addBooking(String email,BookingsRequest bookingsRequest);
     void updateBooking(String email, BookingsRequest bookingsRequest, Long bookingId);
-    Page<BookingsResponse> getAllBookingUser(String email ,String bookingCode,String status, int page, int size);
+    Page<BookingsResponse> getAllBookingUser(String email, String bookingCode,String status, int page, int size);
     void cancelBooking(String email,Long bookingId);
+    BookingsResponse getBooking(Long bookingId);
 
 }

@@ -1,5 +1,6 @@
 package com.example.car_rental.repository;
 
+import com.example.car_rental.dto.responseDTO.RefundResponse;
 import com.example.car_rental.entity.Refunds;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,6 +15,9 @@ public interface RefundRepository extends JpaRepository<Refunds, Long> {
     @Query("""
           select r from Refunds r
           where (:bookingCode is null or LOWER(r.bookingCode) LIKE LOWER(CONCAT('%', :bookingCode, '%')))
+          and (:status is null or LOWER(r.status) LIKE LOWER(CONCAT('%', :status, '%')))
           """)
-    Page<Refunds> findByBookingCode(@Param("bookingCode") String bookingCode, Pageable pageable);
+    Page<Refunds> findByBookingCode(@Param("bookingCode") String bookingCode,
+                                    @Param("status") String status,
+                                    Pageable pageable);
 }

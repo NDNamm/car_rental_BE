@@ -164,6 +164,8 @@ CREATE TABLE refunds (
     amount decimal(19,2),
     note Text,
     status VARCHAR(20) DEFAULT 'PENDING',
+    admin_proof_image VARCHAR(255), 
+    public_id_proof VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_refund_booking FOREIGN KEY (booking_id) REFERENCES bookings(id)
 );
@@ -173,6 +175,7 @@ CREATE TABLE car_handovers (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     booking_detail_id BIGINT NOT NULL, -- Bàn giao cụ thể từng xe trong đơn
     staff_id BIGINT,                  -- Nhân viên thực hiện bàn giao
+    reason varchar(255),
     handover_time DATETIME,           -- Lúc giao xe cho khách
     return_time DATETIME,             -- Lúc khách trả xe
     car_condition_before TEXT,        -- Tình trạng lúc giao (xước, xăng...)

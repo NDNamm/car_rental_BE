@@ -35,7 +35,7 @@ public class BookingController {
 
     @PatchMapping("/{bookingId}")
     public ApiResponse<Void> updateStatus(@PathVariable(value = "bookingId") Long bookingId,
-                                          @RequestBody BookingStatusRequest request) {
+                                          @RequestBody(required = false) BookingStatusRequest request) {
 
         bookingsService.updateBookingsStatus(request, bookingId);
         return ApiResponse.<Void>builder()

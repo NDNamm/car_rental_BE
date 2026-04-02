@@ -113,7 +113,8 @@ public class UserServiceImpl implements UserService {
         Users user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        Verifications verification = verificationRepository.findVerificationByUserId(user.getId());
+        Verifications verification = verificationRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_VERIFIED));
 
         if (verification != null &&
                 VerStatusEnum.APPROVED.equals(verification.getStatus()) &&

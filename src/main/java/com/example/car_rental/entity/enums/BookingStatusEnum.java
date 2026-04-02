@@ -8,5 +8,6 @@ public enum BookingStatusEnum {
     CONFIRMED,
     RENTED,
     COMPLETED,
-    CANCELLED;
+    CANCELLED,
+    REFUND;
 }

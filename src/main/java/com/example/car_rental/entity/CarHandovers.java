@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -19,17 +20,20 @@ public class CarHandovers {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "reason")
+    private String reason;
+
     @Column(name = "handover_time")
-    private LocalDate handoverTime;
+    private LocalDateTime handoverTime;
 
     @Column(name = "return_time")
-    private LocalDate returnTime;
+    private LocalDateTime returnTime;
 
     @Column(name = "car_condition_before")
     private String carConditionBefore;
 
     @Column(name = "car_condition_after")
-    private String getCarConditionBefore;
+    private String carConditionAfter;
 
     @Column(name = "note")
     private String note;
@@ -42,6 +46,6 @@ public class CarHandovers {
     @OneToOne
     @JsonIgnore
     @JoinColumn(name = "staff_id")
-    private Users user;
+    private Users staff;
 
 }

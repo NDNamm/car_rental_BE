@@ -40,6 +40,14 @@ public class RefundServiceImpl implements RefundService {
     final UserRepository userRepository;
 
     @Override
+    public RefundResponse getRefundUser(String email, Long refundId) {
+        Refunds refunds = refundRepository.findById(refundId)
+                .orElseThrow(() -> new AppException(ErrorCode.REFUND_NOT_FOUND));
+
+        return getRefund(refunds);
+    }
+
+    @Override
     public RefundResponse cancelRefund(Long bookingId, RefundRequest request, MultipartFile qrCode) {
 
         Bookings booking = bookingsRepository.findById(bookingId)
@@ -53,7 +61,6 @@ public class RefundServiceImpl implements RefundService {
         Users user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        LocalDateTime now = LocalDateTime.now();
         LocalDateTime bookingStart = booking.getCreatedAt();
         long hoursBefore = Duration.between(LocalDateTime.now(), bookingStart).toHours();
         int cancelPercent;
@@ -74,6 +81,7 @@ public class RefundServiceImpl implements RefundService {
             Refunds refund = Refunds.builder()
                     .booking(booking)
                     .bookingCode(booking.getBookingCode())
+                    .reason(request.getReason())
                     .hoursBefore(hoursBefore)
                     .cancelPercent(cancelPercent)
                     .amount(calculateCancelAmount(booking, cancelPercent))
@@ -90,15 +98,20 @@ public class RefundServiceImpl implements RefundService {
                 throw new AppException(ErrorCode.UPDATE_IMAGE_FAIL);
             }
 
+            refundRepository.save(refund);
+
+            booking.setStatus(BookingStatusEnum.CANCELLED);
+            bookingsRepository.save(booking);
             return getRefund(refund);
         }
     }
 
-    RefundResponse getRefund(Refunds refunds){
+    RefundResponse getRefund(Refunds refunds) {
 
-        return  RefundResponse.builder()
+        return RefundResponse.builder()
                 .id(refunds.getId())
                 .bookingCode(refunds.getBookingCode())
+                .reason(refunds.getReason())
                 .amount(refunds.getAmount())
                 .hoursBefore(refunds.getHoursBefore())
                 .cancelPercent(refunds.getCancelPercent())
@@ -115,15 +128,55 @@ public class RefundServiceImpl implements RefundService {
         BigDecimal divisor = new BigDecimal("100");
 
         // Công thức: (Tiền cọc * Phần trăm) / 100
-        BigDecimal refundAmount = booking.getTotalDepositAmount()
+        BigDecimal cancelAmount = booking.getTotalDepositAmount()
                 .multiply(percent)
                 .divide(divisor, 2, RoundingMode.HALF_UP);
 
+        BigDecimal refundAmount = booking.getTotalDepositAmount().subtract(cancelAmount);
         return refundAmount;
     }
 
     @Override
-    public RefundResponse updateStatus(Long bookingId, RefundRequest request) {
-        return null;
+    public RefundResponse updateStatus(Long refundId, RefundRequest request, MultipartFile adminProofImage) {
+
+        Refunds refunds = refundRepository.findById(refundId)
+                .orElseThrow(() -> new AppException(ErrorCode.REFUND_NOT_FOUND));
+
+
+        if (refunds.getStatus() == RefundStatus.COMPLETED) {
+            throw new AppException(ErrorCode.REFUND_ALREADY_COMPLETED);
+        }
+
+        Refunds refund = Refunds.builder()
+                .note("Đã hoàn " + refunds.getAmount() + "(" + refunds.getCancelPercent() + ") số tiền sau " + refunds.getHoursBefore() + "giờ cọc")
+                .status(RefundStatus.COMPLETED)
+                .build();
+
+        try {
+
+            Map<String, String> adminProofImageUrl = imageService.uploadImages(adminProofImage, "bookings", refunds.getBookingCode(), "adminProofImage");
+            refund.setAdminProofImage(adminProofImageUrl.get("url"));
+            refund.setPublicIdProof(adminProofImageUrl.get("public_id"));
+        } catch (IOException e) {
+            throw new AppException(ErrorCode.UPDATE_IMAGE_FAIL);
+        }
+
+        refundRepository.save(refund);
+        return getRefund(refund);
+
+    }
+
+    @Override
+    public Page<RefundResponse> getAllRefund(String bookingCode, String status, int page, int size) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Refunds> responsePage;
+
+        if (bookingCode == null || bookingCode.isEmpty()) {
+            responsePage = refundRepository.findAll(pageable);
+        } else {
+            responsePage = refundRepository.findByBookingCode(bookingCode,status, pageable);
+        }
+        return responsePage.map(this::getRefund);
     }
 }
