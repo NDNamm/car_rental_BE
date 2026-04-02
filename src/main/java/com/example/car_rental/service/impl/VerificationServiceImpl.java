@@ -2,6 +2,7 @@ package com.example.car_rental.service.impl;
 
 import com.example.car_rental.dto.requestDTO.VerificationRequest.UpdateVerificationStatusRequest;
 import com.example.car_rental.dto.requestDTO.VerificationRequest.VerificationRequest;
+import com.example.car_rental.dto.responseDTO.UserResponse;
 import com.example.car_rental.dto.responseDTO.VerificationResponse;
 import com.example.car_rental.entity.Users;
 import com.example.car_rental.entity.Verifications;
@@ -14,6 +15,10 @@ import com.example.car_rental.service.ImageService;
 import com.example.car_rental.service.VerificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +36,18 @@ public class VerificationServiceImpl implements VerificationService {
     private final VerificationRepository verificationRepository;
     private final UserRepository userRepository;
     private final ImageService imageService;
+
+    @Override
+    public Page<VerificationResponse> getAllVerifications(String fullName, String email, String status, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        Page<Verifications> versPage = null;
+
+        if (email == null || email.isEmpty() && fullName == null || fullName.isEmpty() && status == null || status.isEmpty()) {
+            versPage = verificationRepository.findAll(pageable);
+        } else versPage = verificationRepository.findAllVerification(email, fullName, status, pageable);
+
+        return versPage.map(this::mapToVerification);
+    }
 
     //ADMIN
     @Override
@@ -69,18 +86,7 @@ public class VerificationServiceImpl implements VerificationService {
         Verifications verification = verificationRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_VERIFIED));
 
-        return VerificationResponse.builder()
-                .id(verification.getId())
-                .userId(user.getId())
-                .cccdFrontUrl(verification.getCccdFrontUrl())
-                .cccdBackUrl(verification.getCccdBackUrl())
-                .licenseImageUrl(verification.getLicenseImageUrl())
-                .licenseNumber(verification.getLicenseNumber())
-                .status(verification.getStatus())
-                .note(verification.getNote())
-                .licenseExpiredDate(verification.getLicenseExpiredDate())
-                .createdAt(verification.getCreatedAt())
-                .build();
+        return mapToVerification(verification);
     }
 
     @Override
@@ -142,5 +148,22 @@ public class VerificationServiceImpl implements VerificationService {
 
         verificationRepository.save(verification);
 
+    }
+
+    private VerificationResponse mapToVerification(Verifications verification) {
+        return VerificationResponse.builder()
+                .id(verification.getId())
+                .userId(verification.getUser().getId())
+                .fullName(verification.getUser().getFullName())
+                .email(verification.getUser().getEmail())
+                .cccdFrontUrl(verification.getCccdFrontUrl())
+                .cccdBackUrl(verification.getCccdBackUrl())
+                .licenseImageUrl(verification.getLicenseImageUrl())
+                .licenseNumber(verification.getLicenseNumber())
+                .status(verification.getStatus())
+                .note(verification.getNote())
+                .licenseExpiredDate(verification.getLicenseExpiredDate())
+                .createdAt(verification.getCreatedAt())
+                .build();
     }
 }

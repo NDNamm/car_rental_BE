@@ -32,7 +32,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
 
                         .requestMatchers("/api/auth/**", "/api/webhooks/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/cars/**", "/api/category/**", "/api/feature/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/cars/**", "/api/category/**", "/api/features/**").permitAll()
 
                         .requestMatchers("/api/verification/me/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/api/users/me/**").hasAnyRole("USER", "ADMIN")
@@ -46,7 +46,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/bookings/**").hasRole("ADMIN")
                         .requestMatchers("/api/cars/**").hasRole("ADMIN")
                         .requestMatchers("/api/category/**").hasRole("ADMIN")
-                        .requestMatchers("/api/feature/**").hasRole("ADMIN")
+                        .requestMatchers("/api/features/**").hasRole("ADMIN")
 
                         .anyRequest().authenticated()
                 )

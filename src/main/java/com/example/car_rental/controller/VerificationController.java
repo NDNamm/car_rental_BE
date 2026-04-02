@@ -8,6 +8,7 @@ import com.example.car_rental.dto.responseDTO.VerificationResponse;
 import com.example.car_rental.service.VerificationService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,6 +21,21 @@ public class VerificationController {
     private final VerificationService verificationService;
 
     //ADMIN
+    @GetMapping("")
+    public ApiResponse<Page<VerificationResponse>> getAllVerificationUser(@RequestParam(required = false) String email,
+                                                                    @RequestParam(required = false) String fullName,
+                                                                    @RequestParam(required = false) String status,
+                                                                    @RequestParam(defaultValue = "0") int page,
+                                                                    @RequestParam(defaultValue = "10") int size) {
+        Page<VerificationResponse> verification = verificationService.getAllVerifications(email, fullName, status, page, size);
+
+        return ApiResponse.<Page<VerificationResponse>>builder()
+                .code(200)
+                .message("Get verification successful")
+                .data(verification)
+                .build();
+    }
+
     @PutMapping("/{userId}/status")
     public ApiResponse<Void> updateStatus(@PathVariable Long userId,
                                           @RequestBody UpdateVerificationStatusRequest request) {
