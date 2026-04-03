@@ -58,6 +58,7 @@ public class UserServiceImpl implements UserService {
                 .dob(user.getDob())
                 .avatarUrl(user.getAvatarUrl())
                 .gender(user.getGender())
+                .roleName(user.getRole().getRoleName())
                 .createdAt(user.getCreatedAt())
                 .build());
     }

@@ -20,5 +20,6 @@ public class UserResponse {
     private GenderEnum gender;
     private String email;
     private String phoneNumber;
+    private String roleName;
     private LocalDate createdAt;
 }
