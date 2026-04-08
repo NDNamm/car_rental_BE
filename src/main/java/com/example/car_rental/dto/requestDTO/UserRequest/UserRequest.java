@@ -14,6 +14,7 @@ import java.util.Date;
 public class UserRequest {
 
     private Long id;
+    private String email;
     private String fullName;
     private Date dob;
     private GenderEnum gender;

@@ -10,6 +10,6 @@ public interface CarService {
     void addCar(CarsRequest request, MultipartFile[] images);
     void updateCar(Long carId, CarsRequest request, MultipartFile[] images);
     void deleteCar(Long carId);
-    Page<CarResponse> getAllCar(String name, int page, int size);
+    Page<CarResponse> getAllCar(String name,String status ,int page, int size);
     CarResponse getCarById(Long carId);
 }

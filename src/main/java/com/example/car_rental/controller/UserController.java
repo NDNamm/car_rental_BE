@@ -2,11 +2,14 @@ package com.example.car_rental.controller;
 
 import com.example.car_rental.dto.requestDTO.UserRequest.UpdateRoleRequest;
 import com.example.car_rental.dto.requestDTO.UserRequest.UserRequest;
+import com.example.car_rental.dto.requestDTO.authRequest.RegisterRequest;
 import com.example.car_rental.dto.requestDTO.passwordRequest.ChangePassRequest;
 import com.example.car_rental.dto.responseDTO.ApiResponse;
+import com.example.car_rental.dto.responseDTO.AuthResponse;
 import com.example.car_rental.dto.responseDTO.UserResponse;
 import com.example.car_rental.service.PasswordService;
 import com.example.car_rental.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
@@ -51,6 +54,16 @@ public class UserController {
                 .build();
     }
 
+    @PostMapping("")
+    public ApiResponse<UserResponse> register(
+            @RequestBody @Valid RegisterRequest request
+    ) {
+        return ApiResponse.<UserResponse>builder()
+                .code(200)
+                .message("Add user successful")
+                .data(userService.add(request))
+                .build();
+    }
 
     //CLIENT
     @GetMapping("/me")
@@ -74,7 +87,7 @@ public class UserController {
     }
 
     @PatchMapping("/me/avatar")
-    public ApiResponse<Void> editAvatar(@RequestParam(value = "avatar") MultipartFile avatar) throws IOException {
+    public ApiResponse<Void> editAvatar(@RequestPart(value = "avatar") MultipartFile avatar) throws IOException {
         userService.editAvatar(avatar);
         return ApiResponse.<Void>builder()
                 .code(200)

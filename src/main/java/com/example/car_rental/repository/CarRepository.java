@@ -17,6 +17,9 @@ public interface CarRepository extends JpaRepository<Cars, Long> {
     @Query("""
           select c from Cars c
           where (:name is null or LOWER(c.name) LIKE LOWER(CONCAT('%', :name, '%')))
+                  AND (:status IS NULL OR LOWER(c.status) LIKE LOWER(CONCAT('%', :status, '%')))
           """)
-    Page<Cars> findByName(@Param("name") String name, Pageable pageable);
+    Page<Cars> findByCars(@Param("name") String name,
+                          @Param("status") String status,
+                          Pageable pageable);
 }

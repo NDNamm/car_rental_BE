@@ -3,6 +3,8 @@ package com.example.car_rental.service;
 
 import com.example.car_rental.dto.requestDTO.UserRequest.UpdateRoleRequest;
 import com.example.car_rental.dto.requestDTO.UserRequest.UserRequest;
+import com.example.car_rental.dto.requestDTO.authRequest.RegisterRequest;
+import com.example.car_rental.dto.responseDTO.AuthResponse;
 import com.example.car_rental.dto.responseDTO.UserResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.web.multipart.MultipartFile;
@@ -16,6 +18,8 @@ public interface UserService {
     void updateRole(Long id, UpdateRoleRequest request);
 
     void delete(Long id);
+
+    UserResponse add(RegisterRequest registerRequest);
 
     //USER
     UserResponse getProfile();

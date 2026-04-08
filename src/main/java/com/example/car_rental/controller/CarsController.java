@@ -22,10 +22,11 @@ public class CarsController {
     @GetMapping("")
     public ApiResponse<Page<CarResponse>> getAllCars(@RequestParam(defaultValue = "0", required = false) int page,
                                                      @RequestParam(defaultValue = "5") int size,
-                                                     @RequestParam(required = false) String name) {
+                                                     @RequestParam(required = false) String name,
+                                                     @RequestParam(required = false) String status) {
         return ApiResponse.<Page<CarResponse>>builder()
                 .code(200)
-                .data(carService.getAllCar(name, page, size))
+                .data(carService.getAllCar(name,status, page, size))
                 .build();
     }
 
@@ -53,7 +54,7 @@ public class CarsController {
 
 
     @PutMapping(value = "/{carId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ApiResponse<Void> addCar(@PathVariable(value = "carId") Long carId,
+    public ApiResponse<Void> updateCar(@PathVariable(value = "carId") Long carId,
                                     @RequestPart(value = "carRequest", required = false) String request,
                                     @RequestPart(value = "images", required = false) MultipartFile[] images) throws JsonProcessingException {
 

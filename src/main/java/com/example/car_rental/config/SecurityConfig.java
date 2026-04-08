@@ -35,7 +35,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/cars/**", "/api/category/**", "/api/features/**").permitAll()
 
                         .requestMatchers("/api/verification/me/**").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/api/users/me/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/users/me/**").hasAnyRole("USER", "ADMIN","STAFF")
                         .requestMatchers("/api/bookings/me/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/api/payment/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/api/refunds/me/**").hasAnyRole("USER", "ADMIN")

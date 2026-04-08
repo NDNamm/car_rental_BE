@@ -2,6 +2,8 @@ package com.example.car_rental.service.impl;
 
 import com.example.car_rental.dto.requestDTO.UserRequest.UpdateRoleRequest;
 import com.example.car_rental.dto.requestDTO.UserRequest.UserRequest;
+import com.example.car_rental.dto.requestDTO.authRequest.RegisterRequest;
+import com.example.car_rental.dto.responseDTO.AuthResponse;
 import com.example.car_rental.dto.responseDTO.UserResponse;
 import com.example.car_rental.entity.Roles;
 import com.example.car_rental.entity.Users;
@@ -22,6 +24,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -38,6 +41,7 @@ public class UserServiceImpl implements UserService {
     private final VerificationRepository verificationRepository;
     private final ImageService imageService;
     private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
 
     //ADMIN
     @Override
@@ -78,6 +82,37 @@ public class UserServiceImpl implements UserService {
     @Override
     public void delete(Long id) {
 
+    }
+
+    @Override
+    public UserResponse add(RegisterRequest request) {
+        if (userRepository.existsByEmail(request.getEmail())) {
+            throw new AppException(ErrorCode.EMAIL_EXISTED);
+        }
+        if (!request.getPassword().equals(request.getConfirmPassword())) {
+            throw new AppException(ErrorCode.PASSWORD_NOT_MATCH);
+        }
+
+        String roleName = request.getRoleName();
+
+
+        Users user = Users.builder()
+                .email(request.getEmail())
+                .fullName(request.getFullName())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .createdAt(LocalDate.now())
+                .role(roleRepository.findByRoleName(roleName)
+                        .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND)))
+                .build();
+
+        userRepository.save(user);
+
+        return UserResponse.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .fullName(user.getFullName())
+                .roleName(user.getRole().getRoleName())
+                .build();
     }
 
     //USER

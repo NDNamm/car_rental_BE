@@ -212,12 +212,12 @@ public class CarServiceImpl implements CarService {
     }
 
     @Override
-    public Page<CarResponse> getAllCar(String name, int page, int size) {
+    public Page<CarResponse> getAllCar(String name,String status, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
         Page<Cars> carsPage;
 
         if(name != null && !name.isEmpty()) {
-            carsPage = carRepository.findByName(name, pageable);
+            carsPage = carRepository.findByCars(name,status, pageable);
         } else {
             carsPage = carRepository.findAll(pageable);
         }

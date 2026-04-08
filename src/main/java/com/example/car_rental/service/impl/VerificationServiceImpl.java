@@ -101,7 +101,10 @@ public class VerificationServiceImpl implements VerificationService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         Verifications verification = verificationRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_VERIFIED));
+                .orElseGet(() -> Verifications.builder()
+                        .user(user)
+                        .status(VerStatusEnum.PENDING)
+                        .build());
 
         if (verification.getStatus() == VerStatusEnum.APPROVED) {
             throw new AppException(ErrorCode.ALREADY_VERIFIED);

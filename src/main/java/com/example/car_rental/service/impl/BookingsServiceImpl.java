@@ -74,6 +74,7 @@ public class BookingsServiceImpl implements BookingsService {
                 .totalDepositAmount(booking.getTotalDepositAmount())
                 .status(booking.getStatus())
                 .createdAt(booking.getCreatedAt())
+                .nameStaff(booking.getUser().getFullName())
                 .bookingDetailsResponse(getBookingDetails(booking.getBookingDetailsList()))
                 .build();
     }
