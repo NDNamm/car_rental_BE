@@ -45,7 +45,7 @@ public class RefundController {
                 .build();
     }
 
-    @PutMapping(value = "/me/cancel/{bookingId}")
+    @PutMapping(value = "/me/{bookingId}/cancel")
     public ApiResponse<RefundResponse> cancelRefund(@PathVariable(value = "bookingId") Long bookingId,
                                                     @RequestPart(value = "refundRequest", required = false) String requestJson,
                                                     @RequestPart(value = "qrCode") MultipartFile qrCode) throws JsonProcessingException {
@@ -61,7 +61,7 @@ public class RefundController {
     }
 
     @GetMapping("/me/{refundId}")
-    public ApiResponse<RefundResponse> getRefundResponse(@PathVariable(value = "refundId") Long refundId) {
+    public ApiResponse<RefundResponse> getRefund(@PathVariable(value = "refundId") Long refundId) {
 
         String email = SecurityContextHolder
                 .getContext()

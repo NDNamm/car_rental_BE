@@ -68,6 +68,18 @@ public class CarsController {
                 .build();
     }
 
+    @PatchMapping(value = "/{carId}")
+    public ApiResponse<Void> updateCar(@PathVariable(value = "carId") Long carId,
+                                       @RequestBody String Status)  {
+
+        carService.updateStatusCar(carId, Status);
+
+        return ApiResponse.<Void>builder()
+                .code(200)
+                .message("Update car successful")
+                .build();
+    }
+
     @DeleteMapping("/{carId}")
     public ApiResponse<Void> deleteCar(@PathVariable("carId") Long carId) {
 

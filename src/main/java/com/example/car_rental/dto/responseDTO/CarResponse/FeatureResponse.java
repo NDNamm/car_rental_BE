@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class CarFeatureResponse {
+public class FeatureResponse {
     private Long id;
     private String name;
 }

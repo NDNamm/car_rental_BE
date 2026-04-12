@@ -65,7 +65,7 @@ public class Users {
     @JsonIgnore
     private List<Bookings> myBookings;
 
-    @OneToMany(mappedBy = "staff")
+    @OneToMany(mappedBy = "changedBy")
     @JsonIgnore
-    private List<Bookings> staffBookings;
+    private List<BookingStatusHistory> changeStatusHistories;
 }

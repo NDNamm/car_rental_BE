@@ -111,6 +111,7 @@ public class RefundServiceImpl implements RefundService {
         return RefundResponse.builder()
                 .id(refunds.getId())
                 .bookingCode(refunds.getBookingCode())
+                .customerName(refunds.getBooking().getCustomerName())
                 .reason(refunds.getReason())
                 .amount(refunds.getAmount())
                 .hoursBefore(refunds.getHoursBefore())
@@ -139,7 +140,7 @@ public class RefundServiceImpl implements RefundService {
     @Override
     public RefundResponse updateStatus(Long refundId, RefundRequest request, MultipartFile adminProofImage) {
 
-        Refunds refunds = refundRepository.findById(refundId)
+            Refunds refunds = refundRepository.findById(refundId)
                 .orElseThrow(() -> new AppException(ErrorCode.REFUND_NOT_FOUND));
 
 

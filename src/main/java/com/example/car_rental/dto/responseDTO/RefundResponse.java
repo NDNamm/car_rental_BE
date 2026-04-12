@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 public class RefundResponse {
     private Long id;
     private String bookingCode;
+    private String customerName;
     private BigDecimal amount;
     private String reason;
     private Long hoursBefore;

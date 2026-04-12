@@ -59,17 +59,16 @@ public class Bookings {
     @JoinColumn(name = "user_id")
     private Users user;
 
-    @ManyToOne
-    @JsonIgnore
-    @JoinColumn(name = "staff_id")
-    private Users staff;
-
     @OneToOne(mappedBy = "booking", cascade = CascadeType.ALL)
     private Payments payment;
 
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<BookingDetails> bookingDetailsList;
+
+    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<BookingStatusHistory> bookingStatusHistory;
 
     @OneToOne(mappedBy = "booking", cascade = CascadeType.ALL)
     private Refunds refunds;

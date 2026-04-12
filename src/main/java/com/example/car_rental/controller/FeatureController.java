@@ -1,6 +1,6 @@
 package com.example.car_rental.controller;
 
-import com.example.car_rental.dto.requestDTO.CarRequest.CarFeatureRequest;
+import com.example.car_rental.dto.requestDTO.CarRequest.FeatureRequest;
 import com.example.car_rental.dto.responseDTO.ApiResponse;
 import com.example.car_rental.dto.responseDTO.CategoryResponse;
 import com.example.car_rental.service.FeatureService;
@@ -25,7 +25,7 @@ public class FeatureController {
     }
 
     @PostMapping(value = "")
-    public ApiResponse<Void> addFeature(@RequestBody CarFeatureRequest request) {
+    public ApiResponse<Void> addFeature(@RequestBody FeatureRequest request) {
 
         featureService.addFeature(request);
 
@@ -38,7 +38,7 @@ public class FeatureController {
 
     @PutMapping(value = "/{featureId}")
     public ApiResponse<Void> addFeature(@PathVariable(value = "featureId") Long featureId,
-                                        @RequestBody CarFeatureRequest request) {
+                                        @RequestBody FeatureRequest request) {
 
         featureService.updateFeature(featureId, request);
 

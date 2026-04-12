@@ -59,6 +59,7 @@ public enum ErrorCode {
     REFUND_NOT_FOUND(9007, "REFUND not found", HttpStatus.NOT_FOUND),
     REFUND_ALREADY_COMPLETED(9007, "REFUND not found", HttpStatus.NOT_FOUND),
     HANDOVER_NOT_FOUND(9008,"HANDOVER_NOT_FOUND", HttpStatus.NOT_FOUND),
+    INVALID_CAR_STATUS(9009,"INVALID_CAR_STATUS", HttpStatus.BAD_REQUEST),
 
     DETAIL_NOT_FOUND(10001,"Booking detail not found", HttpStatus.NOT_FOUND),
 

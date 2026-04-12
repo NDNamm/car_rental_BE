@@ -1,6 +1,8 @@
 package com.example.car_rental.dto.requestDTO;
 
 import com.example.car_rental.entity.enums.PaymentTypeEnum;
+import com.example.car_rental.entity.enums.RefundStatus;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -16,6 +18,7 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class RefundRequest {
 
     private String bookingCode;
@@ -23,10 +26,9 @@ public class RefundRequest {
     private BigDecimal amount;
     private Long hoursBefore;
     private int cancelPercent;
-    private String publicId;
     private String qrCodeUrl;
     private String note;
-    private String publicIdProof;
     private String adminProofImage;
     private LocalDateTime createdAt;
+    private RefundStatus status;
 }

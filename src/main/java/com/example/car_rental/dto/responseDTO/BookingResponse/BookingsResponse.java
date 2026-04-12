@@ -29,4 +29,5 @@ public class BookingsResponse {
     private String note;
     private LocalDateTime paymentDeadline;
     private List<BookingDetailResponse> bookingDetailsResponse;
+    private List<BookingStatusResponse> bookingStatusResponses;
 }

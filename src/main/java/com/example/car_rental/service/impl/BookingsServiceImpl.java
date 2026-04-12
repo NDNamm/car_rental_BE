@@ -4,6 +4,7 @@ import com.example.car_rental.dto.requestDTO.BookingsRequest.BookingDetailReques
 import com.example.car_rental.dto.requestDTO.BookingsRequest.BookingStatusRequest;
 import com.example.car_rental.dto.requestDTO.BookingsRequest.BookingsRequest;
 import com.example.car_rental.dto.responseDTO.BookingResponse.BookingDetailResponse;
+import com.example.car_rental.dto.responseDTO.BookingResponse.BookingStatusResponse;
 import com.example.car_rental.dto.responseDTO.BookingResponse.BookingsResponse;
 import com.example.car_rental.dto.responseDTO.CarResponse.CarImageResponse;
 import com.example.car_rental.dto.responseDTO.CarResponse.CarResponse;
@@ -45,6 +46,7 @@ public class BookingsServiceImpl implements BookingsService {
     final PaymentsService paymentsService;
     final VerificationRepository verificationRepository;
     final CarHandoverRepository carHandoverRepository;
+    final BookingStatusHistoryRepository bookingStatusHistoryRepository;
 
 
     @Override
@@ -64,7 +66,7 @@ public class BookingsServiceImpl implements BookingsService {
 
     private BookingsResponse getBooking(Bookings booking) {
 
-        return  BookingsResponse.builder()
+        return BookingsResponse.builder()
                 .id(booking.getId())
                 .bookingCode(booking.getBookingCode())
                 .customerEmail(booking.getCustomerEmail())
@@ -76,7 +78,22 @@ public class BookingsServiceImpl implements BookingsService {
                 .createdAt(booking.getCreatedAt())
                 .nameStaff(booking.getUser().getFullName())
                 .bookingDetailsResponse(getBookingDetails(booking.getBookingDetailsList()))
+                .bookingStatusResponses(getBookingStatusHistory(booking.getBookingStatusHistory()))
                 .build();
+    }
+
+    private List<BookingStatusResponse> getBookingStatusHistory(List<BookingStatusHistory> historyList) {
+        if (historyList == null) return Collections.emptyList();
+
+        return historyList.stream().map(history -> BookingStatusResponse.builder()
+                .id(history.getId())
+                .oldStatus(history.getOldStatus())
+                .newStatus(history.getNewStatus())
+                .reason(history.getReason())
+                .note(history.getNote())
+                .changedAt(history.getChangedAt())
+                .changedBy(history.getChangedBy().getFullName())
+                .build()).collect(Collectors.toList());
     }
 
     private List<BookingDetailResponse> getBookingDetails(List<BookingDetails> bookingDetailsList) {
@@ -143,7 +160,6 @@ public class BookingsServiceImpl implements BookingsService {
         if (!isValid) throw new AppException(ErrorCode.INVALID_STATUS_TRANSITION);
 
         booking.setStatus(next);
-        booking.setStaff(staff);
         bookingsRepository.save(booking);
 
         // XỬ LÝ LOGIC CHI TIẾT THEO TRẠNG THÁI MỚI
@@ -187,6 +203,18 @@ public class BookingsServiceImpl implements BookingsService {
             }
 
             carRepository.save(car);
+
+            BookingStatusHistory history = BookingStatusHistory.builder()
+                    .booking(booking)
+                    .oldStatus(current)
+                    .newStatus(next)
+                    .reason(request.getReason())
+                    .note(request.getNote())
+                    .changedAt(LocalDateTime.now())
+                    .changedBy(staff)
+                    .build();
+
+            bookingStatusHistoryRepository.save(history);
         });
     }
 

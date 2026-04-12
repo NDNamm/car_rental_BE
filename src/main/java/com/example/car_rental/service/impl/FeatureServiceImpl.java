@@ -1,6 +1,6 @@
 package com.example.car_rental.service.impl;
 
-import com.example.car_rental.dto.requestDTO.CarRequest.CarFeatureRequest;
+import com.example.car_rental.dto.requestDTO.CarRequest.FeatureRequest;
 import com.example.car_rental.dto.responseDTO.CategoryResponse;
 import com.example.car_rental.entity.CarFeatures;
 import com.example.car_rental.exception.AppException;
@@ -19,7 +19,7 @@ public class FeatureServiceImpl implements FeatureService {
     private final FeatureRepository featureRepository;
 
     @Override
-    public void addFeature(CarFeatureRequest request) {
+    public void addFeature(FeatureRequest request) {
         if (featureRepository.existsByName(request.getName())) {
             throw new AppException(ErrorCode.FEATURE_EXISTED);
         }
@@ -32,7 +32,7 @@ public class FeatureServiceImpl implements FeatureService {
     }
 
     @Override
-    public void updateFeature(Long featureId, CarFeatureRequest request) {
+    public void updateFeature(Long featureId, FeatureRequest request) {
         CarFeatures carFeatures = featureRepository.findById(featureId)
                 .orElseThrow(() -> new AppException(ErrorCode.FEATURE_NOT_FOUND));
 

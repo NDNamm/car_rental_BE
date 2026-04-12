@@ -25,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -67,7 +68,7 @@ public class CarServiceImpl implements CarService {
                 .depositAmount(request.getDepositAmount())
                 .status(request.getStatus() != null ? request.getStatus() : CarStatusEnum.AVAILABLE)
                 .description(request.getDescription())
-                .createdAt(LocalDate.now())
+                .createdAt(LocalDateTime.now())
                 .build();
 
         CarDetail carDetail = CarDetail.builder()
@@ -77,7 +78,7 @@ public class CarServiceImpl implements CarService {
                 .manufactureYear(carDetailRequest.getManufactureYear())
                 .address(carDetailRequest.getAddress())
                 .city(carDetailRequest.getCity())
-                .deliveryAvailable(carDetailRequest.getDeliveryAvailable())
+                .deliveryAvailable((carDetailRequest.getDeliveryAvailable() != null && carDetailRequest.getDeliveryAvailable()))
                 .deliveryFee(carDetailRequest.getDeliveryFee())
                 .features(carFeatures)
                 .car(car)
@@ -209,6 +210,20 @@ public class CarServiceImpl implements CarService {
         }
 
         carRepository.delete(car);
+    }
+
+    @Override
+    public void updateStatusCar(Long carId, String status) {
+        Cars car = carRepository.findById(carId)
+                .orElseThrow(() -> new AppException(ErrorCode.CAR_NOT_FOUND));
+
+        try {
+            CarStatusEnum carStatusEnum = CarStatusEnum.valueOf(status.toUpperCase());
+            car.setStatus(carStatusEnum);
+            carRepository.save(car);
+        } catch (IllegalArgumentException e) {
+            throw new AppException(ErrorCode.INVALID_CAR_STATUS);
+        }
     }
 
     @Override

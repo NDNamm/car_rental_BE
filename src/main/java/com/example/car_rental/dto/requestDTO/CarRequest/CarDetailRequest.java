@@ -1,5 +1,6 @@
 package com.example.car_rental.dto.requestDTO.CarRequest;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,15 +11,16 @@ import java.util.Set;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class CarDetailRequest {
 
-    private Integer  seatCount;
+    private Integer seatCount;
     private String fuelType;
     private String transmission;
     private Integer  manufactureYear;
     private String address;
     private String city;
-    private Boolean deliveryAvailable;
+    private Boolean deliveryAvailable = false;
     private BigDecimal deliveryFee;
     private Set<Long> features;
 }

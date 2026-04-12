@@ -3,17 +3,17 @@ package com.example.car_rental.dto.requestDTO.CarRequest;
 import com.example.car_rental.entity.CarImages;
 import com.example.car_rental.entity.Categories;
 import com.example.car_rental.entity.enums.CarStatusEnum;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class CarsRequest {
     private Long id;
     private String name;
@@ -23,7 +23,6 @@ public class CarsRequest {
     private CarStatusEnum status;
     private String description;
     private int tripCount;
-    private LocalDate createdAt;
     private Long categoryId;
     private CarDetailRequest carDetailRequest;
 }

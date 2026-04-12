@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -25,7 +26,7 @@ public class CarResponse {
     private BigDecimal depositAmount;
     private CarStatusEnum status;
     private int tripCount;
-    private LocalDate createdAt;
+    private LocalDateTime createdAt;
     private String categoryName;
     private List<CarImageResponse> carImageResponses;
     private CarDetailResponse carDetailResponse;
