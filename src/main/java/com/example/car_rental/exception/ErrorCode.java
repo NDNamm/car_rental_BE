@@ -67,7 +67,8 @@ public enum ErrorCode {
 
     PAYMENT_NOT_FOUND(12001, "PAYMENT_NOT_FOUND", HttpStatus.NOT_FOUND),
 
-    UPDATE_IMAGE_FAIL(6003, "Failed to update image", HttpStatus.INTERNAL_SERVER_ERROR);
+    UPDATE_IMAGE_FAIL(6003, "Failed to update image", HttpStatus.INTERNAL_SERVER_ERROR),
+    IMAGE_REQUIRED(6004, "Image is required", HttpStatus.BAD_REQUEST);
 
     private final int code;
     private final String message;

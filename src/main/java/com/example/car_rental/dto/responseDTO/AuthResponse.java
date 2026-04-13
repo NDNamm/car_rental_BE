@@ -14,5 +14,6 @@ public class AuthResponse {
     private String fullName;
     private String email;
     private String roleName;
+    private String avatarUrl;
     private String token;
 }

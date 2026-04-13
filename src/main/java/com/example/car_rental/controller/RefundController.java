@@ -32,8 +32,8 @@ public class RefundController {
 
     @PutMapping(value = "/{refundId}")
     public ApiResponse<RefundResponse> updateRefundResponse(@PathVariable(value = "refundId") Long refundId,
-                                                            @RequestPart(value = "refundRequest") String requestJson,
-                                                            @RequestPart MultipartFile image) throws JsonProcessingException {
+                                                            @RequestPart(value = "refundRequest", required = false) String requestJson,
+                                                            @RequestPart(required = false, value = "image") MultipartFile image) throws JsonProcessingException {
 
         ObjectMapper objectMapper = new ObjectMapper();
         RefundRequest request = objectMapper.readValue(requestJson, RefundRequest.class);

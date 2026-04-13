@@ -119,7 +119,7 @@ public class RefundServiceImpl implements RefundService {
                 .status(refunds.getStatus())
                 .note(refunds.getNote())
                 .qrCodeUrl(refunds.getQrCodeUrl())
-                .adminProofImage(refunds.getPublicIdProof())
+                .adminProofImage(refunds.getAdminProofImage())
                 .createdAt(refunds.getCreatedAt())
                 .build();
     }
@@ -140,31 +140,54 @@ public class RefundServiceImpl implements RefundService {
     @Override
     public RefundResponse updateStatus(Long refundId, RefundRequest request, MultipartFile adminProofImage) {
 
-            Refunds refunds = refundRepository.findById(refundId)
+        Refunds refunds = refundRepository.findById(refundId)
                 .orElseThrow(() -> new AppException(ErrorCode.REFUND_NOT_FOUND));
-
 
         if (refunds.getStatus() == RefundStatus.COMPLETED) {
             throw new AppException(ErrorCode.REFUND_ALREADY_COMPLETED);
         }
 
-        Refunds refund = Refunds.builder()
-                .note("Đã hoàn " + refunds.getAmount() + "(" + refunds.getCancelPercent() + ") số tiền sau " + refunds.getHoursBefore() + "giờ cọc")
-                .status(RefundStatus.COMPLETED)
-                .build();
+        if (request.getStatus() == RefundStatus.COMPLETED) {
 
-        try {
+            if (adminProofImage == null) {
+                throw new AppException(ErrorCode.IMAGE_REQUIRED);
+            }
 
-            Map<String, String> adminProofImageUrl = imageService.uploadImages(adminProofImage, "bookings", refunds.getBookingCode(), "adminProofImage");
-            refund.setAdminProofImage(adminProofImageUrl.get("url"));
-            refund.setPublicIdProof(adminProofImageUrl.get("public_id"));
-        } catch (IOException e) {
-            throw new AppException(ErrorCode.UPDATE_IMAGE_FAIL);
+            refunds.setStatus(RefundStatus.COMPLETED);
+
+            refunds.setNote(
+                    "Đã hoàn " + refunds.getAmount()
+                            + " (" + refunds.getCancelPercent() + "%)"
+                            + " số tiền sau " + refunds.getHoursBefore() + " giờ cọc"
+            );
+
+            try {
+                Map<String, String> adminProofImageUrl = imageService.uploadImages(
+                        adminProofImage,
+                        "bookings",
+                        refunds.getBookingCode(),
+                        "adminProofImage"
+                );
+
+                refunds.setAdminProofImage(adminProofImageUrl.get("url"));
+                refunds.setPublicIdProof(adminProofImageUrl.get("public_id"));
+
+            } catch (IOException e) {
+                throw new AppException(ErrorCode.UPDATE_IMAGE_FAIL);
+            }
+
         }
 
-        refundRepository.save(refund);
-        return getRefund(refund);
+        else if (request.getStatus() == RefundStatus.REJECTED) {
 
+            refunds.setStatus(RefundStatus.REJECTED);
+            refunds.setNote(request.getNote());
+
+        }
+
+        refundRepository.save(refunds);
+
+        return getRefund(refunds);
     }
 
     @Override

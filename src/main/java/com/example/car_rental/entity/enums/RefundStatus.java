@@ -5,5 +5,6 @@ import lombok.Getter;
 @Getter
 public enum RefundStatus {
     PENDING,
-    COMPLETED
+    COMPLETED,
+    REJECTED
 }
