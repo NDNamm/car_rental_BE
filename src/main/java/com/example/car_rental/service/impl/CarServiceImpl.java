@@ -248,6 +248,14 @@ public class CarServiceImpl implements CarService {
         return mapToCarResponse(car);
     }
 
+    @Override
+    public Page<CarResponse> getAllCarsByCategoryId(Long categoryId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        Page<Cars> carsPage = carRepository.findByCategoryId(categoryId, pageable);
+
+        return carsPage.map(this::mapToCarResponse);
+    }
+
     private CarResponse mapToCarResponse(Cars car) {
 
         CarDetailResponse carDetailResponse = CarDetailResponse.builder()

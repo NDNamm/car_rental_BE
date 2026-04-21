@@ -13,4 +13,5 @@ public interface CarService {
     void updateStatusCar(Long carId, String status);
     Page<CarResponse> getAllCar(String name,String status ,int page, int size);
     CarResponse getCarById(Long carId);
+    Page<CarResponse> getAllCarsByCategoryId(Long categoryId, int page, int size);
 }

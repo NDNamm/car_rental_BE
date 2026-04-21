@@ -57,8 +57,8 @@ public class BookingController {
 
     //USER
     @GetMapping("/me")
-    public ApiResponse<Page<BookingsResponse>> getAllBookingsUser(@RequestParam String bookingCode,
-                                                                  @RequestParam String status,
+    public ApiResponse<Page<BookingsResponse>> getAllBookingsUser(@RequestParam(required = false) String bookingCode,
+                                                                  @RequestParam(required = false) String status,
                                                                   @RequestParam(defaultValue = "0", required = false) int page,
                                                                   @RequestParam(defaultValue = "5") int size) {
 

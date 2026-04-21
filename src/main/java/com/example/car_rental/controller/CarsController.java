@@ -1,6 +1,7 @@
 package com.example.car_rental.controller;
 
 import com.example.car_rental.dto.requestDTO.CarRequest.CarsRequest;
+import com.example.car_rental.dto.requestDTO.VerificationRequest.VerificationRequest;
 import com.example.car_rental.dto.responseDTO.ApiResponse;
 import com.example.car_rental.dto.responseDTO.CarResponse.CarResponse;
 import com.example.car_rental.service.CarService;

@@ -72,3 +72,5 @@ cloudinary:
 
 jwt:
   secret: alu/+a1d0NbwC4xqaJsIVyIS8XG+jrLIuNDNqv6I7Jg=
+
+clientId: 165678719567-9v5qt4rqe42rhddpj1m7jllog3j6lm0l.apps.googleusercontent.com

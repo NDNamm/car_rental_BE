@@ -60,12 +60,13 @@ public class VerificationController {
     }
 
     @PostMapping(value = "/me", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ApiResponse<Void> update(@RequestPart(value = "verificationRequest", required = false) String requestJson,
-                                    @RequestPart(value = "cccdFront", required = false) MultipartFile cccdFront,
-                                    @RequestPart(value = "cccdBack", required = false) MultipartFile cccdBack,
-                                    @RequestPart(value = "license", required = false) MultipartFile license) throws JsonProcessingException {
+    public ApiResponse<Void> update(@RequestPart(value = "verificationRequest") String requestJson,
+                                    @RequestPart(value = "cccdFront") MultipartFile cccdFront,
+                                    @RequestPart(value = "cccdBack") MultipartFile cccdBack,
+                                    @RequestPart(value = "license") MultipartFile license) throws JsonProcessingException {
 
-        VerificationRequest request = new ObjectMapper().readValue(requestJson, VerificationRequest.class);
+        ObjectMapper objectMapper = new ObjectMapper();
+        VerificationRequest request = objectMapper.readValue(requestJson, VerificationRequest.class);
         verificationService.updateVer(request, cccdFront, cccdBack, license);
 
         return ApiResponse.<Void>builder()

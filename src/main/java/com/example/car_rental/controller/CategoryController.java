@@ -5,8 +5,10 @@ import com.example.car_rental.dto.requestDTO.UserRequest.UpdateRoleRequest;
 import com.example.car_rental.dto.requestDTO.UserRequest.UserRequest;
 import com.example.car_rental.dto.requestDTO.passwordRequest.ChangePassRequest;
 import com.example.car_rental.dto.responseDTO.ApiResponse;
+import com.example.car_rental.dto.responseDTO.CarResponse.CarResponse;
 import com.example.car_rental.dto.responseDTO.CategoryResponse;
 import com.example.car_rental.dto.responseDTO.UserResponse;
+import com.example.car_rental.service.CarService;
 import com.example.car_rental.service.CategoryService;
 import com.example.car_rental.service.PasswordService;
 import com.example.car_rental.service.UserService;
@@ -19,10 +21,11 @@ import java.io.IOException;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/category")
+@RequestMapping("/api/categories")
 public class CategoryController {
 
     private final CategoryService categoryService;
+    private final CarService carService;
 
     @GetMapping("")
     public ApiResponse<Page<CategoryResponse>> getAllCategory(@RequestParam(defaultValue = "0", required = false) int page,
@@ -31,6 +34,16 @@ public class CategoryController {
         return ApiResponse.<Page<CategoryResponse>>builder()
                 .code(200)
                 .data(categoryService.getAllCategories(name, page, size))
+                .build();
+    }
+
+    @GetMapping("{categoryId}/cars")
+    public ApiResponse<Page<CarResponse>> getAllCarByCategoryId(@RequestParam(defaultValue = "0", required = false) int page,
+                                                                @RequestParam(defaultValue = "5") int size,
+                                                                @PathVariable Long categoryId) {
+        return ApiResponse.<Page<CarResponse>>builder()
+                .code(200)
+                .data(carService.getAllCarsByCategoryId(categoryId, page, size))
                 .build();
     }
 

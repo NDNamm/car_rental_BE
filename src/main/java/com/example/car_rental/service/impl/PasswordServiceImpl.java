@@ -67,6 +67,7 @@ public class PasswordServiceImpl implements PasswordService {
                 .getAuthentication()
                 .getName();
 
+
         Users user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
@@ -74,7 +75,7 @@ public class PasswordServiceImpl implements PasswordService {
             throw new AppException(ErrorCode.PASSWORD_OLD_NOT_MATCH);
         }
 
-        if (!request.getNewPassword().equals(request.getNewConfirmPassword())) {
+        if (!request.getNewPassword().equals(request.getConfirmNewPassword())) {
             throw new AppException(ErrorCode.PASSWORD_NOT_MATCH);
         }
 

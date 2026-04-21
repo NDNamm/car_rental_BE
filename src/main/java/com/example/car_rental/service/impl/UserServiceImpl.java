@@ -135,6 +135,7 @@ public class UserServiceImpl implements UserService {
                 .dob(user.getDob())
                 .gender(user.getGender())
                 .createdAt(user.getCreatedAt())
+                .roleName(user.getRole().getRoleName())
                 .build();
     }
 
@@ -148,16 +149,6 @@ public class UserServiceImpl implements UserService {
 
         Users user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-
-        Verifications verification = verificationRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_VERIFIED));
-
-        if (verification != null &&
-                VerStatusEnum.APPROVED.equals(verification.getStatus()) &&
-                userRequest.getFullName() != null) {
-
-            throw new AppException(ErrorCode.CANNOT_UPDATE_NAME_AFTER_VERIFICATION);
-        }
 
         if (userRequest.getFullName() != null) {
             user.setFullName(userRequest.getFullName());
@@ -196,9 +187,9 @@ public class UserServiceImpl implements UserService {
                     imageService.deleteImages(user.getPublicIdAvatar());
                 }
 
-                Map<String, String> cccdFrontUrl = imageService.uploadImages(avatar, "users", user.getFullName(), "avatar");
-                user.setAvatarUrl(cccdFrontUrl.get("url"));
-                user.setPublicIdAvatar(cccdFrontUrl.get("public_id"));
+                Map<String, String> avatarUrl = imageService.uploadImages(avatar, "users", user.getFullName(), "avatar");
+                user.setAvatarUrl(avatarUrl.get("url"));
+                user.setPublicIdAvatar(avatarUrl.get("public_id"));
             }
         } catch (IOException e) {
             throw new AppException(ErrorCode.UPDATE_IMAGE_FAIL);

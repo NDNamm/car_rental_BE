@@ -37,6 +37,7 @@ public class VerificationServiceImpl implements VerificationService {
     private final UserRepository userRepository;
     private final ImageService imageService;
 
+    //ADMIN
     @Override
     public Page<VerificationResponse> getAllVerifications(String fullName, String email, String status, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
@@ -49,7 +50,7 @@ public class VerificationServiceImpl implements VerificationService {
         return versPage.map(this::mapToVerification);
     }
 
-    //ADMIN
+
     @Override
     public void updateStatus(Long id, UpdateVerificationStatusRequest request) {
         Users user = userRepository.findById(id)
@@ -84,7 +85,10 @@ public class VerificationServiceImpl implements VerificationService {
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         Verifications verification = verificationRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_VERIFIED));
+                .orElseGet(() -> Verifications.builder()
+                        .user(user)
+                        .status(VerStatusEnum.PENDING)
+                        .build());
 
         return mapToVerification(verification);
     }

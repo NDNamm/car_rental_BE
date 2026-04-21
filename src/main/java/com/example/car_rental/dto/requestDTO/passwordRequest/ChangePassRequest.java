@@ -19,5 +19,5 @@ public class ChangePassRequest {
 
     @NotBlank(message = "PASSWORD_INVALID")
     @Size(min = 8, max = 20, message = "PASSWORD_INVALID")
-    String newConfirmPassword;
+    String confirmNewPassword;
 }

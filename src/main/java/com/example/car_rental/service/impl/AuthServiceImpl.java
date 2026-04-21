@@ -5,10 +5,13 @@ import com.example.car_rental.dto.requestDTO.authRequest.RegisterRequest;
 import com.example.car_rental.dto.responseDTO.AuthResponse;
 import com.example.car_rental.entity.Roles;
 import com.example.car_rental.entity.Users;
+import com.example.car_rental.entity.Verifications;
+import com.example.car_rental.entity.enums.VerStatusEnum;
 import com.example.car_rental.exception.AppException;
 import com.example.car_rental.exception.ErrorCode;
 import com.example.car_rental.repository.RoleRepository;
 import com.example.car_rental.repository.UserRepository;
+import com.example.car_rental.repository.VerificationRepository;
 import com.example.car_rental.security.JwtUtils;
 import com.example.car_rental.service.AuthService;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
@@ -25,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
-import org.springframework.security.core.userdetails.User;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -43,6 +46,10 @@ public class AuthServiceImpl implements AuthService {
     private final RoleRepository roleRepository;
     private final JwtUtils jwtUtils;
     private final RedisTemplate<String, Object> redisTemplate;
+    private final VerificationRepository verificationRepository;
+
+    @Value("${clientId}")
+    private String clientId;
 
     @Override
     public AuthResponse login(LoginRequest request, HttpServletResponse response) {
@@ -107,6 +114,13 @@ public class AuthServiceImpl implements AuthService {
 
 
         userRepository.save(user);
+
+        Verifications verifications = Verifications.builder()
+                .status(VerStatusEnum.UNVERIFIED)
+                .user(user)
+                .build();
+
+        verificationRepository.save(verifications);
 
         return AuthResponse.builder()
                 .id(user.getId())
@@ -203,7 +217,7 @@ public class AuthServiceImpl implements AuthService {
                     new NetHttpTransport(),
                     JacksonFactory.getDefaultInstance()
             )
-                    .setAudience(Collections.singletonList("165678719567-obs21fiuqir6ta0dg5ea6um7fbk4qhfv.apps.googleusercontent.com"))
+                    .setAudience(Collections.singletonList(clientId))
                     .build();
 
             GoogleIdToken googleIdToken = verifier.verify(idTokenString);

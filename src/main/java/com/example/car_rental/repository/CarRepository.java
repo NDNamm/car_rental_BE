@@ -22,4 +22,6 @@ public interface CarRepository extends JpaRepository<Cars, Long> {
     Page<Cars> findByCars(@Param("name") String name,
                           @Param("status") String status,
                           Pageable pageable);
+
+    Page<Cars> findByCategoryId(Long categoryId, Pageable pageable);
 }
