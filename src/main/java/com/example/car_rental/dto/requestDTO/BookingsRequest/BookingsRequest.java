@@ -30,5 +30,5 @@ public class BookingsRequest {
     private String nameStaff;
     private String note;
     private LocalDateTime paymentDeadline;
-    private List<BookingDetailRequest> bookingDetailsRequest;
+    private List<BookingDetailRequest> bookingDetailRequest;
 }

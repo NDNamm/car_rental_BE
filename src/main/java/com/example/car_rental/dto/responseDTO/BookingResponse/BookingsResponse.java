@@ -28,6 +28,6 @@ public class BookingsResponse {
     private String nameStaff;
     private String note;
     private LocalDateTime paymentDeadline;
-    private List<BookingDetailResponse> bookingDetailsResponse;
+    private List<BookingDetailResponse> bookingDetailResponse;
     private List<BookingStatusResponse> bookingStatusResponses;
 }

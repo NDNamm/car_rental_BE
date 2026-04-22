@@ -77,7 +77,7 @@ public class BookingsServiceImpl implements BookingsService {
                 .status(booking.getStatus())
                 .createdAt(booking.getCreatedAt())
                 .nameStaff(booking.getUser().getFullName())
-                .bookingDetailsResponse(getBookingDetails(booking.getBookingDetailsList()))
+                .bookingDetailResponse(getBookingDetails(booking.getBookingDetailsList()))
                 .bookingStatusResponses(getBookingStatusHistory(booking.getBookingStatusHistory()))
                 .build();
     }
@@ -266,7 +266,7 @@ public class BookingsServiceImpl implements BookingsService {
         BigDecimal totalOrderPrice = BigDecimal.ZERO;
         BigDecimal totalDeposit = BigDecimal.ZERO;
 
-        for (BookingDetailRequest detailReq : bookingsRequest.getBookingDetailsRequest()) {
+        for (BookingDetailRequest detailReq : bookingsRequest.getBookingDetailRequest()) {
             Cars car = carRepository.findById(detailReq.getCarsRequest().getId())
                     .orElseThrow(() -> new AppException(ErrorCode.CAR_NOT_FOUND));
 
@@ -337,7 +337,7 @@ public class BookingsServiceImpl implements BookingsService {
         BigDecimal newTotalPrice = BigDecimal.ZERO;
         BigDecimal newTotalDeposit = BigDecimal.ZERO;
 
-        for (BookingDetailRequest detailReq : bookingsRequest.getBookingDetailsRequest()) {
+        for (BookingDetailRequest detailReq : bookingsRequest.getBookingDetailRequest()) {
             BookingDetails detail = bookingDetailRepository.findById(detailReq.getId())
                     .orElseThrow(() -> new AppException(ErrorCode.DETAIL_NOT_FOUND));
 
