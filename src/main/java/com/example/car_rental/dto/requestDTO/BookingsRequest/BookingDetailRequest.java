@@ -1,7 +1,6 @@
 package com.example.car_rental.dto.requestDTO.BookingsRequest;
 
-import com.example.car_rental.dto.requestDTO.CarRequest.CarsRequest;
-import com.example.car_rental.dto.responseDTO.CarResponse.CarResponse;
+import com.example.car_rental.dto.requestDTO.CarRequest.CarRequest;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
@@ -17,13 +16,9 @@ import java.time.LocalDateTime;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BookingDetailRequest {
     private Long id;
-    private Long bookingId;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime startDate;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime endDate;
     private BigDecimal pricePerDay;
-    private BigDecimal subTotal;
     private BigDecimal depositAmount;
-    private CarsRequest carsRequest;
+    private CarRequest carRequest;
 }

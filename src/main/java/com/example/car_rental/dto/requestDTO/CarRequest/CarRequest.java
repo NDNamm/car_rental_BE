@@ -1,7 +1,6 @@
 package com.example.car_rental.dto.requestDTO.CarRequest;
 
-import com.example.car_rental.entity.CarImages;
-import com.example.car_rental.entity.Categories;
+
 import com.example.car_rental.entity.enums.CarStatusEnum;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
@@ -14,7 +13,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class CarsRequest {
+public class CarRequest {
     private Long id;
     private String name;
     private String licensePlate;

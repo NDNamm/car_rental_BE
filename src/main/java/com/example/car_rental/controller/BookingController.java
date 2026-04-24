@@ -1,7 +1,7 @@
 package com.example.car_rental.controller;
 
 import com.example.car_rental.dto.requestDTO.BookingsRequest.BookingStatusRequest;
-import com.example.car_rental.dto.requestDTO.BookingsRequest.BookingsRequest;
+import com.example.car_rental.dto.requestDTO.BookingsRequest.BookingRequest;
 import com.example.car_rental.dto.responseDTO.ApiResponse;
 import com.example.car_rental.dto.responseDTO.BookingResponse.BookingsResponse;
 import com.example.car_rental.service.BookingsService;
@@ -71,7 +71,7 @@ public class BookingController {
     }
 
     @PostMapping("/me")
-    public ApiResponse<String> addBooking(@RequestBody BookingsRequest request) {
+    public ApiResponse<String> addBooking(@RequestBody BookingRequest request) {
 
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
@@ -84,7 +84,7 @@ public class BookingController {
 
     @PutMapping("/me/{bookingId}")
     public ApiResponse<Void> updateBooking(@PathVariable(value = "bookingId") Long bookingId ,
-                                           @RequestBody BookingsRequest request) {
+                                           @RequestBody BookingRequest request) {
 
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         bookingsService.updateBooking(email,request, bookingId );

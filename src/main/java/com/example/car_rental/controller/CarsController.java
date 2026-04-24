@@ -1,7 +1,6 @@
 package com.example.car_rental.controller;
 
-import com.example.car_rental.dto.requestDTO.CarRequest.CarsRequest;
-import com.example.car_rental.dto.requestDTO.VerificationRequest.VerificationRequest;
+import com.example.car_rental.dto.requestDTO.CarRequest.CarRequest;
 import com.example.car_rental.dto.responseDTO.ApiResponse;
 import com.example.car_rental.dto.responseDTO.CarResponse.CarResponse;
 import com.example.car_rental.service.CarService;
@@ -44,7 +43,7 @@ public class CarsController {
                                     @RequestPart("images") MultipartFile[] images) throws JsonProcessingException {
 
         ObjectMapper objectMapper = new ObjectMapper();
-        CarsRequest carRequest = objectMapper.readValue(request, CarsRequest.class);
+        CarRequest carRequest = objectMapper.readValue(request, CarRequest.class);
         carService.addCar(carRequest, images);
 
         return ApiResponse.<Void>builder()
@@ -60,7 +59,7 @@ public class CarsController {
                                     @RequestPart(value = "images", required = false) MultipartFile[] images) throws JsonProcessingException {
 
         ObjectMapper objectMapper = new ObjectMapper();
-        CarsRequest carRequest = objectMapper.readValue(request, CarsRequest.class);
+        CarRequest carRequest = objectMapper.readValue(request, CarRequest.class);
         carService.updateCar(carId, carRequest, images);
 
         return ApiResponse.<Void>builder()

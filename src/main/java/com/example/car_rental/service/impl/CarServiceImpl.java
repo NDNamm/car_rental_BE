@@ -1,7 +1,7 @@
 package com.example.car_rental.service.impl;
 
 import com.example.car_rental.dto.requestDTO.CarRequest.CarDetailRequest;
-import com.example.car_rental.dto.requestDTO.CarRequest.CarsRequest;
+import com.example.car_rental.dto.requestDTO.CarRequest.CarRequest;
 import com.example.car_rental.dto.responseDTO.CarResponse.CarDetailResponse;
 import com.example.car_rental.dto.responseDTO.CarResponse.CarImageResponse;
 import com.example.car_rental.dto.responseDTO.CarResponse.CarResponse;
@@ -42,7 +42,7 @@ public class CarServiceImpl implements CarService {
     private final ImageService imageService;
 
     @Override
-    public void addCar(CarsRequest request, MultipartFile[] images) {
+    public void addCar(CarRequest request, MultipartFile[] images) {
 
         if (carRepository.existsByName(request.getName())) {
             throw new AppException(ErrorCode.CAR_EXISTED);
@@ -97,7 +97,7 @@ public class CarServiceImpl implements CarService {
     }
 
     @Override
-    public void updateCar(Long carId, CarsRequest request, MultipartFile[] images) {
+    public void updateCar(Long carId, CarRequest request, MultipartFile[] images) {
 
         Cars car = carRepository.findById(carId)
                 .orElseThrow(() -> new AppException(ErrorCode.CAR_NOT_FOUND));
