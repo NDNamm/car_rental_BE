@@ -112,8 +112,6 @@ public class AuthServiceImpl implements AuthService {
                 .build();
 
 
-
-
         userRepository.save(user);
 
         Verifications verifications = Verifications.builder()

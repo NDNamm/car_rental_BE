@@ -76,6 +76,9 @@ public class BookingsServiceImpl implements BookingsService {
                 .status(booking.getStatus())
                 .createdAt(booking.getCreatedAt())
                 .nameStaff(booking.getUser().getFullName())
+                .note(booking.getNote())
+                .paymentDeadline(booking.getPaymentDeadline())
+                .qrCodeUrl(booking.getQrCodeUrl())
                 .bookingDetailResponse(getBookingDetails(booking.getBookingDetailsList()))
                 .bookingStatusResponses(getBookingStatusHistory(booking.getBookingStatusHistory()))
                 .build();
@@ -258,7 +261,7 @@ public class BookingsServiceImpl implements BookingsService {
                         ? user.getPhoneNumber()
                         : bookingRequest.getCustomerPhone())
                 .createdAt(LocalDateTime.now())
-                .paymentDeadline(LocalDateTime.now().plusDays(1))
+                .paymentDeadline(LocalDateTime.now().plusHours(1))
                 .build();
 
         List<BookingDetails> detailsList = new ArrayList<>();
@@ -309,6 +312,8 @@ public class BookingsServiceImpl implements BookingsService {
         booking.setTotalPrice(totalOrderPrice);
         booking.setTotalDepositAmount(totalDeposit);
 
+        String qrBooking = paymentsService.generateQrUrl(booking);
+        booking.setQrCodeUrl(qrBooking);
         Bookings savedBooking = bookingsRepository.save(booking);
 
         paymentsRepository.save(Payments.builder()
@@ -321,8 +326,7 @@ public class BookingsServiceImpl implements BookingsService {
                 .paymentContent(bookingCode)
                 .build());
 
-        //Trả về Link QR để Frontend hiển thị luôn
-        return paymentsService.generateQrUrl(booking);
+        return qrBooking;
     }
 
     @Override

@@ -54,6 +54,9 @@ public class Bookings {
     @Column(name = "payment_deadline")
     private LocalDateTime paymentDeadline;
 
+    @Column(name = "qr_code_url")
+    private String qrCodeUrl;
+
     @ManyToOne
     @JsonIgnore
     @JoinColumn(name = "user_id")

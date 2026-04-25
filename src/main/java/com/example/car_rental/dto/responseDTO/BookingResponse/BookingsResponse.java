@@ -30,4 +30,5 @@ public class BookingsResponse {
     private LocalDateTime paymentDeadline;
     private List<BookingDetailResponse> bookingDetailResponse;
     private List<BookingStatusResponse> bookingStatusResponses;
+    private String qrCodeUrl;
 }

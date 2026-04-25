@@ -1,20 +1,22 @@
 package com.example.car_rental.service.impl;
 
 import com.example.car_rental.dto.requestDTO.paymentsRequest.SePayWebhookRequest;
+import com.example.car_rental.entity.BookingStatusHistory;
 import com.example.car_rental.entity.Bookings;
 import com.example.car_rental.entity.Payments;
-import com.example.car_rental.entity.enums.BookingStatusEnum;
-import com.example.car_rental.entity.enums.PaymentMethodEnum;
-import com.example.car_rental.entity.enums.PaymentStatusEnum;
-import com.example.car_rental.entity.enums.PaymentTypeEnum;
+import com.example.car_rental.entity.Users;
+import com.example.car_rental.entity.enums.*;
 import com.example.car_rental.exception.AppException;
 import com.example.car_rental.exception.ErrorCode;
+import com.example.car_rental.repository.BookingStatusHistoryRepository;
 import com.example.car_rental.repository.BookingsRepository;
 import com.example.car_rental.repository.PaymentsRepository;
+import com.example.car_rental.repository.UserRepository;
 import com.example.car_rental.service.PaymentsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +31,8 @@ public class PaymentsServiceImpl implements PaymentsService {
 
     private final BookingsRepository bookingsRepository;
     private final PaymentsRepository paymentsRepository;
+    private final BookingStatusHistoryRepository bookingStatusHistoryRepository;
+    private final UserRepository userRepository;
 
     @Value("${sepay.webhook.api-key}")
     private String sepayApiKey;
@@ -64,8 +68,29 @@ public class PaymentsServiceImpl implements PaymentsService {
         }
 
         if (LocalDateTime.now().isAfter(booking.getPaymentDeadline())) {
+
             booking.setStatus(BookingStatusEnum.CANCELLED);
+
+            booking.getBookingDetailsList().forEach(detail -> {
+                detail.getCar().setStatus(CarStatusEnum.AVAILABLE);
+            });
+
+            Users user = userRepository.findByEmail("system@local")
+                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+            BookingStatusHistory his = BookingStatusHistory.builder()
+                    .booking(booking)
+                    .newStatus(BookingStatusEnum.CANCELLED)
+                    .reason("Hết hạn thanh toán - Auto cancel")
+                    .changedAt(LocalDateTime.now())
+                    .changedBy(user)
+                    .build();
+
+            bookingStatusHistoryRepository.save(his);
             bookingsRepository.save(booking);
+
+            log.warn("Booking {} bị cancel do thanh toán quá hạn", bookingCode);
+
             return;
         }
 
@@ -96,7 +121,7 @@ public class PaymentsServiceImpl implements PaymentsService {
             throw new AppException(ErrorCode.BOOKING_ALREADY_PROCESSED);
         }
 
-        return generateQrUrl(booking);
+        return booking.getQrCodeUrl();
     }
 
     @Override

@@ -17,7 +17,10 @@ public class BookingController {
 
     final private BookingsService bookingsService;
 
-
+    @GetMapping("/1")
+    public String geta() {
+        return "NAM";
+    }
     //ADMIN
     @GetMapping("")
     public ApiResponse<Page<BookingsResponse>> getAllBookings(@RequestParam(required = false) String bookingCode,
