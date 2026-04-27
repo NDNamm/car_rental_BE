@@ -55,9 +55,8 @@ public class UserController {
     }
 
     @PostMapping("")
-    public ApiResponse<UserResponse> register(
-            @RequestBody @Valid RegisterRequest request
-    ) {
+    public ApiResponse<UserResponse> register(@RequestBody @Valid UserRequest request)
+     {
         return ApiResponse.<UserResponse>builder()
                 .code(200)
                 .message("Add user successful")

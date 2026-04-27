@@ -222,6 +222,7 @@ public class BookingsServiceImpl implements BookingsService {
 
 
     @Override
+    @Transactional
     public void deleteBooking(Long bookingId) {
         Bookings booking = bookingsRepository.findById(bookingId)
                 .orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
@@ -426,6 +427,7 @@ public class BookingsServiceImpl implements BookingsService {
     }
 
     @Override
+    @Transactional
     public void cancelBooking(String email, Long bookingId) {
         Bookings booking = bookingsRepository.findById(bookingId)
                 .orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
@@ -437,6 +439,11 @@ public class BookingsServiceImpl implements BookingsService {
         if (booking.getStatus() != BookingStatusEnum.PENDING) {
             throw new AppException(ErrorCode.CAR_NOT_AVAILABLE);
         }
+
+        booking.getBookingDetailsList().forEach(detail -> {
+            detail.getCar().setStatus(CarStatusEnum.AVAILABLE);
+            carRepository.save(detail.getCar());
+        });
 
         booking.setStatus(BookingStatusEnum.CANCELLED);
         bookingsRepository.save(booking);

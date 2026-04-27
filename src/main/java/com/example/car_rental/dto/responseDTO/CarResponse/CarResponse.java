@@ -27,6 +27,7 @@ public class CarResponse {
     private CarStatusEnum status;
     private int tripCount;
     private LocalDateTime createdAt;
+    private Long categoryId;
     private String categoryName;
     private List<CarImageResponse> carImageResponses;
     private CarDetailResponse carDetailResponse;

@@ -1,14 +1,11 @@
 package com.example.car_rental.entity;
 
-import com.example.car_rental.entity.enums.CarStatusEnum;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -59,5 +56,5 @@ public class CarDetail {
             joinColumns = @JoinColumn(name = "car_detail_id"),
             inverseJoinColumns = @JoinColumn(name = "feature_id")
     )
-    private Set<CarFeatures> features = new HashSet<>();
+    private Set<Features> features = new HashSet<>();
 }

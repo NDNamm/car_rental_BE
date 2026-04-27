@@ -2,9 +2,11 @@ package com.example.car_rental.controller;
 
 import com.example.car_rental.dto.requestDTO.CarRequest.FeatureRequest;
 import com.example.car_rental.dto.responseDTO.ApiResponse;
+import com.example.car_rental.dto.responseDTO.CarResponse.FeatureResponse;
 import com.example.car_rental.dto.responseDTO.CategoryResponse;
 import com.example.car_rental.service.FeatureService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,10 +19,12 @@ public class FeatureController {
     private final FeatureService featureService;
 
     @GetMapping("")
-    public ApiResponse<List<CategoryResponse>> getAllFeature() {
-        return ApiResponse.<List<CategoryResponse>>builder()
+    public ApiResponse<Page<FeatureResponse>> getAllFeature(@RequestParam(defaultValue = "0", required = false) int page,
+                                                            @RequestParam(defaultValue = "5") int size,
+                                                            @RequestParam(required = false) String name) {
+        return ApiResponse.<Page<FeatureResponse>>builder()
                 .code(200)
-                .data(featureService.getAllFeature())
+                .data(featureService.getAllFeature(page, size, name))
                 .build();
     }
 

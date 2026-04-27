@@ -22,4 +22,6 @@ public class UserRequest {
     private GenderEnum gender;
     private String phoneNumber;
     private LocalDate createdAt;
+    private String roleName;
+    private String password;
 }

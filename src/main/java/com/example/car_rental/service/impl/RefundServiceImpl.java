@@ -14,6 +14,7 @@ import com.example.car_rental.repository.RefundRepository;
 import com.example.car_rental.repository.UserRepository;
 import com.example.car_rental.service.ImageService;
 import com.example.car_rental.service.RefundService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -48,6 +49,7 @@ public class RefundServiceImpl implements RefundService {
     }
 
     @Override
+    @Transactional
     public RefundResponse cancelRefund(Long bookingId, RefundRequest request, MultipartFile qrCode) {
 
         Bookings booking = bookingsRepository.findById(bookingId)
@@ -138,6 +140,7 @@ public class RefundServiceImpl implements RefundService {
     }
 
     @Override
+    @Transactional
     public RefundResponse updateStatus(Long refundId, RefundRequest request, MultipartFile adminProofImage) {
 
         Refunds refunds = refundRepository.findById(refundId)

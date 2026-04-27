@@ -19,7 +19,7 @@ public interface UserService {
 
     void delete(Long id);
 
-    UserResponse add(RegisterRequest registerRequest);
+    UserResponse add(UserRequest request);
 
     //USER
     UserResponse getProfile();

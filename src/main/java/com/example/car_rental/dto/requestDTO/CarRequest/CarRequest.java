@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -24,4 +25,5 @@ public class CarRequest {
     private int tripCount;
     private Long categoryId;
     private CarDetailRequest carDetailRequest;
+    private List<Long> imageIdsToDelete;
 }

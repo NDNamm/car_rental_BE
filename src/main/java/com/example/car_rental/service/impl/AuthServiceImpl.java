@@ -31,6 +31,7 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -51,6 +52,7 @@ public class AuthServiceImpl implements AuthService {
     @Value("${clientId}")
     private String clientId;
 
+    @Transactional
     @Override
     public AuthResponse login(LoginRequest request, HttpServletResponse response) {
 
@@ -94,6 +96,7 @@ public class AuthServiceImpl implements AuthService {
 
 
     @Override
+    @Transactional
     public AuthResponse register(@Valid RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new AppException(ErrorCode.EMAIL_EXISTED);

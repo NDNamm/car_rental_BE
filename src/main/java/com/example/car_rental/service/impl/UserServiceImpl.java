@@ -17,6 +17,7 @@ import com.example.car_rental.repository.VerificationRepository;
 import com.example.car_rental.service.ImageService;
 import com.example.car_rental.service.UserService;
 import com.example.car_rental.service.VerificationService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -68,6 +69,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void updateRole(Long id, UpdateRoleRequest request) {
         Users user = userRepository.findById(id)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
@@ -85,16 +87,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponse add(RegisterRequest request) {
+    @Transactional
+    public UserResponse add(UserRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new AppException(ErrorCode.EMAIL_EXISTED);
         }
-        if (!request.getPassword().equals(request.getConfirmPassword())) {
-            throw new AppException(ErrorCode.PASSWORD_NOT_MATCH);
-        }
 
         String roleName = request.getRoleName();
-
 
         Users user = Users.builder()
                 .email(request.getEmail())
@@ -140,6 +139,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void editProfile(UserRequest userRequest) {
 
         String email = SecurityContextHolder
@@ -172,6 +172,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void editAvatar(MultipartFile avatar) throws IOException {
         String email = SecurityContextHolder
                 .getContext()

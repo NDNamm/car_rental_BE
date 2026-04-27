@@ -53,7 +53,7 @@ public class Cars {
     @JoinColumn(name = "category_id")
     private Categories category;
 
-    @OneToMany(mappedBy = "car")
+    @OneToMany(mappedBy = "car", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<CarImages> carImages;
 

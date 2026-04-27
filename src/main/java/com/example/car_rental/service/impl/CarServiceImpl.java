@@ -2,6 +2,7 @@ package com.example.car_rental.service.impl;
 
 import com.example.car_rental.dto.requestDTO.CarRequest.CarDetailRequest;
 import com.example.car_rental.dto.requestDTO.CarRequest.CarRequest;
+import com.example.car_rental.dto.requestDTO.CarRequest.UpdateCarStatusRequest;
 import com.example.car_rental.dto.responseDTO.CarResponse.CarDetailResponse;
 import com.example.car_rental.dto.responseDTO.CarResponse.CarImageResponse;
 import com.example.car_rental.dto.responseDTO.CarResponse.CarResponse;
@@ -16,15 +17,16 @@ import com.example.car_rental.repository.FeatureRepository;
 import com.example.car_rental.service.CarService;
 import com.example.car_rental.service.ImageService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
@@ -33,6 +35,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CarServiceImpl implements CarService {
 
     private final CarRepository carRepository;
@@ -42,6 +45,7 @@ public class CarServiceImpl implements CarService {
     private final ImageService imageService;
 
     @Override
+    @Transactional
     public void addCar(CarRequest request, MultipartFile[] images) {
 
         if (carRepository.existsByName(request.getName())) {
@@ -52,13 +56,6 @@ public class CarServiceImpl implements CarService {
                 .orElseThrow(() -> new AppException(ErrorCode.CATEGORY_NOT_FOUND));
 
         CarDetailRequest carDetailRequest = request.getCarDetailRequest();
-
-        Set<CarFeatures> carFeatures = new HashSet<>();
-        for (Long featureId : carDetailRequest.getFeatures()) {
-            CarFeatures feature = featureRepository.findById(featureId)
-                    .orElseThrow(() -> new AppException(ErrorCode.FEATURE_NOT_FOUND));
-            carFeatures.add(feature);
-        }
 
         Cars car = Cars.builder()
                 .category(category)
@@ -71,6 +68,13 @@ public class CarServiceImpl implements CarService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
+        Set<Features> features = new HashSet<>();
+        for (Long featureId : carDetailRequest.getFeatures()) {
+            Features feature = featureRepository.findById(featureId)
+                    .orElseThrow(() -> new AppException(ErrorCode.FEATURE_NOT_FOUND));
+            features.add(feature);
+        }
+
         CarDetail carDetail = CarDetail.builder()
                 .seatCount(carDetailRequest.getSeatCount())
                 .fuelType(carDetailRequest.getFuelType())
@@ -80,13 +84,11 @@ public class CarServiceImpl implements CarService {
                 .city(carDetailRequest.getCity())
                 .deliveryAvailable((carDetailRequest.getDeliveryAvailable() != null && carDetailRequest.getDeliveryAvailable()))
                 .deliveryFee(carDetailRequest.getDeliveryFee())
-                .features(carFeatures)
+                .features(features)
                 .car(car)
                 .build();
 
         car.setCarDetail(carDetail);
-
-        carRepository.save(car);
 
         List<CarImages> carImagesList =
                 imageService.uploadCarImages(images, "cars", request.getName(), car);
@@ -97,6 +99,7 @@ public class CarServiceImpl implements CarService {
     }
 
     @Override
+    @Transactional
     public void updateCar(Long carId, CarRequest request, MultipartFile[] images) {
 
         Cars car = carRepository.findById(carId)
@@ -124,7 +127,7 @@ public class CarServiceImpl implements CarService {
         if (request.getDescription() != null) {
             car.setDescription(request.getDescription());
         }
-        if(request.getStatus() != null) {
+        if (request.getStatus() != null) {
             car.setStatus(request.getStatus());
         }
 
@@ -134,20 +137,36 @@ public class CarServiceImpl implements CarService {
             car.setCategory(category);
         }
 
-        if (images != null && images.length > 0) {
-            // Xóa ảnh cũ
-            for (CarImages carImage : car.getCarImages()) {
+
+        if (request.getImageIdsToDelete() != null && !request.getImageIdsToDelete().isEmpty()) {
+
+            // 1. Tìm các đối tượng cần xóa
+            List<CarImages> imagesToDelete = car.getCarImages().stream()
+                    .filter(img -> request.getImageIdsToDelete().contains(img.getId()))
+                    .collect(Collectors.toList());
+
+            // 2. Xóa khỏi danh sách của car (Xóa trong DB)
+            car.getCarImages().removeAll(imagesToDelete);
+
+            // Ép Hibernate thực hiện lệnh DELETE xuống Database ngay lập tức
+            carRepository.saveAndFlush(car);
+
+            // 3. Sau khi DB đã xóa thành công, mới tiến hành xóa trên Cloud
+            for (CarImages img : imagesToDelete) {
                 try {
-                    imageService.deleteImages(carImage.getPublicId());
+                    imageService.deleteImages(img.getPublicId());
                 } catch (IOException e) {
-                    throw new AppException(ErrorCode.IMAGE_DELETE_FAILED);
+                    // Log lỗi nhưng không nhất thiết phải throw exception làm rollback
+                    // vì DB đã xóa rồi, ta chỉ đang dọn dẹp file rác trên cloud thôi.
+                    log.error("Failed to delete image on Cloud: " + img.getPublicId());
                 }
             }
-            car.getCarImages().clear();
+        }
 
-            // Thêm ảnh mới
-            List<CarImages> newCarImages = imageService.uploadCarImages(images, "cars", request.getName(), car);
-            car.setCarImages(newCarImages);
+// 4. Thêm ảnh mới như bình thường
+        if (images != null && images.length > 0) {
+            List<CarImages> newCarImages = imageService.uploadCarImages(images, "cars", car.getName(), car);
+            car.getCarImages().addAll(newCarImages);
         }
 
         updateCarDetail(car, request.getCarDetailRequest());
@@ -187,7 +206,7 @@ public class CarServiceImpl implements CarService {
 
         if (request.getFeatures() != null && !request.getFeatures().isEmpty()) {
 
-            Set<CarFeatures> features = request.getFeatures().stream()
+            Set<Features> features = request.getFeatures().stream()
                     .map(id -> featureRepository.findById(id)
                             .orElseThrow(() -> new AppException(ErrorCode.FEATURE_NOT_FOUND)))
                     .collect(Collectors.toSet());
@@ -197,11 +216,12 @@ public class CarServiceImpl implements CarService {
     }
 
     @Override
+    @Transactional
     public void deleteCar(Long carId) {
         Cars car = carRepository.findById(carId)
                 .orElseThrow(() -> new AppException(ErrorCode.CAR_NOT_FOUND));
 
-        for(CarImages carImage : car.getCarImages()) {
+        for (CarImages carImage : car.getCarImages()) {
             try {
                 imageService.deleteImages(carImage.getPublicId());
             } catch (IOException e) {
@@ -213,26 +233,26 @@ public class CarServiceImpl implements CarService {
     }
 
     @Override
-    public void updateStatusCar(Long carId, String status) {
+    @Transactional
+    public void updateStatusCar(Long carId, UpdateCarStatusRequest request) {
         Cars car = carRepository.findById(carId)
                 .orElseThrow(() -> new AppException(ErrorCode.CAR_NOT_FOUND));
 
-        try {
-            CarStatusEnum carStatusEnum = CarStatusEnum.valueOf(status.toUpperCase());
-            car.setStatus(carStatusEnum);
-            carRepository.save(car);
-        } catch (IllegalArgumentException e) {
+        if (request.getStatus() == null) {
             throw new AppException(ErrorCode.INVALID_CAR_STATUS);
         }
+
+        car.setStatus(request.getStatus());
+        carRepository.save(car);
     }
 
     @Override
-    public Page<CarResponse> getAllCar(String name,String status, int page, int size) {
+    public Page<CarResponse> getAllCar(String name, String status, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
         Page<Cars> carsPage;
 
-        if(name != null && !name.isEmpty()) {
-            carsPage = carRepository.findByCars(name,status, pageable);
+        if (name != null && !name.isEmpty()) {
+            carsPage = carRepository.findByCars(name, status, pageable);
         } else {
             carsPage = carRepository.findAll(pageable);
         }
@@ -269,7 +289,7 @@ public class CarServiceImpl implements CarService {
                 .deliveryAvailable(car.getCarDetail().isDeliveryAvailable())
                 .deliveryFee(car.getCarDetail().getDeliveryFee())
                 .features(car.getCarDetail().getFeatures().stream()
-                        .map(CarFeatures::getName)
+                        .map(Features::getName)
                         .collect(Collectors.toSet()))
                 .build();
 
@@ -290,6 +310,7 @@ public class CarServiceImpl implements CarService {
                 .tripCount(car.getTripCount())
                 .description(car.getDescription())
                 .createdAt(car.getCreatedAt())
+                .categoryId(car.getCategory().getId())
                 .categoryName(car.getCategory().getName())
                 .carImageResponses(carImageResponse)
                 .carDetailResponse(carDetailResponse)

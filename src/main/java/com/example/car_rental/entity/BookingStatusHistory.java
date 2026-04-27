@@ -22,31 +22,30 @@ public class BookingStatusHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "old_status")
     @Enumerated(EnumType.STRING)
+    @Column(name = "old_status")
     private BookingStatusEnum oldStatus;
 
-    @Column(name = "new_status")
     @Enumerated(EnumType.STRING)
+    @Column(name = "new_status", nullable = false)
     private BookingStatusEnum newStatus;
 
-    @Column(name = "reason")
     private String reason;
-
-    @Column(name = "note")
     private String note;
 
     @Column(name = "changed_at")
     private LocalDateTime changedAt;
 
-    @ManyToOne
-    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "changed_by")
     private Users changedBy;
 
-    @ManyToOne
-    @JsonIgnore
-    @JoinColumn(name = "booking_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "booking_id", nullable = false)
     private Bookings booking;
 
+    @PrePersist
+    public void prePersist() {
+        this.changedAt = LocalDateTime.now();
+    }
 }

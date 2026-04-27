@@ -41,22 +41,35 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
+    @Transactional
     public void deleteImages(String publicId) throws IOException {
-        if (publicId != null && !publicId.isEmpty()) {
-            Map<String, Object> options = new HashMap<>();
-            cloudinary.uploader().destroy(publicId, options);
+        if (publicId == null || publicId.isBlank()) return;
+
+        Map result = cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap());
+
+        String status = (String) result.get("result");
+
+        if (!"ok".equals(status) && !"not found".equals(status)) {
+            throw new IOException("Delete failed: " + result);
         }
     }
 
     @Override
-    public List<CarImages> uploadCarImages(MultipartFile[] file, String folder, String name, Cars car) {
+    @Transactional
+    public List<CarImages> uploadCarImages(MultipartFile[] files, String folder, String name, Cars car) {
         List<CarImages> list = new ArrayList<>();
-        for (MultipartFile fileItem : file) {
+
+        String safeName = sanitize(name);
+
+        for (MultipartFile fileItem : files) {
             try {
-                Map<?, ?> results = cloudinary.uploader().upload(fileItem.getBytes(), ObjectUtils.asMap(
-                        "folder", "car_rental/" + folder + "/" + name,
-                        "overwrite", true
-                ));
+                Map<?, ?> results = cloudinary.uploader().upload(
+                        fileItem.getBytes(),
+                        ObjectUtils.asMap(
+                                "folder", "car_rental/" + folder + "/" + safeName,
+                                "overwrite", true
+                        )
+                );
 
                 String url = results.get("secure_url").toString();
                 String publicId = results.get("public_id").toString();
@@ -65,13 +78,22 @@ public class ImageServiceImpl implements ImageService {
                 images.setImageUrl(url);
                 images.setPublicId(publicId);
                 images.setCar(car);
-                imagesRepository.save(images);
 
+                imagesRepository.save(images);
                 list.add(images);
+
             } catch (IOException e) {
                 throw new AppException(ErrorCode.UPDATE_IMAGE_FAIL);
             }
         }
         return list;
+    }
+
+    private String sanitize(String name) {
+        return name
+                .trim()
+                .toLowerCase()
+                .replaceAll("\\s+", "_")
+                .replaceAll("[^a-z0-9_]", "");
     }
 }

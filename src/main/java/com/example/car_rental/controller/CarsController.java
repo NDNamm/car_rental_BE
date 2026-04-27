@@ -1,6 +1,7 @@
 package com.example.car_rental.controller;
 
 import com.example.car_rental.dto.requestDTO.CarRequest.CarRequest;
+import com.example.car_rental.dto.requestDTO.CarRequest.UpdateCarStatusRequest;
 import com.example.car_rental.dto.responseDTO.ApiResponse;
 import com.example.car_rental.dto.responseDTO.CarResponse.CarResponse;
 import com.example.car_rental.service.CarService;
@@ -70,9 +71,9 @@ public class CarsController {
 
     @PatchMapping(value = "/{carId}")
     public ApiResponse<Void> updateCar(@PathVariable(value = "carId") Long carId,
-                                       @RequestBody String Status)  {
+                                       @RequestBody UpdateCarStatusRequest request)  {
 
-        carService.updateStatusCar(carId, Status);
+        carService.updateStatusCar(carId, request);
 
         return ApiResponse.<Void>builder()
                 .code(200)

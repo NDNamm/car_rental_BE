@@ -14,7 +14,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "features")
-public class CarFeatures {
+public class Features {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
