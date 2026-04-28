@@ -39,13 +39,25 @@ public class VerificationServiceImpl implements VerificationService {
 
     //ADMIN
     @Override
-    public Page<VerificationResponse> getAllVerifications(String fullName, String email, String status, int page, int size) {
+    public Page<VerificationResponse> getAllVerifications(String email, String fullName, String status, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
         Page<Verifications> versPage = null;
 
-        if (email == null || email.isEmpty() && fullName == null || fullName.isEmpty() && status == null || status.isEmpty()) {
+        boolean noFilter =
+                (email == null || email.isBlank()) &&
+                        (fullName == null || fullName.isBlank()) &&
+                        (status == null || status.isBlank());
+
+        if(noFilter){
             versPage = verificationRepository.findAll(pageable);
-        } else versPage = verificationRepository.findAllVerification(email, fullName, status, pageable);
+        } else {
+            VerStatusEnum statusEnum = null;
+
+            if (status != null && !status.isBlank()) {
+                statusEnum = VerStatusEnum.valueOf(status.toUpperCase());
+            }
+            versPage = verificationRepository.findAllVerification(email, fullName, statusEnum, pageable);
+        }
 
         return versPage.map(this::mapToVerification);
     }

@@ -49,15 +49,27 @@ public class BookingsServiceImpl implements BookingsService {
 
 
     @Override
-    public Page<BookingsResponse> getAllBookings(String bookingCode, String name, String phoneNumber, String status, int page, int size) {
+    public Page<BookingsResponse> getAllBookings(String bookingCode, String email, String name, String phoneNumber, String status, int page, int size) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
         Page<Bookings> bookingsPage;
 
-        if (name == null && phoneNumber == null && status == null) {
+        boolean noFilter =
+                (bookingCode == null || bookingCode.isBlank()) &&
+                        (email == null || email.isBlank()) &&
+                        (name == null || name.isBlank()) &&
+                        (phoneNumber == null || phoneNumber.isBlank()) &&
+                        (status == null || status.isBlank());
+
+        if (noFilter) {
             bookingsPage = bookingsRepository.findAll(pageable);
         } else {
-            bookingsPage = bookingsRepository.searchBookings(bookingCode, name, phoneNumber, status, pageable);
+            BookingStatusEnum statusEnum = null;
+
+            if (status != null && !status.isBlank()) {
+                statusEnum = BookingStatusEnum.valueOf(status.toUpperCase());
+            }
+            bookingsPage = bookingsRepository.searchBookings(bookingCode,email, name, phoneNumber, statusEnum, pageable);
         }
 
         return bookingsPage.map(this::getBooking);
@@ -250,10 +262,6 @@ public class BookingsServiceImpl implements BookingsService {
                 .user(user)
                 .bookingCode(bookingCode)
                 .status(BookingStatusEnum.PENDING)
-                .customerEmail(bookingRequest.getCustomerEmail() == null
-                        ? email
-                        : bookingRequest.getCustomerEmail())
-
                 .customerName(bookingRequest.getCustomerName() == null
                         ? user.getFullName()
                         : bookingRequest.getCustomerName())
@@ -421,7 +429,21 @@ public class BookingsServiceImpl implements BookingsService {
     @Override
     public Page<BookingsResponse> getAllBookingUser(String email, String bookingCode, String status, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Bookings> bookingsPage = bookingsRepository.findBookingsByUser(email, bookingCode, status, pageable);
+        Page<Bookings> bookingsPage = null;
+        boolean noFilter =
+                (bookingCode == null || bookingCode.isBlank()) &&
+                        (status == null || status.isBlank());
+
+        if (noFilter) {
+            bookingsPage = bookingsRepository.findAll(pageable);
+        } else {
+            BookingStatusEnum statusEnum = null;
+
+            if (status != null && !status.isBlank()) {
+                statusEnum = BookingStatusEnum.valueOf(status.toUpperCase());
+            }
+            bookingsPage = bookingsRepository.findBookingsByUser(email, bookingCode, statusEnum, pageable);
+        }
 
         return bookingsPage.map(this::getBooking);
     }

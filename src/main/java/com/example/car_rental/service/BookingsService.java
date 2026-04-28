@@ -8,7 +8,7 @@ import org.springframework.data.domain.Page;
 public interface BookingsService {
 
     //ADMIN
-    Page<BookingsResponse> getAllBookings(String bookingCode ,String name, String phoneNumber, String status, int page, int size);
+    Page<BookingsResponse> getAllBookings(String bookingCode, String email, String name, String phoneNumber, String status, int page, int size);
     void updateBookingsStatus(BookingStatusRequest request, Long bookingId);
     void deleteBooking(Long bookingId);
 

@@ -18,16 +18,18 @@ import java.util.Optional;
 public interface BookingsRepository extends JpaRepository<Bookings, Long> {
     @Query("""
                 SELECT b FROM Bookings b
-                WHERE (:name IS NULL OR LOWER(b.customerName) LIKE LOWER(CONCAT('%', :customerName, '%')))
-                  AND (:phoneNumber IS NULL OR LOWER(b.customerPhone) LIKE LOWER(CONCAT('%', :customerPhone, '%')))
+                WHERE (:customerEmail IS NULL OR LOWER(b.customerEmail) LIKE LOWER(CONCAT('%', :customerEmail, '%')))
+                  AND (:customerName IS NULL OR LOWER(b.customerName) LIKE LOWER(CONCAT('%', :customerName, '%')))
+                  AND (:customerPhone IS NULL OR LOWER(b.customerPhone) LIKE LOWER(CONCAT('%', :customerPhone, '%')))
                   AND (:bookingCode IS NULL OR LOWER(b.bookingCode) LIKE LOWER(CONCAT('%', :bookingCode, '%')))
-                  AND (:status IS NULL OR LOWER(b.status) LIKE LOWER(CONCAT('%', :status, '%')))
+                  AND (:status IS NULL OR b.status = :status)
             """)
     Page<Bookings> searchBookings(
             @Param("bookingCode") String bookingCode,
+            @Param("customerEmail") String email,
             @Param("customerName") String customerName,
             @Param("customerPhone") String customerPhone,
-            @Param("status") String status,
+            @Param("status") BookingStatusEnum status,
             Pageable pageable
     );
 
@@ -39,10 +41,11 @@ public interface BookingsRepository extends JpaRepository<Bookings, Long> {
     Page<Bookings> findBookingsByUser(
             @Param("email") String email,
             @Param("bookingCode") String bookingCode,
-            @Param("status") String status,
+            @Param("status") BookingStatusEnum status,
             Pageable pageable);
 
     Optional<Bookings> findByBookingCode(String bookingCode);
+
     List<Bookings> findByStatusAndPaymentDeadlineBefore(
             BookingStatusEnum status,
             LocalDateTime time

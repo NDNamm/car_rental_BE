@@ -28,13 +28,14 @@ public class UserController {
     //ADMIN
     @GetMapping("")
     public ApiResponse<Page<UserResponse>> getAllUser(@RequestParam(required = false) String email,
-                                                     @RequestParam(required = false) String fullName,
-                                                     @RequestParam(required = false) String phoneNumber,
-                                                     @RequestParam(defaultValue = "0") int page,
-                                                     @RequestParam(defaultValue = "10") int size){
+                                                      @RequestParam(required = false) String fullName,
+                                                      @RequestParam(required = false) String phoneNumber,
+                                                      @RequestParam(required = false) String role,
+                                                      @RequestParam(defaultValue = "0") int page,
+                                                      @RequestParam(defaultValue = "10") int size) {
 
         Page<UserResponse> users =
-                userService.getAllUsers(email, fullName, phoneNumber, page, size);
+                userService.getAllUsers(email, fullName, phoneNumber,role, page, size);
 
         return ApiResponse.<Page<UserResponse>>builder()
                 .code(200)
@@ -55,8 +56,7 @@ public class UserController {
     }
 
     @PostMapping("")
-    public ApiResponse<UserResponse> register(@RequestBody @Valid UserRequest request)
-     {
+    public ApiResponse<UserResponse> register(@RequestBody @Valid UserRequest request) {
         return ApiResponse.<UserResponse>builder()
                 .code(200)
                 .message("Add user successful")
@@ -66,7 +66,7 @@ public class UserController {
 
     //CLIENT
     @GetMapping("/me")
-    public ApiResponse<UserResponse> getProfile(){
+    public ApiResponse<UserResponse> getProfile() {
 
         return ApiResponse.<UserResponse>builder()
                 .code(200)
@@ -76,7 +76,7 @@ public class UserController {
     }
 
     @PutMapping("/me")
-    public ApiResponse<Void> editProfile(@RequestBody UserRequest request)  {
+    public ApiResponse<Void> editProfile(@RequestBody UserRequest request) {
 
         userService.editProfile(request);
         return ApiResponse.<Void>builder()

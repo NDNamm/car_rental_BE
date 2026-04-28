@@ -24,6 +24,7 @@ public class BookingController {
     //ADMIN
     @GetMapping("")
     public ApiResponse<Page<BookingsResponse>> getAllBookings(@RequestParam(required = false) String bookingCode,
+                                                              @RequestParam(required = false) String email,
                                                               @RequestParam(required = false) String name,
                                                               @RequestParam(required = false) String phone,
                                                               @RequestParam(required = false) String status,
@@ -32,7 +33,7 @@ public class BookingController {
 
         return ApiResponse.<Page<BookingsResponse>>builder()
                 .code(200)
-                .data(bookingsService.getAllBookings(bookingCode, name, phone, status, page, size))
+                .data(bookingsService.getAllBookings(bookingCode,email, name, phone, status, page, size))
                 .build();
     }
 

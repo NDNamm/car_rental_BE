@@ -14,15 +14,19 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<Users, Long> {
 
     @Query("""
-             Select u from Users u
-             Where (:email is null or lower(u.email) Like Lower(concat('%',:email, '%')))
-               And (:fullName is null or lower(u.fullName) Like Lower(concat('%', :fullName, '%')))
-               And (:phoneNumber is null or(u.phoneNumber) Like Lower(concat('&', :phoneNumber, '%')))
-            """)
-    Page<Users> finByUser(@Param("email") String email,
-                          @Param("fullName") String fullName,
-                          @Param("phoneNumber") String phoneNumber,
-                          Pageable pageable);
+    SELECT u FROM Users u
+    WHERE (:email IS NULL OR LOWER(u.email) LIKE LOWER(CONCAT('%', :email, '%')))
+      AND (:fullName IS NULL OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :fullName, '%')))
+      AND (:phoneNumber IS NULL OR u.phoneNumber LIKE CONCAT('%', :phoneNumber, '%'))
+      AND (:role IS NULL OR u.role.roleName = :role)
+""")
+    Page<Users> finByUser(
+            @Param("email") String email,
+            @Param("fullName") String fullName,
+            @Param("phoneNumber") String phoneNumber,
+            @Param("role") String role,
+            Pageable pageable
+    );
 
     Optional<Users> findByEmail(String email);
     boolean existsByEmail(String email);

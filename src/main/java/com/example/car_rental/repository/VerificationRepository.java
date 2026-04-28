@@ -16,16 +16,17 @@ import java.util.Optional;
 public interface VerificationRepository extends JpaRepository<Verifications, Long> {
    Optional<Verifications> findByUserId(Long userId);
     @Query("""
-        Select v 
-        From Verifications v 
-        Join v.user u
-        Where (:email is null or lower(u.email) Like lower(concat('%', :email, '%')))
-          And (:fullName is null or lower(u.fullName) Like lower(concat('%', :fullName, '%')))
-          And (:status is null or v.status = :status)
-    """)
-    Page<Verifications> findAllVerification(@Param("email") String email,
-                                            @Param("fullName") String fullName,
-                                            @Param("status") String status,
-                                            Pageable pageable);
+    SELECT v FROM Verifications v
+    JOIN v.user u
+    WHERE (:email IS NULL OR LOWER(u.email) LIKE LOWER(CONCAT('%', :email, '%')))
+      AND (:fullName IS NULL OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :fullName, '%')))
+      AND (:status IS NULL OR v.status = :status)
+""")
+    Page<Verifications> findAllVerification(
+            @Param("email") String email,
+            @Param("fullName") String fullName,
+            @Param("status") VerStatusEnum status,
+            Pageable pageable
+    );
 
 }

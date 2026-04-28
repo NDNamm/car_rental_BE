@@ -46,14 +46,21 @@ public class UserServiceImpl implements UserService {
 
     //ADMIN
     @Override
-    public Page<UserResponse> getAllUsers(String email, String fullName, String phoneNumber, int page, int size) {
+    public Page<UserResponse> getAllUsers(String email, String fullName, String phoneNumber,String role, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
         Page<Users> usersPage = null;
 
-        if (email == null || email.isEmpty() && fullName == null || fullName.isEmpty() && phoneNumber == null || phoneNumber.isEmpty()) {
-            usersPage = userRepository.findAll(pageable);
-        } else usersPage = userRepository.finByUser(email, fullName, phoneNumber, pageable);
+        boolean noFilter =
+                (email == null || email.isBlank()) &&
+                        (fullName == null || fullName.isBlank()) &&
+                        (phoneNumber == null || phoneNumber.isBlank()) &&
+                        (role == null || role.isBlank());
 
+        if (noFilter) {
+            usersPage = userRepository.findAll(pageable);
+        } else {
+            usersPage = userRepository.finByUser(email, fullName, phoneNumber, role, pageable);
+        }
 
         return usersPage.map(user -> UserResponse.builder()
                 .id(user.getId())

@@ -17,8 +17,8 @@ public interface BookingDetailRepository extends JpaRepository<BookingDetails, L
 
     @Query("SELECT COUNT(bd) FROM BookingDetails bd " +
                   "WHERE bd.car.id = :carId " +
-                  "AND bd.booking.id <> :currentBookingId " + // Loại trừ chính đơn hàng đang sửa
-                  "AND bd.booking.status <> 'CANCELLED' " +   // Không tính các đơn đã hủy
+                  "AND bd.booking.id <> :currentBookingId " +
+                  "AND bd.booking.status <> 'CANCELLED' " +
                   "AND :startDate <= bd.endDate " +
                   "AND bd.startDate <= :endDate")
     long countOverlappingBookings(@Param("carId") Long carId,
