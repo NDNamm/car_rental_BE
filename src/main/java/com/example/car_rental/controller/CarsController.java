@@ -3,6 +3,7 @@ package com.example.car_rental.controller;
 import com.example.car_rental.dto.requestDTO.CarRequest.CarRequest;
 import com.example.car_rental.dto.requestDTO.CarRequest.UpdateCarStatusRequest;
 import com.example.car_rental.dto.responseDTO.ApiResponse;
+import com.example.car_rental.dto.responseDTO.BookingResponse.BookingTimeResponse;
 import com.example.car_rental.dto.responseDTO.CarResponse.CarResponse;
 import com.example.car_rental.service.CarService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -12,6 +13,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -88,6 +91,18 @@ public class CarsController {
         return ApiResponse.<Void>builder()
                 .code(200)
                 .message("Delete car successful")
+                .build();
+    }
+
+    @GetMapping("/{carId}/booked-times")
+    public ApiResponse<List<BookingTimeResponse>> getBookedTimes(
+            @PathVariable Long carId
+    ) {
+        List<BookingTimeResponse> ranges = carService.getBookedRanges(carId);
+
+        return ApiResponse.<List<BookingTimeResponse>>builder()
+                .data(ranges)
+                .message("Lấy danh sách thời gian đã đặt thành công")
                 .build();
     }
 

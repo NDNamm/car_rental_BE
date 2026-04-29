@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
+
 @Repository
 public interface CarRepository extends JpaRepository<Cars, Long> {
     boolean existsByName(String name);
@@ -22,6 +24,7 @@ public interface CarRepository extends JpaRepository<Cars, Long> {
     Page<Cars> findByCars(@Param("name") String name,
                           @Param("status") String status,
                           Pageable pageable);
+
 
     Page<Cars> findByCategoryId(Long categoryId, Pageable pageable);
 }

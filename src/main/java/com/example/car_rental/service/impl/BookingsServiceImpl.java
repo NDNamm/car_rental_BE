@@ -3,6 +3,7 @@ package com.example.car_rental.service.impl;
 import com.example.car_rental.dto.requestDTO.BookingsRequest.BookingDetailRequest;
 import com.example.car_rental.dto.requestDTO.BookingsRequest.BookingStatusRequest;
 import com.example.car_rental.dto.requestDTO.BookingsRequest.BookingRequest;
+import com.example.car_rental.dto.responseDTO.BookingResponse.BookingCodeResponse;
 import com.example.car_rental.dto.responseDTO.BookingResponse.BookingDetailResponse;
 import com.example.car_rental.dto.responseDTO.BookingResponse.BookingStatusResponse;
 import com.example.car_rental.dto.responseDTO.BookingResponse.BookingsResponse;
@@ -242,11 +243,11 @@ public class BookingsServiceImpl implements BookingsService {
         bookingsRepository.delete(booking);
     }
 
-
     //USER
     @Override
     @Transactional
-    public String addBooking(String email, BookingRequest bookingRequest) {
+    public BookingCodeResponse addBooking(String email, BookingRequest request) {
+
         Users user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
@@ -258,75 +259,75 @@ public class BookingsServiceImpl implements BookingsService {
         }
 
         String bookingCode = "BK_" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+
         Bookings booking = Bookings.builder()
                 .user(user)
                 .bookingCode(bookingCode)
                 .status(BookingStatusEnum.PENDING)
-                .customerName(bookingRequest.getCustomerName() == null
-                        ? user.getFullName()
-                        : bookingRequest.getCustomerName())
-
-                .customerPhone(bookingRequest.getCustomerPhone() == null
-                        ? user.getPhoneNumber()
-                        : bookingRequest.getCustomerPhone())
+                .customerEmail(user.getEmail())
+                .customerName(request.getCustomerName() != null ? request.getCustomerName() : user.getFullName())
+                .customerPhone(request.getCustomerPhone() != null ? request.getCustomerPhone() : user.getPhoneNumber())
                 .createdAt(LocalDateTime.now())
                 .paymentDeadline(LocalDateTime.now().plusHours(1))
                 .build();
 
         List<BookingDetails> detailsList = new ArrayList<>();
-        BigDecimal totalOrderPrice = BigDecimal.ZERO;
+        BigDecimal totalPrice = BigDecimal.ZERO;
         BigDecimal totalDeposit = BigDecimal.ZERO;
 
-        for (BookingDetailRequest detailReq : bookingRequest.getBookingDetailRequest()) {
+        for (BookingDetailRequest d : request.getBookingDetailRequest()) {
 
-            if (detailReq.getCarRequest() == null || detailReq.getCarRequest().getId() == null) {
+            if (d.getCarRequest() == null || d.getCarRequest().getId() == null) {
                 throw new AppException(ErrorCode.INVALID_REQUEST);
             }
-            calculateRentalDays(detailReq.getStartDate(), detailReq.getEndDate());
+            if (d.getStartDate() == null || d.getEndDate() == null) {
+                throw new AppException(ErrorCode.INVALID_REQUEST);
+            }
+            long days = calculateRentalDays(d.getStartDate(), d.getEndDate());
 
-            Cars car = carRepository.findById(detailReq.getCarRequest().getId())
+            Cars car = carRepository.findById(d.getCarRequest().getId())
                     .orElseThrow(() -> new AppException(ErrorCode.CAR_NOT_FOUND));
-
-            if (car.getStatus() != CarStatusEnum.AVAILABLE) {
+            if (car.getStatus() == CarStatusEnum.MAINTENANCE) {
                 throw new AppException(ErrorCode.CAR_NOT_AVAILABLE);
             }
+            // 🔥 check trùng lịch (thuê theo ngày)
+            validateCarAvailability(
+                    car.getId(),
+                    null,
+                    d.getStartDate(),
+                    d.getEndDate()
+            );
 
-            car.setStatus(CarStatusEnum.RENTED);
-            carRepository.save(car);
-
-            // Tính số ngày thuê cho xe này
-            long days = calculateRentalDays(detailReq.getStartDate(), detailReq.getEndDate());
-            // Tính thành tiền (Giá x Ngày)
             BigDecimal subTotal = car.getPricePerDay().multiply(BigDecimal.valueOf(days));
 
-            BookingDetails bookingDetail = BookingDetails.builder()
-                    .car(car)
+            BookingDetails detail = BookingDetails.builder()
                     .booking(booking)
-                    .startDate(detailReq.getStartDate())
-                    .endDate(detailReq.getEndDate())
+                    .car(car)
+                    .startDate(d.getStartDate())
+                    .endDate(d.getEndDate())
                     .rentalDays(days)
                     .pricePerDay(car.getPricePerDay())
                     .depositAmount(car.getDepositAmount())
                     .subTotal(subTotal)
                     .build();
 
-            detailsList.add(bookingDetail);
+            detailsList.add(detail);
 
-            totalOrderPrice = totalOrderPrice.add(subTotal);
-            totalDeposit = totalDeposit.add(detailReq.getDepositAmount());
-
+            totalPrice = totalPrice.add(subTotal);
+            totalDeposit = totalDeposit.add(car.getDepositAmount());
         }
 
         booking.setBookingDetailsList(detailsList);
-        booking.setTotalPrice(totalOrderPrice);
+        booking.setTotalPrice(totalPrice);
         booking.setTotalDepositAmount(totalDeposit);
 
-        String qrBooking = paymentsService.generateQrUrl(booking);
-        booking.setQrCodeUrl(qrBooking);
-        Bookings savedBooking = bookingsRepository.save(booking);
+        String qr = paymentsService.generateQrUrl(booking);
+        booking.setQrCodeUrl(qr);
+
+        Bookings saved = bookingsRepository.save(booking);
 
         paymentsRepository.save(Payments.builder()
-                .booking(savedBooking)
+                .booking(saved)
                 .amount(totalDeposit)
                 .status(PaymentStatusEnum.UNPAID)
                 .paymentMethod(PaymentMethodEnum.BANK_TRANSFER)
@@ -335,12 +336,16 @@ public class BookingsServiceImpl implements BookingsService {
                 .paymentContent(bookingCode)
                 .build());
 
-        return qrBooking;
+        return BookingCodeResponse.builder()
+                .bookingCode(bookingCode)
+                .qrCodeUrl(qr)
+                .build();
     }
 
     @Override
     @Transactional
-    public void updateBooking(String email, BookingRequest bookingRequest, Long bookingId) {
+    public BookingCodeResponse updateBooking(String email, BookingRequest request, Long bookingId) {
+
         Bookings booking = bookingsRepository.findById(bookingId)
                 .orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
 
@@ -349,56 +354,74 @@ public class BookingsServiceImpl implements BookingsService {
         }
 
         if (booking.getStatus() != BookingStatusEnum.PENDING) {
-            throw new AppException(ErrorCode.CAR_NOT_AVAILABLE);
+            throw new AppException(ErrorCode.CANNOT_UPDATE_BOOKING);
         }
 
-        BigDecimal newTotalPrice = BigDecimal.ZERO;
-        BigDecimal newTotalDeposit = BigDecimal.ZERO;
+        BigDecimal totalPrice = BigDecimal.ZERO;
+        BigDecimal totalDeposit = BigDecimal.ZERO;
 
-        for (BookingDetailRequest detailReq : bookingRequest.getBookingDetailRequest()) {
-            BookingDetails detail = bookingDetailRepository.findById(detailReq.getId())
+        for (BookingDetailRequest d : request.getBookingDetailRequest()) {
+
+            if (d.getId() == null) {
+                throw new AppException(ErrorCode.INVALID_REQUEST);
+            }
+
+            if (d.getCarRequest() == null || d.getCarRequest().getId() == null) {
+                throw new AppException(ErrorCode.INVALID_REQUEST);
+            }
+
+            BookingDetails detail = bookingDetailRepository.findById(d.getId())
                     .orElseThrow(() -> new AppException(ErrorCode.DETAIL_NOT_FOUND));
 
-            // Kiểm tra trùng lịch (loại trừ chính đơn hàng hiện tại)
-            validateCarAvailability(detailReq.getCarRequest().getId(), bookingId,
-                    detailReq.getStartDate(), detailReq.getEndDate());
+            Long carId = d.getCarRequest().getId();
 
-            long days = calculateRentalDays(detailReq.getStartDate(), detailReq.getEndDate());
+            // 🔥 check trùng lịch (loại trừ chính booking hiện tại)
+            validateCarAvailability(carId, bookingId, d.getStartDate(),d.getEndDate());
 
-            // Cập nhật thông tin mới
-            detail.setStartDate(detailReq.getStartDate());
-            detail.setEndDate(detailReq.getEndDate());
-            detail.setRentalDays(days);
+            long days = calculateRentalDays(d.getStartDate(), d.getEndDate());
 
-            // Nếu đổi xe, cập nhật lại giá và tiền cọc
-            Cars car = carRepository.findById(detailReq.getCarRequest().getId()).get();
+            Cars car = carRepository.findById(carId)
+                    .orElseThrow(() -> new AppException(ErrorCode.CAR_NOT_FOUND));
+
             detail.setCar(car);
+            detail.setStartDate(d.getStartDate());
+            detail.setEndDate(d.getEndDate());
+            detail.setRentalDays(days);
             detail.setPricePerDay(car.getPricePerDay());
             detail.setDepositAmount(car.getDepositAmount());
 
             BigDecimal subTotal = car.getPricePerDay().multiply(BigDecimal.valueOf(days));
             detail.setSubTotal(subTotal);
 
-            newTotalPrice = newTotalPrice.add(subTotal);
-            newTotalDeposit = newTotalDeposit.add(car.getDepositAmount());
+            totalPrice = totalPrice.add(subTotal);
+            totalDeposit = totalDeposit.add(car.getDepositAmount());
         }
 
-        if (bookingRequest.getCustomerName() != null && !bookingRequest.getCustomerName().isBlank()) {
-            booking.setCustomerName(bookingRequest.getCustomerName());
+        if (request.getCustomerName() != null && !request.getCustomerName().isBlank()) {
+            booking.setCustomerName(request.getCustomerName());
+        }
+        if (request.getCustomerPhone() != null && !request.getCustomerPhone().isBlank()) {
+            booking.setCustomerPhone(request.getCustomerPhone());
         }
 
-        if (bookingRequest.getCustomerPhone() != null && !bookingRequest.getCustomerPhone().isBlank()) {
-            booking.setCustomerPhone(bookingRequest.getCustomerPhone());
-        }
-        booking.setTotalPrice(newTotalPrice);
-        booking.setTotalDepositAmount(newTotalDeposit);
+        booking.setTotalPrice(totalPrice);
+        booking.setTotalDepositAmount(totalDeposit);
 
         bookingsRepository.save(booking);
+
+        return BookingCodeResponse.builder()
+                .bookingCode(booking.getBookingCode())
+                .qrCodeUrl(booking.getQrCodeUrl())
+                .build();
     }
 
     // Hàm tính số ngày thuê // check tg
     private long calculateRentalDays(LocalDateTime start, LocalDateTime end) {
+
         if (start == null || end == null) {
+            throw new AppException(ErrorCode.INVALID_DATE_RANGE);
+        }
+        if (!end.isAfter(start)) {
             throw new AppException(ErrorCode.INVALID_DATE_RANGE);
         }
 
@@ -407,22 +430,22 @@ public class BookingsServiceImpl implements BookingsService {
         if (start.isBefore(now)) {
             throw new AppException(ErrorCode.START_DATE_IN_PAST);
         }
-
-        if (!end.isAfter(start)) {
-            throw new AppException(ErrorCode.INVALID_DATE_RANGE);
-        }
-
-        long days = ChronoUnit.DAYS.between(start, end);
+        long days = ChronoUnit.DAYS.between(
+                start.toLocalDate(),
+                end.toLocalDate()
+        );
 
         return (days == 0) ? 1 : days;
     }
 
-    private void validateCarAvailability(Long carId, Long currentBookingId, LocalDateTime start, LocalDateTime end) {
-        long overlapCount = bookingDetailRepository.countOverlappingBookings(
-                carId, currentBookingId, start, end);
+    private void validateCarAvailability(Long carId,
+                                         Long bookingId,
+                                         LocalDateTime start,
+                                         LocalDateTime end) {
 
-        if (overlapCount > 0) {
-            throw new AppException(ErrorCode.CAR_ALREADY_BOOKED);
+        long count = bookingDetailRepository.countOverlappingBookings(carId, bookingId ,start,end);
+        if (count > 0) {
+            throw new AppException(ErrorCode.CAR_ALREADY_BOOKED_IN_THIS_TIME);
         }
     }
 
@@ -458,8 +481,9 @@ public class BookingsServiceImpl implements BookingsService {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
 
-        if (booking.getStatus() != BookingStatusEnum.PENDING) {
-            throw new AppException(ErrorCode.CAR_NOT_AVAILABLE);
+        if (booking.getStatus() != BookingStatusEnum.PENDING &&
+                booking.getStatus() != BookingStatusEnum.CONFIRMED) {
+            throw new AppException(ErrorCode.CANNOT_CANCEL_BOOKING);
         }
 
         booking.getBookingDetailsList().forEach(detail -> {
@@ -467,6 +491,15 @@ public class BookingsServiceImpl implements BookingsService {
             carRepository.save(detail.getCar());
         });
 
+        BookingStatusHistory history = BookingStatusHistory.builder()
+                .booking(booking)
+                .oldStatus(booking.getStatus())
+                .newStatus(BookingStatusEnum.CANCELLED)
+                .reason("Khách hàng hủy đơn")
+                .changedAt(LocalDateTime.now())
+                .changedBy(booking.getUser())
+                .build();
+        bookingStatusHistoryRepository.save(history);
         booking.setStatus(BookingStatusEnum.CANCELLED);
         bookingsRepository.save(booking);
     }

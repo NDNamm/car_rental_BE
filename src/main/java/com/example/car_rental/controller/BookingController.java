@@ -3,6 +3,7 @@ package com.example.car_rental.controller;
 import com.example.car_rental.dto.requestDTO.BookingsRequest.BookingStatusRequest;
 import com.example.car_rental.dto.requestDTO.BookingsRequest.BookingRequest;
 import com.example.car_rental.dto.responseDTO.ApiResponse;
+import com.example.car_rental.dto.responseDTO.BookingResponse.BookingCodeResponse;
 import com.example.car_rental.dto.responseDTO.BookingResponse.BookingsResponse;
 import com.example.car_rental.service.BookingsService;
 import lombok.RequiredArgsConstructor;
@@ -75,11 +76,11 @@ public class BookingController {
     }
 
     @PostMapping("/me")
-    public ApiResponse<String> addBooking(@RequestBody BookingRequest request) {
+    public ApiResponse<BookingCodeResponse> addBooking(@RequestBody BookingRequest request) {
 
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        return ApiResponse.<String>builder()
+        return ApiResponse.<BookingCodeResponse>builder()
                 .code(200)
                 .data(bookingsService.addBooking(email, request))
                 .message("Add booking successful")
@@ -87,14 +88,14 @@ public class BookingController {
     }
 
     @PutMapping("/me/{bookingId}")
-    public ApiResponse<Void> updateBooking(@PathVariable(value = "bookingId") Long bookingId ,
+    public ApiResponse<BookingCodeResponse> updateBooking(@PathVariable(value = "bookingId") Long bookingId ,
                                            @RequestBody BookingRequest request) {
 
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        bookingsService.updateBooking(email,request, bookingId );
-        return ApiResponse.<Void>builder()
+        return ApiResponse.<BookingCodeResponse>builder()
                 .code(200)
                 .message("Update booking successful")
+                .data(bookingsService.updateBooking(email,request, bookingId ))
                 .build();
     }
 
@@ -108,4 +109,5 @@ public class BookingController {
                 .message("Cancel booking successful")
                 .build();
     }
+
 }

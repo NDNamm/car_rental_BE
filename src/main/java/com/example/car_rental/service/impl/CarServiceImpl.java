@@ -3,6 +3,7 @@ package com.example.car_rental.service.impl;
 import com.example.car_rental.dto.requestDTO.CarRequest.CarDetailRequest;
 import com.example.car_rental.dto.requestDTO.CarRequest.CarRequest;
 import com.example.car_rental.dto.requestDTO.CarRequest.UpdateCarStatusRequest;
+import com.example.car_rental.dto.responseDTO.BookingResponse.BookingTimeResponse;
 import com.example.car_rental.dto.responseDTO.CarResponse.CarDetailResponse;
 import com.example.car_rental.dto.responseDTO.CarResponse.CarImageResponse;
 import com.example.car_rental.dto.responseDTO.CarResponse.CarResponse;
@@ -10,10 +11,7 @@ import com.example.car_rental.entity.*;
 import com.example.car_rental.entity.enums.CarStatusEnum;
 import com.example.car_rental.exception.AppException;
 import com.example.car_rental.exception.ErrorCode;
-import com.example.car_rental.repository.CarDetailRepository;
-import com.example.car_rental.repository.CarRepository;
-import com.example.car_rental.repository.CategoryRepository;
-import com.example.car_rental.repository.FeatureRepository;
+import com.example.car_rental.repository.*;
 import com.example.car_rental.service.CarService;
 import com.example.car_rental.service.ImageService;
 import lombok.RequiredArgsConstructor;
@@ -40,9 +38,9 @@ public class CarServiceImpl implements CarService {
 
     private final CarRepository carRepository;
     private final FeatureRepository featureRepository;
-    private final CarDetailRepository carDetailRepository;
     private final CategoryRepository categoryRepository;
     private final ImageService imageService;
+    private final BookingDetailRepository bookingDetailRepository;
 
     @Override
     @Transactional
@@ -274,6 +272,11 @@ public class CarServiceImpl implements CarService {
         Page<Cars> carsPage = carRepository.findByCategoryId(categoryId, pageable);
 
         return carsPage.map(this::mapToCarResponse);
+    }
+
+    @Override
+    public List<BookingTimeResponse> getBookedRanges(Long carId) {
+        return bookingDetailRepository.findBookedRanges(carId);
     }
 
     private CarResponse mapToCarResponse(Cars car) {
