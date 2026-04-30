@@ -3,13 +3,17 @@ package com.example.car_rental.service.impl;
 import com.example.car_rental.dto.requestDTO.RefundRequest;
 import com.example.car_rental.dto.responseDTO.RefundResponse;
 import com.example.car_rental.entity.Bookings;
+import com.example.car_rental.entity.Payments;
 import com.example.car_rental.entity.Refunds;
 import com.example.car_rental.entity.Users;
 import com.example.car_rental.entity.enums.BookingStatusEnum;
+import com.example.car_rental.entity.enums.PaymentStatusEnum;
+import com.example.car_rental.entity.enums.PaymentTypeEnum;
 import com.example.car_rental.entity.enums.RefundStatus;
 import com.example.car_rental.exception.AppException;
 import com.example.car_rental.exception.ErrorCode;
 import com.example.car_rental.repository.BookingsRepository;
+import com.example.car_rental.repository.PaymentsRepository;
 import com.example.car_rental.repository.RefundRepository;
 import com.example.car_rental.repository.UserRepository;
 import com.example.car_rental.service.ImageService;
@@ -36,76 +40,93 @@ import java.util.Map;
 public class RefundServiceImpl implements RefundService {
 
     final RefundRepository refundRepository;
-    final BookingsRepository bookingsRepository;
     final ImageService imageService;
-    final UserRepository userRepository;
+    final PaymentsRepository paymentsRepository;
 
     @Override
-    public RefundResponse getRefundUser(String email, Long refundId) {
-        Refunds refunds = refundRepository.findById(refundId)
-                .orElseThrow(() -> new AppException(ErrorCode.REFUND_NOT_FOUND));
+    public Page<RefundResponse> getAllRefundUser(String email,String bookingCode, String status, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Refunds> refundsPage = null;
 
-        return getRefund(refunds);
+        boolean noFilter =
+                (bookingCode == null || bookingCode.isBlank()) &&
+                        (status == null || status.isBlank());
+
+        if (noFilter) {
+            refundsPage = refundRepository.findAll(pageable);
+        } else {
+            RefundStatus statusEnum = null;
+
+            if (status != null && !status.isBlank()) {
+                statusEnum = RefundStatus.valueOf(status.toUpperCase());
+            }
+            refundsPage = refundRepository.findRefundByUser(email, bookingCode, statusEnum, pageable);
+        }
+
+        return refundsPage.map(this::getRefund);
     }
 
     @Override
     @Transactional
-    public RefundResponse cancelRefund(Long bookingId, RefundRequest request, MultipartFile qrCode) {
+    public RefundResponse createRefund(Bookings booking, RefundRequest request, MultipartFile qrCode) {
 
-        Bookings booking = bookingsRepository.findById(bookingId)
-                .orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
+        // ❗ tránh double refund
+        if (refundRepository.existsByBooking(booking)) {
+            throw new AppException(ErrorCode.REFUND_ALREADY_EXISTS);
+        }
+        if (booking.getStatus() != BookingStatusEnum.CONFIRMED) {
+            throw new AppException(ErrorCode.INVALID_BOOKING_STATUS);
+        }
+        // ❗ check payment tồn tại + đã thanh toán
+        Payments payment = paymentsRepository
+                .findByBookingAndPaymentType(booking, PaymentTypeEnum.DEPOSIT)
+                .orElseThrow(() -> new AppException(ErrorCode.PAYMENT_NOT_FOUND));
 
-        String email = SecurityContextHolder
-                .getContext()
-                .getAuthentication()
-                .getName();
+        if (payment.getStatus() != PaymentStatusEnum.SUCCESS) {
+            throw new AppException(ErrorCode.PAYMENT_NOT_COMPLETED);
+        }
 
-        Users user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        if (booking.getBookingDetailsList() == null || booking.getBookingDetailsList().isEmpty()) {
+            throw new AppException(ErrorCode.INVALID_BOOKING_TIME);
+        }
+        LocalDateTime bookingStart = booking.getBookingDetailsList().get(0).getStartDate();
 
-        LocalDateTime bookingStart = booking.getCreatedAt();
-        long hoursBefore = Duration.between(LocalDateTime.now(), bookingStart).toHours();
+        // ❗ tránh số âm
+        long hoursBefore = Math.max(
+                Duration.between(LocalDateTime.now(), bookingStart).toHours(),
+                0
+        );
+
         int cancelPercent;
-        if (hoursBefore >= 24) {
-            cancelPercent = 100;
-        } else if (hoursBefore >= 12) {
-            cancelPercent = 60;
-        } else {
-            cancelPercent = 0;
+        if (hoursBefore >= 24) cancelPercent = 100;
+        else if (hoursBefore >= 12) cancelPercent = 60;
+        else cancelPercent = 0;
+
+        Refunds refund = Refunds.builder()
+                .booking(booking)
+                .bookingCode(booking.getBookingCode())
+                .reason(request.getReason())
+                .hoursBefore(hoursBefore)
+                .cancelPercent(cancelPercent)
+                .amount(calculateCancelAmount(booking, cancelPercent))
+                .status(RefundStatus.PENDING)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        try {
+            Map<String, String> qrCodeUrl =
+                    imageService.uploadImages(qrCode, "bookings", booking.getBookingCode(), "QrCode");
+
+            refund.setQrCodeUrl(qrCodeUrl.get("url"));
+            refund.setPublicId(qrCodeUrl.get("public_id"));
+
+        } catch (IOException e) {
+            throw new AppException(ErrorCode.UPDATE_IMAGE_FAIL);
         }
 
-        if (booking.getStatus() == BookingStatusEnum.PENDING) {
-            booking.setStatus(BookingStatusEnum.CANCELLED);
-            return null;
-        } else if (booking.getStatus() == BookingStatusEnum.RENTED || booking.getStatus() == BookingStatusEnum.COMPLETED || booking.getStatus() == BookingStatusEnum.CANCELLED) {
-            throw new AppException(ErrorCode.CAR_ALREADY_PICKED_UP_CANNOT_CANCEL);
-        } else {
-            Refunds refund = Refunds.builder()
-                    .booking(booking)
-                    .bookingCode(booking.getBookingCode())
-                    .reason(request.getReason())
-                    .hoursBefore(hoursBefore)
-                    .cancelPercent(cancelPercent)
-                    .amount(calculateCancelAmount(booking, cancelPercent))
-                    .status(RefundStatus.PENDING)
-                    .createdAt(LocalDateTime.now())
-                    .build();
+        refundRepository.save(refund);
 
-            try {
-
-                Map<String, String> qrCodeUrl = imageService.uploadImages(qrCode, "users", user.getFullName(), "QrCode");
-                refund.setQrCodeUrl(qrCodeUrl.get("url"));
-                refund.setPublicId(qrCodeUrl.get("public_id"));
-            } catch (IOException e) {
-                throw new AppException(ErrorCode.UPDATE_IMAGE_FAIL);
-            }
-
-            refundRepository.save(refund);
-
-            booking.setStatus(BookingStatusEnum.CANCELLED);
-            bookingsRepository.save(booking);
-            return getRefund(refund);
-        }
+        return getRefund(refund);
     }
 
     RefundResponse getRefund(Refunds refunds) {

@@ -45,32 +45,22 @@ public class RefundController {
                 .build();
     }
 
-    @PutMapping(value = "/me/{bookingId}/cancel")
-    public ApiResponse<RefundResponse> cancelRefund(@PathVariable(value = "bookingId") Long bookingId,
-                                                    @RequestPart(value = "refundRequest", required = false) String requestJson,
-                                                    @RequestPart(value = "qrCode") MultipartFile qrCode) throws JsonProcessingException {
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        RefundRequest request = objectMapper.readValue(requestJson, RefundRequest.class);
-
-        return ApiResponse.<RefundResponse>builder()
-                .code(200)
-                .data(refundService.cancelRefund(bookingId, request, qrCode))
-                .message("Update refund successful")
-                .build();
-    }
-
-    @GetMapping("/me/{refundId}")
-    public ApiResponse<RefundResponse> getRefund(@PathVariable(value = "refundId") Long refundId) {
+    //USER
+    @GetMapping("/me")
+    public ApiResponse<Page<RefundResponse>> getRefundUser(@RequestParam(defaultValue = "0", required = false) int page,
+                                                     @RequestParam(defaultValue = "5") int size,
+                                                     @RequestParam(required = false) String bookingCode,
+                                                     @RequestParam(required = false) String status) {
 
         String email = SecurityContextHolder
                 .getContext()
                 .getAuthentication()
                 .getName();
 
-        return ApiResponse.<RefundResponse>builder()
+        return ApiResponse.<Page<RefundResponse>> builder()
                 .code(200)
-                .data(refundService.getRefundUser(email, refundId))
+                .data(refundService.getAllRefundUser(email, bookingCode, status, page, size))
                 .build();
     }
 

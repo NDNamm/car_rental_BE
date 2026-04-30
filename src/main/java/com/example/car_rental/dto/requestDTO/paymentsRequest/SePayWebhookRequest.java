@@ -14,7 +14,7 @@ public class SePayWebhookRequest {
     private String gateway;
     private String transactionDate; // Ngày giờ giao dịch
     private String accountNo;     // Số tài khoản nhận tiền
-    private BigDecimal amount;    // Số tiền khách chuyển
+    private BigDecimal transferAmount;    // Số tiền khách chuyển
     private String content;       // Nội dung chuyển khoản (QUAN TRỌNG: Chứa mã BK_...)
     private String transferType;  // Loại giao dịch (In/Out)
     private String referenceCode; // Mã tham chiếu của ngân hàng (Transaction ID)

@@ -1,6 +1,7 @@
 package com.example.car_rental.controller;
 
 import com.example.car_rental.dto.responseDTO.ApiResponse;
+import com.example.car_rental.dto.responseDTO.BookingResponse.BookingCodeResponse;
 import com.example.car_rental.service.PaymentsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -13,12 +14,11 @@ public class PaymentsController {
     private final PaymentsService paymentsService;
 
     @GetMapping("/qr/{bookingCode}")
-    public ApiResponse<String> getPaymentQr(@PathVariable String bookingCode) {
-        String qrUrl = paymentsService.getQrUrlByBookingCode(bookingCode);
+    public ApiResponse<BookingCodeResponse> getPaymentQr(@PathVariable String bookingCode) {
 
-        return ApiResponse.<String>builder()
+        return ApiResponse.<BookingCodeResponse>builder()
                 .code(200)
-                .data(qrUrl)
+                .data(paymentsService.getQrUrlByBookingCode(bookingCode))
                 .message("QR code generated successfully")
                 .build();
     }

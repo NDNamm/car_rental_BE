@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/webhooks")
+@RequestMapping("/api/v1/webhooks")
 @RequiredArgsConstructor
 @Slf4j
 public class WebhookController {
@@ -21,7 +21,7 @@ public class WebhookController {
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
 
         log.info(">>> Nhận Webhook từ SePay: Content='{}', Amount={}",
-                request.getContent(), request.getAmount());
+                request.getContent(), request.getTransferAmount());
 
         String apiKey = "";
         if (authHeader != null) {

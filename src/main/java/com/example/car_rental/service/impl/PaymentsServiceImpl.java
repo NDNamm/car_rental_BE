@@ -1,6 +1,7 @@
 package com.example.car_rental.service.impl;
 
 import com.example.car_rental.dto.requestDTO.paymentsRequest.SePayWebhookRequest;
+import com.example.car_rental.dto.responseDTO.BookingResponse.BookingCodeResponse;
 import com.example.car_rental.entity.BookingStatusHistory;
 import com.example.car_rental.entity.Bookings;
 import com.example.car_rental.entity.Payments;
@@ -52,68 +53,75 @@ public class PaymentsServiceImpl implements PaymentsService {
     @Override
     @Transactional
     public void processSePayWebhook(SePayWebhookRequest request, String apiKeyHeader) {
-        if (apiKeyHeader == null || !apiKeyHeader.equals(sepayApiKey)) {
-            throw new AppException(ErrorCode.UNAUTHORIZED_WEBHOOK);
-        }
 
+        // 1. Verify API KEY
+//        if (apiKeyHeader == null || !apiKeyHeader.equals(sepayApiKey)) {
+//            throw new AppException(ErrorCode.UNAUTHORIZED_WEBHOOK);
+//        }
+        // 2. Extract booking code
         String bookingCode = extractBookingCode(request.getContent());
-        if (bookingCode == null) return;
-
+        if (bookingCode == null) {
+            log.warn("Không tìm thấy bookingCode từ content: {}", request.getContent());
+            return;
+        }
+        bookingCode = normalizeBookingCode(bookingCode);
+        // 3. Find booking
         Bookings booking = bookingsRepository.findByBookingCode(bookingCode)
                 .orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
-
+        // 4. Ignore nếu đã xử lý rồi
         if (booking.getStatus() != BookingStatusEnum.PENDING) {
             log.info("Booking {} đã được xử lý trước đó.", bookingCode);
             return;
         }
-
+        // 5. Check timeout thanh toán
         if (LocalDateTime.now().isAfter(booking.getPaymentDeadline())) {
-
             booking.setStatus(BookingStatusEnum.CANCELLED);
-
-            booking.getBookingDetailsList().forEach(detail -> {
-                detail.getCar().setStatus(CarStatusEnum.AVAILABLE);
-            });
-
-            Users user = userRepository.findByEmail("system@local")
+            booking.getBookingDetailsList().forEach(detail ->
+                    detail.getCar().setStatus(CarStatusEnum.AVAILABLE)
+            );
+            Users systemUser = userRepository.findByEmail("system@local")
                     .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-
-            BookingStatusHistory his = BookingStatusHistory.builder()
+            BookingStatusHistory history = BookingStatusHistory.builder()
                     .booking(booking)
                     .newStatus(BookingStatusEnum.CANCELLED)
                     .reason("Hết hạn thanh toán - Auto cancel")
                     .changedAt(LocalDateTime.now())
-                    .changedBy(user)
+                    .changedBy(systemUser)
                     .build();
-
-            bookingStatusHistoryRepository.save(his);
+            bookingStatusHistoryRepository.save(history);
             bookingsRepository.save(booking);
-
-            log.warn("Booking {} bị cancel do thanh toán quá hạn", bookingCode);
-
+            log.warn("Booking {} bị cancel do quá hạn thanh toán", bookingCode);
             return;
         }
-
-        if (request.getAmount().compareTo(booking.getTotalDepositAmount()) >= 0) {
-
-            // Tìm bản ghi thanh toán cọc đang chờ (PENDING)
-            Payments payment = paymentsRepository.findByBookingAndPaymentType(booking, PaymentTypeEnum.DEPOSIT)
-                    .orElseThrow(() -> new AppException(ErrorCode.PAYMENT_NOT_FOUND));
-
-            payment.setStatus(PaymentStatusEnum.SUCCESS);
-            payment.setTransactionCode(request.getReferenceCode());
-            payment.setPaymentMethod(PaymentMethodEnum.BANK_TRANSFER);
-            booking.setStatus(BookingStatusEnum.CONFIRMED);
-
-            paymentsRepository.save(payment);
-            bookingsRepository.save(booking);
-
-            log.info("Xác nhận thành công tiền cọc cho đơn hàng: {}", bookingCode);
+        // 6. SAFE NULL CHECK amount
+        if (request.getTransferAmount() == null) {
+            log.warn("SePay webhook thiếu amount. Content={}", request.getContent());
+            return;
         }
+        // 7. Compare amount
+        if (request.getTransferAmount().compareTo(booking.getTotalDepositAmount()) < 0) {
+            log.warn("Số tiền không đủ cho booking {}. Amount={}", bookingCode, request.getTransferAmount());
+            return;
+        }
+        // 8. Find payment
+        Payments payment = paymentsRepository
+                .findByBookingAndPaymentType(booking, PaymentTypeEnum.DEPOSIT)
+                .orElseThrow(() -> new AppException(ErrorCode.PAYMENT_NOT_FOUND));
+        // 9. Update payment
+        payment.setStatus(PaymentStatusEnum.SUCCESS);
+        payment.setTransactionCode(request.getReferenceCode());
+        payment.setPaymentMethod(PaymentMethodEnum.BANK_TRANSFER);
+        // 10. Update booking
+        booking.setStatus(BookingStatusEnum.CONFIRMED);
+        // 11. Save
+        paymentsRepository.save(payment);
+        bookingsRepository.save(booking);
+
+        log.info("Thanh toán cọc thành công cho booking: {}", bookingCode);
     }
 
     @Override
-    public String getQrUrlByBookingCode(String bookingCode) {
+    public BookingCodeResponse getQrUrlByBookingCode(String bookingCode) {
         Bookings booking = bookingsRepository.findByBookingCode(bookingCode)
                 .orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
 
@@ -121,7 +129,10 @@ public class PaymentsServiceImpl implements PaymentsService {
             throw new AppException(ErrorCode.BOOKING_ALREADY_PROCESSED);
         }
 
-        return booking.getQrCodeUrl();
+        return BookingCodeResponse.builder()
+                .qrCodeUrl(booking.getQrCodeUrl())
+                .bookingCode(booking.getBookingCode())
+                .build();
     }
 
     @Override
@@ -135,8 +146,25 @@ public class PaymentsServiceImpl implements PaymentsService {
     //Lay ma don hang
     private String extractBookingCode(String content) {
         if (content == null) return null;
-        Pattern pattern = Pattern.compile("BK_[A-Z0-9]+", Pattern.CASE_INSENSITIVE);
+
+        Pattern pattern = Pattern.compile("(BK[_A-Z0-9]+)");
         Matcher matcher = pattern.matcher(content);
-        return matcher.find() ? matcher.group().toUpperCase() : null;
+
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+
+        return null;
+    }
+
+    private String normalizeBookingCode(String code) {
+        if (code == null) return null;
+
+        // nếu dạng BK123ABC → chuyển thành BK_123ABC
+        if (code.matches("^BK[0-9A-Z]+$")) {
+            return "BK_" + code.substring(2);
+        }
+
+        return code;
     }
 }

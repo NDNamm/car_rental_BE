@@ -76,7 +76,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private boolean bypassFilter(HttpServletRequest request) {
-        return request.getServletPath().startsWith("/api/auth/");
+        String path = request.getServletPath();
+
+        return path.startsWith("/api/auth/")
+                || path.startsWith("/api/v1/webhooks/");
     }
 
     private void unauthorized(HttpServletResponse response, String message) throws IOException {

@@ -65,12 +65,19 @@ public enum ErrorCode {
     START_DATE_IN_PAST(9010,"START_DATE_IN_PAST", HttpStatus.BAD_REQUEST),
     INVALID_REQUEST(9011,"INVALID_REQUEST", HttpStatus.BAD_REQUEST),
     CAR_ALREADY_BOOKED_IN_THIS_TIME(9012,"CAR_ALREADY_BOOKED_IN_THIS_TIME", HttpStatus.BAD_REQUEST),
+    QR_CODE_REQUIRED(9013,"QR_CODE_REQUIRED", HttpStatus.BAD_REQUEST),
 
     DETAIL_NOT_FOUND(10001,"Booking detail not found", HttpStatus.NOT_FOUND),
 
     UNAUTHORIZED_WEBHOOK(11001,"UNAUTHORIZED_WEBHOOK",HttpStatus.UNAUTHORIZED),
 
     PAYMENT_NOT_FOUND(12001, "PAYMENT_NOT_FOUND", HttpStatus.NOT_FOUND),
+
+    REFUND_ALREADY_EXISTS(13001, "Refund already exists for this booking", HttpStatus.BAD_REQUEST),
+
+    INVALID_BOOKING_TIME(13002, "Invalid booking time", HttpStatus.BAD_REQUEST),
+    PAYMENT_NOT_COMPLETED(13003, "Payment not completed", HttpStatus.BAD_REQUEST),
+    INVALID_BOOKING_STATUS(13004, "Invalid booking status for refund", HttpStatus.BAD_REQUEST),
 
     UPDATE_IMAGE_FAIL(6003, "Failed to update image", HttpStatus.INTERNAL_SERVER_ERROR),
     IMAGE_REQUIRED(6004, "Image is required", HttpStatus.BAD_REQUEST);

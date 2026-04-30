@@ -31,7 +31,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
 
-                        .requestMatchers("/api/auth/**", "/api/webhooks/**").permitAll()
+                        .requestMatchers("/api/auth/**", "/api/v1/webhooks/**").permitAll()
                         .requestMatchers("/api/users/me/change-password").hasAnyRole("USER", "ADMIN","STAFF")
                         .requestMatchers(HttpMethod.GET, "/api/cars/**", "/api/categories/**", "/api/features/**").permitAll()
 

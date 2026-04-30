@@ -2,14 +2,20 @@ package com.example.car_rental.controller;
 
 import com.example.car_rental.dto.requestDTO.BookingsRequest.BookingStatusRequest;
 import com.example.car_rental.dto.requestDTO.BookingsRequest.BookingRequest;
+import com.example.car_rental.dto.requestDTO.CarRequest.CarRequest;
+import com.example.car_rental.dto.requestDTO.RefundRequest;
 import com.example.car_rental.dto.responseDTO.ApiResponse;
 import com.example.car_rental.dto.responseDTO.BookingResponse.BookingCodeResponse;
 import com.example.car_rental.dto.responseDTO.BookingResponse.BookingsResponse;
+import com.example.car_rental.dto.responseDTO.RefundResponse;
 import com.example.car_rental.service.BookingsService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequiredArgsConstructor
@@ -100,10 +106,15 @@ public class BookingController {
     }
 
     @PatchMapping("/me/{bookingId}")
-    public ApiResponse<Void> cancelBooking(@PathVariable(value = "bookingId") Long bookingId) {
+    public ApiResponse<Void> cancelBooking(@PathVariable(value = "bookingId") Long bookingId,
+                                                     @RequestPart(value = "refundRequest", required = false) String request,
+                                                     @RequestPart(required = false) MultipartFile qrCode) throws JsonProcessingException {
 
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        bookingsService.cancelBooking(email, bookingId );
+        ObjectMapper objectMapper = new ObjectMapper();
+        RefundRequest refundRequest = objectMapper.readValue(request, RefundRequest.class);
+
+        bookingsService.cancelBooking(email, bookingId, refundRequest, qrCode );
         return ApiResponse.<Void>builder()
                 .code(200)
                 .message("Cancel booking successful")

@@ -3,12 +3,14 @@ package com.example.car_rental.service.impl;
 import com.example.car_rental.dto.requestDTO.BookingsRequest.BookingDetailRequest;
 import com.example.car_rental.dto.requestDTO.BookingsRequest.BookingStatusRequest;
 import com.example.car_rental.dto.requestDTO.BookingsRequest.BookingRequest;
+import com.example.car_rental.dto.requestDTO.RefundRequest;
 import com.example.car_rental.dto.responseDTO.BookingResponse.BookingCodeResponse;
 import com.example.car_rental.dto.responseDTO.BookingResponse.BookingDetailResponse;
 import com.example.car_rental.dto.responseDTO.BookingResponse.BookingStatusResponse;
 import com.example.car_rental.dto.responseDTO.BookingResponse.BookingsResponse;
 import com.example.car_rental.dto.responseDTO.CarResponse.CarImageResponse;
 import com.example.car_rental.dto.responseDTO.CarResponse.CarResponse;
+import com.example.car_rental.dto.responseDTO.RefundResponse;
 import com.example.car_rental.entity.*;
 import com.example.car_rental.entity.enums.*;
 import com.example.car_rental.exception.AppException;
@@ -16,6 +18,7 @@ import com.example.car_rental.exception.ErrorCode;
 import com.example.car_rental.repository.*;
 import com.example.car_rental.service.BookingsService;
 import com.example.car_rental.service.PaymentsService;
+import com.example.car_rental.service.RefundService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -24,6 +27,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -47,6 +51,7 @@ public class BookingsServiceImpl implements BookingsService {
     final VerificationRepository verificationRepository;
     final CarHandoverRepository carHandoverRepository;
     final BookingStatusHistoryRepository bookingStatusHistoryRepository;
+    private final RefundService refundService;
 
 
     @Override
@@ -473,7 +478,8 @@ public class BookingsServiceImpl implements BookingsService {
 
     @Override
     @Transactional
-    public void cancelBooking(String email, Long bookingId) {
+    public void cancelBooking(String email, Long bookingId, RefundRequest request, MultipartFile qrCode) {
+
         Bookings booking = bookingsRepository.findById(bookingId)
                 .orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
 
@@ -481,16 +487,31 @@ public class BookingsServiceImpl implements BookingsService {
             throw new AppException(ErrorCode.UNAUTHORIZED);
         }
 
-        if (booking.getStatus() != BookingStatusEnum.PENDING &&
-                booking.getStatus() != BookingStatusEnum.CONFIRMED) {
+        if (booking.getStatus() == BookingStatusEnum.RENTED
+                || booking.getStatus() == BookingStatusEnum.COMPLETED
+                || booking.getStatus() == BookingStatusEnum.CANCELLED) {
             throw new AppException(ErrorCode.CANNOT_CANCEL_BOOKING);
         }
 
+        RefundResponse refundResponse = null;
+
+        // 👉 chỉ CONFIRMED mới cần refund + QR
+        if (booking.getStatus() == BookingStatusEnum.CONFIRMED) {
+
+            if (qrCode == null || qrCode.isEmpty()) {
+                throw new AppException(ErrorCode.QR_CODE_REQUIRED);
+            }
+
+            refundResponse = refundService.createRefund(booking, request, qrCode);
+        }
+
+        // update car
         booking.getBookingDetailsList().forEach(detail -> {
             detail.getCar().setStatus(CarStatusEnum.AVAILABLE);
             carRepository.save(detail.getCar());
         });
 
+        // history
         BookingStatusHistory history = BookingStatusHistory.builder()
                 .booking(booking)
                 .oldStatus(booking.getStatus())
@@ -499,13 +520,12 @@ public class BookingsServiceImpl implements BookingsService {
                 .changedAt(LocalDateTime.now())
                 .changedBy(booking.getUser())
                 .build();
+
         bookingStatusHistoryRepository.save(history);
+
         booking.setStatus(BookingStatusEnum.CANCELLED);
         bookingsRepository.save(booking);
+
     }
 
-    @Override
-    public BookingsResponse getBooking(Long bookingId) {
-        return null;
-    }
 }

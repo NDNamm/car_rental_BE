@@ -21,14 +21,9 @@ import java.time.LocalDateTime;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class RefundRequest {
 
-    private String bookingCode;
     private String reason;
-    private BigDecimal amount;
-    private Long hoursBefore;
-    private int cancelPercent;
     private String qrCodeUrl;
     private String note;
     private String adminProofImage;
-    private LocalDateTime createdAt;
     private RefundStatus status;
 }
