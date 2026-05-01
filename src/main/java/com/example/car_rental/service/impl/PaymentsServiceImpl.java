@@ -54,26 +54,20 @@ public class PaymentsServiceImpl implements PaymentsService {
     @Transactional
     public void processSePayWebhook(SePayWebhookRequest request, String apiKeyHeader) {
 
-        // 1. Verify API KEY
-//        if (apiKeyHeader == null || !apiKeyHeader.equals(sepayApiKey)) {
-//            throw new AppException(ErrorCode.UNAUTHORIZED_WEBHOOK);
-//        }
-        // 2. Extract booking code
         String bookingCode = extractBookingCode(request.getContent());
         if (bookingCode == null) {
             log.warn("Không tìm thấy bookingCode từ content: {}", request.getContent());
             return;
         }
         bookingCode = normalizeBookingCode(bookingCode);
-        // 3. Find booking
         Bookings booking = bookingsRepository.findByBookingCode(bookingCode)
                 .orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
-        // 4. Ignore nếu đã xử lý rồi
+        //Ignore nếu đã xử lý rồi
         if (booking.getStatus() != BookingStatusEnum.PENDING) {
             log.info("Booking {} đã được xử lý trước đó.", bookingCode);
             return;
         }
-        // 5. Check timeout thanh toán
+        //Check timeout thanh toán
         if (LocalDateTime.now().isAfter(booking.getPaymentDeadline())) {
             booking.setStatus(BookingStatusEnum.CANCELLED);
             booking.getBookingDetailsList().forEach(detail ->
@@ -93,27 +87,36 @@ public class PaymentsServiceImpl implements PaymentsService {
             log.warn("Booking {} bị cancel do quá hạn thanh toán", bookingCode);
             return;
         }
-        // 6. SAFE NULL CHECK amount
+        //SAFE NULL CHECK amount
         if (request.getTransferAmount() == null) {
             log.warn("SePay webhook thiếu amount. Content={}", request.getContent());
             return;
         }
-        // 7. Compare amount
+        //Compare amount
         if (request.getTransferAmount().compareTo(booking.getTotalDepositAmount()) < 0) {
             log.warn("Số tiền không đủ cho booking {}. Amount={}", bookingCode, request.getTransferAmount());
             return;
         }
-        // 8. Find payment
+        //Find payment
         Payments payment = paymentsRepository
                 .findByBookingAndPaymentType(booking, PaymentTypeEnum.DEPOSIT)
                 .orElseThrow(() -> new AppException(ErrorCode.PAYMENT_NOT_FOUND));
-        // 9. Update payment
+
         payment.setStatus(PaymentStatusEnum.SUCCESS);
         payment.setTransactionCode(request.getReferenceCode());
         payment.setPaymentMethod(PaymentMethodEnum.BANK_TRANSFER);
-        // 10. Update booking
+
         booking.setStatus(BookingStatusEnum.CONFIRMED);
-        // 11. Save
+        BookingStatusHistory history = BookingStatusHistory.builder()
+                .booking(booking)
+                .newStatus(BookingStatusEnum.CONFIRMED)
+                .reason("Thanh toán cọc thành công")
+                .changedAt(LocalDateTime.now())
+                .changedBy(userRepository.findByEmail("system@local")
+                        .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND)))
+                .build();
+
+        bookingStatusHistoryRepository.save(history);
         paymentsRepository.save(payment);
         bookingsRepository.save(booking);
 

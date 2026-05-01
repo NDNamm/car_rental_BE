@@ -8,6 +8,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,17 +31,17 @@ public class RefundController {
                 .build();
     }
 
-    @PutMapping(value = "/{refundId}")
+    @PutMapping(value = "/{refundId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<RefundResponse> updateRefundResponse(@PathVariable(value = "refundId") Long refundId,
                                                             @RequestPart(value = "refundRequest", required = false) String requestJson,
-                                                            @RequestPart(required = false, value = "image") MultipartFile image) throws JsonProcessingException {
+                                                            @RequestPart(required = false, value = "adminProofImage") MultipartFile adminProofImage) throws JsonProcessingException {
 
         ObjectMapper objectMapper = new ObjectMapper();
         RefundRequest request = objectMapper.readValue(requestJson, RefundRequest.class);
 
         return ApiResponse.<RefundResponse>builder()
                 .code(200)
-                .data(refundService.updateStatus(refundId, request, image))
+                .data(refundService.updateStatus(refundId, request, adminProofImage))
                 .message("Update refund successful")
                 .build();
     }

@@ -21,7 +21,7 @@ public class RefundResponse {
     private BigDecimal amount;
     private String reason;
     private Long hoursBefore;
-    private int cancelPercent;
+    private int refundPercent;
     private RefundStatus status;
     private String publicId;
     private String qrCodeUrl;

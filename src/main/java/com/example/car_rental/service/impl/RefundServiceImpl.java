@@ -1,5 +1,6 @@
 package com.example.car_rental.service.impl;
 
+import com.example.car_rental.domain.RefundCalculate;
 import com.example.car_rental.dto.requestDTO.RefundRequest;
 import com.example.car_rental.dto.responseDTO.RefundResponse;
 import com.example.car_rental.entity.Bookings;
@@ -42,6 +43,7 @@ public class RefundServiceImpl implements RefundService {
     final RefundRepository refundRepository;
     final ImageService imageService;
     final PaymentsRepository paymentsRepository;
+    final RefundCalculate refundCalculate;
 
     @Override
     public Page<RefundResponse> getAllRefundUser(String email,String bookingCode, String status, int page, int size) {
@@ -91,24 +93,16 @@ public class RefundServiceImpl implements RefundService {
         }
         LocalDateTime bookingStart = booking.getBookingDetailsList().get(0).getStartDate();
 
-        // ❗ tránh số âm
-        long hoursBefore = Math.max(
-                Duration.between(LocalDateTime.now(), bookingStart).toHours(),
-                0
-        );
-
-        int cancelPercent;
-        if (hoursBefore >= 24) cancelPercent = 100;
-        else if (hoursBefore >= 12) cancelPercent = 60;
-        else cancelPercent = 0;
+        long hoursBefore = refundCalculate.calculateHoursBefore(bookingStart);
+        int refundPercent = refundCalculate.calculateRefundPercent(hoursBefore);
 
         Refunds refund = Refunds.builder()
                 .booking(booking)
                 .bookingCode(booking.getBookingCode())
                 .reason(request.getReason())
                 .hoursBefore(hoursBefore)
-                .cancelPercent(cancelPercent)
-                .amount(calculateCancelAmount(booking, cancelPercent))
+                .refundPercent(refundPercent)
+                .amount(refundCalculate.calculateRefundAmount(booking, refundPercent))
                 .status(RefundStatus.PENDING)
                 .createdAt(LocalDateTime.now())
                 .build();
@@ -138,26 +132,13 @@ public class RefundServiceImpl implements RefundService {
                 .reason(refunds.getReason())
                 .amount(refunds.getAmount())
                 .hoursBefore(refunds.getHoursBefore())
-                .cancelPercent(refunds.getCancelPercent())
+                .refundPercent(refunds.getRefundPercent())
                 .status(refunds.getStatus())
                 .note(refunds.getNote())
                 .qrCodeUrl(refunds.getQrCodeUrl())
                 .adminProofImage(refunds.getAdminProofImage())
                 .createdAt(refunds.getCreatedAt())
                 .build();
-    }
-
-    public BigDecimal calculateCancelAmount(Bookings booking, int cancelPercent) {
-        BigDecimal percent = BigDecimal.valueOf(cancelPercent);
-        BigDecimal divisor = new BigDecimal("100");
-
-        // Công thức: (Tiền cọc * Phần trăm) / 100
-        BigDecimal cancelAmount = booking.getTotalDepositAmount()
-                .multiply(percent)
-                .divide(divisor, 2, RoundingMode.HALF_UP);
-
-        BigDecimal refundAmount = booking.getTotalDepositAmount().subtract(cancelAmount);
-        return refundAmount;
     }
 
     @Override
@@ -181,7 +162,7 @@ public class RefundServiceImpl implements RefundService {
 
             refunds.setNote(
                     "Đã hoàn " + refunds.getAmount()
-                            + " (" + refunds.getCancelPercent() + "%)"
+                            + " (" + refunds.getRefundPercent() + "%)"
                             + " số tiền sau " + refunds.getHoursBefore() + " giờ cọc"
             );
 
@@ -203,7 +184,6 @@ public class RefundServiceImpl implements RefundService {
         }
 
         else if (request.getStatus() == RefundStatus.REJECTED) {
-
             refunds.setStatus(RefundStatus.REJECTED);
             refunds.setNote(request.getNote());
 

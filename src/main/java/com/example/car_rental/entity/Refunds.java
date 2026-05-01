@@ -33,8 +33,8 @@ public class Refunds {
     @Column(name = "hours_before")
     private Long hoursBefore;
 
-    @Column(name = "cancel_percent")
-    private int cancelPercent;
+    @Column(name = "refund_percent")
+    private int refundPercent;
 
     @Column(name = "status")
     @Enumerated(EnumType.STRING)

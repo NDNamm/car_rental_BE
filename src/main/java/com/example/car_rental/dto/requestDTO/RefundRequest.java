@@ -22,8 +22,6 @@ import java.time.LocalDateTime;
 public class RefundRequest {
 
     private String reason;
-    private String qrCodeUrl;
     private String note;
-    private String adminProofImage;
     private RefundStatus status;
 }

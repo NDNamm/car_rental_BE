@@ -1,5 +1,6 @@
 package com.example.car_rental.service.impl;
 
+import com.example.car_rental.domain.RefundCalculate;
 import com.example.car_rental.dto.requestDTO.BookingsRequest.BookingDetailRequest;
 import com.example.car_rental.dto.requestDTO.BookingsRequest.BookingStatusRequest;
 import com.example.car_rental.dto.requestDTO.BookingsRequest.BookingRequest;
@@ -51,7 +52,8 @@ public class BookingsServiceImpl implements BookingsService {
     final VerificationRepository verificationRepository;
     final CarHandoverRepository carHandoverRepository;
     final BookingStatusHistoryRepository bookingStatusHistoryRepository;
-    private final RefundService refundService;
+    final RefundService refundService;
+    final RefundCalculate refundCalculate;
 
 
     @Override
@@ -75,7 +77,7 @@ public class BookingsServiceImpl implements BookingsService {
             if (status != null && !status.isBlank()) {
                 statusEnum = BookingStatusEnum.valueOf(status.toUpperCase());
             }
-            bookingsPage = bookingsRepository.searchBookings(bookingCode,email, name, phoneNumber, statusEnum, pageable);
+            bookingsPage = bookingsRepository.searchBookings(bookingCode, email, name, phoneNumber, statusEnum, pageable);
         }
 
         return bookingsPage.map(this::getBooking);
@@ -381,7 +383,7 @@ public class BookingsServiceImpl implements BookingsService {
             Long carId = d.getCarRequest().getId();
 
             // 🔥 check trùng lịch (loại trừ chính booking hiện tại)
-            validateCarAvailability(carId, bookingId, d.getStartDate(),d.getEndDate());
+            validateCarAvailability(carId, bookingId, d.getStartDate(), d.getEndDate());
 
             long days = calculateRentalDays(d.getStartDate(), d.getEndDate());
 
@@ -448,7 +450,7 @@ public class BookingsServiceImpl implements BookingsService {
                                          LocalDateTime start,
                                          LocalDateTime end) {
 
-        long count = bookingDetailRepository.countOverlappingBookings(carId, bookingId ,start,end);
+        long count = bookingDetailRepository.countOverlappingBookings(carId, bookingId, start, end);
         if (count > 0) {
             throw new AppException(ErrorCode.CAR_ALREADY_BOOKED_IN_THIS_TIME);
         }
@@ -495,14 +497,14 @@ public class BookingsServiceImpl implements BookingsService {
 
         RefundResponse refundResponse = null;
 
-        // 👉 chỉ CONFIRMED mới cần refund + QR
         if (booking.getStatus() == BookingStatusEnum.CONFIRMED) {
+            LocalDateTime startDate = booking.getBookingDetailsList().get(0).getStartDate();
+            long hoursBefore = refundCalculate.calculateHoursBefore(startDate);
+            int refundPercent = refundCalculate.calculateRefundPercent(hoursBefore);
 
-            if (qrCode == null || qrCode.isEmpty()) {
-                throw new AppException(ErrorCode.QR_CODE_REQUIRED);
+            if (refundPercent > 0) {
+                refundService.createRefund(booking, request, qrCode);
             }
-
-            refundResponse = refundService.createRefund(booking, request, qrCode);
         }
 
         // update car

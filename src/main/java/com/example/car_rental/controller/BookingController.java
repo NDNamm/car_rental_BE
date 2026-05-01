@@ -13,6 +13,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -105,7 +106,7 @@ public class BookingController {
                 .build();
     }
 
-    @PatchMapping("/me/{bookingId}")
+    @PatchMapping(value = "/me/{bookingId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<Void> cancelBooking(@PathVariable(value = "bookingId") Long bookingId,
                                                      @RequestPart(value = "refundRequest", required = false) String request,
                                                      @RequestPart(required = false) MultipartFile qrCode) throws JsonProcessingException {
