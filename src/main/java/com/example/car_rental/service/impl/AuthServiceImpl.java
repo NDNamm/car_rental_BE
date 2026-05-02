@@ -139,9 +139,9 @@ public class AuthServiceImpl implements AuthService {
         if (refreshToken != null) {
             try {
                 Claims claims = jwtUtils.parseToken(refreshToken);
-                Long userId = Long.parseLong(claims.getSubject());
-                redisTemplate.delete("refreshToken:" + userId);
-                log.info("User {} logout → refresh token deleted", userId);
+                String email = claims.getSubject();;
+                redisTemplate.delete("refreshToken:" + email);
+                log.info("User {} logout → refresh token deleted", email);
             } catch (Exception e) {
                 log.warn("Logout not success");
             }
@@ -258,7 +258,7 @@ public class AuthServiceImpl implements AuthService {
 
             //Lưu Redis whitelist
             redisTemplate.opsForValue().set(
-                    "refreshToken:" + user.getId(),
+                    "refreshToken:" + user.getEmail(),
                     refreshToken,
                     Duration.ofDays(7)
             );
