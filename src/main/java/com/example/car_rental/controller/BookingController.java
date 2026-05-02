@@ -25,23 +25,16 @@ public class BookingController {
 
     final private BookingsService bookingsService;
 
-    @GetMapping("/1")
-    public String geta() {
-        return "NAM";
-    }
     //ADMIN
     @GetMapping("")
-    public ApiResponse<Page<BookingsResponse>> getAllBookings(@RequestParam(required = false) String bookingCode,
-                                                              @RequestParam(required = false) String email,
-                                                              @RequestParam(required = false) String name,
-                                                              @RequestParam(required = false) String phone,
+    public ApiResponse<Page<BookingsResponse>> getAllBookings(@RequestParam(required = false) String search,
                                                               @RequestParam(required = false) String status,
                                                               @RequestParam(defaultValue = "0", required = false) int page,
                                                               @RequestParam(defaultValue = "5") int size) {
 
         return ApiResponse.<Page<BookingsResponse>>builder()
                 .code(200)
-                .data(bookingsService.getAllBookings(bookingCode,email, name, phone, status, page, size))
+                .data(bookingsService.getAllBookings(search, status, page, size))
                 .build();
     }
 

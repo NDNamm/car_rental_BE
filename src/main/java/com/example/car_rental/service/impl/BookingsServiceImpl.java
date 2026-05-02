@@ -57,16 +57,16 @@ public class BookingsServiceImpl implements BookingsService {
 
 
     @Override
-    public Page<BookingsResponse> getAllBookings(String bookingCode, String email, String name, String phoneNumber, String status, int page, int size) {
+    public Page<BookingsResponse> getAllBookings(String search, String status, int page, int size) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
         Page<Bookings> bookingsPage;
 
         boolean noFilter =
-                (bookingCode == null || bookingCode.isBlank()) &&
-                        (email == null || email.isBlank()) &&
-                        (name == null || name.isBlank()) &&
-                        (phoneNumber == null || phoneNumber.isBlank()) &&
+                (search == null || search.isBlank()) &&
+//                        (email == null || email.isBlank()) &&
+//                        (name == null || name.isBlank()) &&
+//                        (phoneNumber == null || phoneNumber.isBlank()) &&
                         (status == null || status.isBlank());
 
         if (noFilter) {
@@ -77,7 +77,7 @@ public class BookingsServiceImpl implements BookingsService {
             if (status != null && !status.isBlank()) {
                 statusEnum = BookingStatusEnum.valueOf(status.toUpperCase());
             }
-            bookingsPage = bookingsRepository.searchBookings(bookingCode, email, name, phoneNumber, statusEnum, pageable);
+            bookingsPage = bookingsRepository.searchBookings(search, statusEnum, pageable);
         }
 
         return bookingsPage.map(this::getBooking);

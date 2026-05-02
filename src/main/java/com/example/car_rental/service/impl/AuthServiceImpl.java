@@ -1,5 +1,6 @@
 package com.example.car_rental.service.impl;
 
+import com.example.car_rental.dto.requestDTO.authRequest.GoogleLoginRequest;
 import com.example.car_rental.dto.requestDTO.authRequest.LoginRequest;
 import com.example.car_rental.dto.requestDTO.authRequest.RegisterRequest;
 import com.example.car_rental.dto.responseDTO.AuthResponse;
@@ -207,13 +208,15 @@ public class AuthServiceImpl implements AuthService {
                     .build();
 
         } catch (Exception e) {
+            e.printStackTrace();
+            log.info("REFRESH TOKEN = " + refreshToken);
             throw new AppException(ErrorCode.TOKEN_INVALID);
         }
     }
 
 
     @Override
-    public AuthResponse loginWithGoogle(String idTokenString, HttpServletResponse response) {
+    public AuthResponse loginWithGoogle(GoogleLoginRequest request, HttpServletResponse response) {
         try {
             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
                     new NetHttpTransport(),
@@ -222,7 +225,7 @@ public class AuthServiceImpl implements AuthService {
                     .setAudience(Collections.singletonList(clientId))
                     .build();
 
-            GoogleIdToken googleIdToken = verifier.verify(idTokenString);
+            GoogleIdToken googleIdToken = verifier.verify(request.getTokenId());
             if (googleIdToken == null) {
                 throw new AppException(ErrorCode.INVALID_CREDENTIALS);
             }
@@ -250,8 +253,8 @@ public class AuthServiceImpl implements AuthService {
             });
 
             String role = user.getRole().getRoleName();
-            String accessToken = jwtUtils.generateAccessToken(String.valueOf(user.getId()), role);
-            String refreshToken = jwtUtils.generateRefreshToken(String.valueOf(user.getId()), role);
+            String accessToken = jwtUtils.generateAccessToken(email, role);
+            String refreshToken = jwtUtils.generateRefreshToken(email, role);
 
             //Lưu Redis whitelist
             redisTemplate.opsForValue().set(
@@ -277,6 +280,7 @@ public class AuthServiceImpl implements AuthService {
                     .email(user.getEmail())
                     .roleName(role)
                     .token(accessToken)
+                    .avatarUrl(user.getAvatarUrl())
                     .build();
 
         } catch (Exception e) {

@@ -1,5 +1,6 @@
 package com.example.car_rental.service;
 
+import com.example.car_rental.dto.requestDTO.authRequest.GoogleLoginRequest;
 import com.example.car_rental.dto.requestDTO.authRequest.LoginRequest;
 import com.example.car_rental.dto.requestDTO.authRequest.RegisterRequest;
 import com.example.car_rental.dto.responseDTO.AuthResponse;
@@ -17,5 +18,5 @@ public interface AuthService {
 
     AuthResponse refreshToken(HttpServletRequest request, HttpServletResponse response);
 
-    AuthResponse loginWithGoogle(String idToken, HttpServletResponse response);
+    AuthResponse loginWithGoogle(GoogleLoginRequest idToken, HttpServletResponse response);
 }

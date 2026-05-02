@@ -1,6 +1,8 @@
 package com.example.car_rental.repository;
 
+import com.example.car_rental.entity.Bookings;
 import com.example.car_rental.entity.Users;
+import com.example.car_rental.entity.enums.BookingStatusEnum;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,18 +15,48 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<Users, Long> {
 
+//    @Query("""
+//    SELECT u FROM Users u
+//    WHERE (:email IS NULL OR LOWER(u.email) LIKE LOWER(CONCAT('%', :email, '%')))
+//      AND (:fullName IS NULL OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :fullName, '%')))
+//      AND (:phoneNumber IS NULL OR u.phoneNumber LIKE CONCAT('%', :phoneNumber, '%'))
+//      AND (:role IS NULL OR u.role.roleName = :role)
+//""")
+//    Page<Users> finByUser(
+//            @Param("email") String email,
+//            @Param("fullName") String fullName,
+//            @Param("phoneNumber") String phoneNumber,
+//            @Param("role") String role,
+//            Pageable pageable
+//    );
+
     @Query("""
     SELECT u FROM Users u
-    WHERE (:email IS NULL OR LOWER(u.email) LIKE LOWER(CONCAT('%', :email, '%')))
-      AND (:fullName IS NULL OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :fullName, '%')))
-      AND (:phoneNumber IS NULL OR u.phoneNumber LIKE CONCAT('%', :phoneNumber, '%'))
-      AND (:role IS NULL OR u.role.roleName = :role)
+    WHERE (:role IS NULL OR u.role.roleName = :role)
+      AND (:search IS NULL OR LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%'))
+          OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :search, '%')) 
+          OR u.phoneNumber LIKE CONCAT('%', :search, '%'))
 """)
     Page<Users> finByUser(
-            @Param("email") String email,
-            @Param("fullName") String fullName,
-            @Param("phoneNumber") String phoneNumber,
+            @Param("search") String search,
             @Param("role") String role,
+            Pageable pageable
+    );
+
+    @Query("""
+    SELECT b FROM Bookings b
+    WHERE (:status IS NULL OR b.status = :status)
+    AND (
+        :search IS NULL OR
+        LOWER(b.bookingCode) LIKE LOWER(CONCAT('%', :search, '%')) OR
+        LOWER(b.customerEmail) LIKE LOWER(CONCAT('%', :search, '%')) OR
+        LOWER(b.customerName) LIKE LOWER(CONCAT('%', :search, '%')) OR
+        LOWER(b.customerPhone) LIKE LOWER(CONCAT('%', :search, '%'))
+    )
+""")
+    Page<Bookings> searchBookings(
+            @Param("search") String search,
+            @Param("status") BookingStatusEnum status,
             Pageable pageable
     );
 

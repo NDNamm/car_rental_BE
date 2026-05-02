@@ -1,5 +1,6 @@
 package com.example.car_rental.controller;
 
+import com.example.car_rental.dto.requestDTO.authRequest.GoogleLoginRequest;
 import com.example.car_rental.dto.requestDTO.authRequest.LoginRequest;
 import com.example.car_rental.dto.requestDTO.authRequest.RegisterRequest;
 import com.example.car_rental.dto.requestDTO.passwordRequest.ForgotPasswordRequest;
@@ -64,7 +65,7 @@ public class AuthController {
 
     @PostMapping("/google-login")
     public ApiResponse<AuthResponse> loginWithGoogle(
-            @RequestBody String tokenId,
+            @RequestBody GoogleLoginRequest tokenId,
             HttpServletResponse response
     ) {
         return ApiResponse.<AuthResponse>builder()

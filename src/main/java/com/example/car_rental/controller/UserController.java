@@ -27,19 +27,17 @@ public class UserController {
 
     //ADMIN
     @GetMapping("")
-    public ApiResponse<Page<UserResponse>> getAllUser(@RequestParam(required = false) String email,
-                                                      @RequestParam(required = false) String fullName,
-                                                      @RequestParam(required = false) String phoneNumber,
+    public ApiResponse<Page<UserResponse>> getAllUser(@RequestParam(required = false) String search,
                                                       @RequestParam(required = false) String role,
                                                       @RequestParam(defaultValue = "0") int page,
                                                       @RequestParam(defaultValue = "10") int size) {
 
         Page<UserResponse> users =
-                userService.getAllUsers(email, fullName, phoneNumber,role, page, size);
+                userService.getAllUsers(search,role, page, size);
 
         return ApiResponse.<Page<UserResponse>>builder()
                 .code(200)
-                .message("Get profile successful")
+                .message("Get user successful")
                 .data(users)
                 .build();
 

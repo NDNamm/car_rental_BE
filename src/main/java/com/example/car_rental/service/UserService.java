@@ -13,7 +13,7 @@ import java.io.IOException;
 
 public interface UserService {
     //ADMIN
-    Page<UserResponse> getAllUsers(String email, String fullName, String phoneNumber,String role, int page, int size);
+    Page<UserResponse> getAllUsers(String search,String role, int page, int size);
 
     void updateRole(Long id, UpdateRoleRequest request);
 
