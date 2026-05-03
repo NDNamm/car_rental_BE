@@ -80,7 +80,12 @@ public enum ErrorCode {
     INVALID_BOOKING_STATUS(13004, "Invalid booking status for refund", HttpStatus.BAD_REQUEST),
 
     UPDATE_IMAGE_FAIL(6003, "Failed to update image", HttpStatus.INTERNAL_SERVER_ERROR),
-    IMAGE_REQUIRED(6004, "Image is required", HttpStatus.BAD_REQUEST);
+    IMAGE_REQUIRED(6004, "Image is required", HttpStatus.BAD_REQUEST),
+
+    BOOKING_NOT_COMPLETED(14001, "Booking not completed", HttpStatus.BAD_REQUEST),
+    REVIEW_ALREADY_EXISTS(15001, "Review already exists for this booking", HttpStatus.BAD_REQUEST),
+    REVIEW_NOT_FOUND(15002, "Review not found", HttpStatus.NOT_FOUND),
+    REVIEW_ALREADY_APPROVED(15003, "Review already approved", HttpStatus.BAD_REQUEST);
 
     private final int code;
     private final String message;

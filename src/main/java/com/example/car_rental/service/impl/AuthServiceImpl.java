@@ -248,8 +248,15 @@ public class AuthServiceImpl implements AuthService {
                                 .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND)))
                         .build();
 
+                Users savedUser = userRepository.save(newUser);
 
-                return userRepository.save(newUser);
+                Verifications verification = Verifications.builder()
+                        .status(VerStatusEnum.UNVERIFIED)
+                        .user(savedUser)
+                        .build();
+
+                verificationRepository.save(verification);
+                return savedUser;
             });
 
             String role = user.getRole().getRoleName();
