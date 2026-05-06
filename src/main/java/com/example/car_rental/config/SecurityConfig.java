@@ -33,13 +33,14 @@ public class SecurityConfig {
 
                         .requestMatchers("/api/auth/**", "/api/v1/webhooks/**").permitAll()
                         .requestMatchers("/api/users/me/change-password").hasAnyRole("USER", "ADMIN","STAFF")
-                        .requestMatchers(HttpMethod.GET, "/api/cars/**", "/api/categories/**", "/api/features/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/cars/**", "/api/categories/**", "/api/features/**","/api/reviews/car/**").permitAll()
 
                         .requestMatchers("/api/verification/me/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/api/users/me/**").hasAnyRole("USER", "ADMIN","STAFF")
                         .requestMatchers("/api/bookings/me/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/api/payments/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/api/refunds/me/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/reviews/me/**").hasAnyRole("USER", "ADMIN")
 
 
                         .requestMatchers("/api/verification/**").hasRole("ADMIN")
@@ -48,6 +49,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/cars/**").hasRole("ADMIN")
                         .requestMatchers("/api/categories/**").hasRole("ADMIN")
                         .requestMatchers("/api/features/**").hasRole("ADMIN")
+                        .requestMatchers("/api/reviews/**").hasAnyRole("USER", "ADMIN")
 
                         .anyRequest().authenticated()
                 )

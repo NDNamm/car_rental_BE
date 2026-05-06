@@ -58,8 +58,9 @@ public class Users {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Verifications verification;
 
-    @OneToOne(mappedBy = "staff", cascade = CascadeType.ALL)
-    private CarHandovers carHandovers;
+    @OneToMany(mappedBy = "staff", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<CarHandovers> carHandovers;
 
     @OneToMany(mappedBy = "user")
     @JsonIgnore

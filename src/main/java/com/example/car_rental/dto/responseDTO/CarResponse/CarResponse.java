@@ -3,6 +3,7 @@ package com.example.car_rental.dto.responseDTO.CarResponse;
 import com.example.car_rental.dto.requestDTO.CarRequest.CarDetailRequest;
 import com.example.car_rental.entity.CarImages;
 import com.example.car_rental.entity.enums.CarStatusEnum;
+import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -31,4 +32,6 @@ public class CarResponse {
     private String categoryName;
     private List<CarImageResponse> carImageResponses;
     private CarDetailResponse carDetailResponse;
+    private Double averageRating;
+    private Long totalReviews;
 }

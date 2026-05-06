@@ -76,8 +76,8 @@ public class Bookings {
     @OneToOne(mappedBy = "booking", cascade = CascadeType.ALL)
     private Refunds refunds;
 
-    @OneToOne
-    @JoinColumn(name = "booking_id")
     @JsonIgnore
-    private Bookings booking;
+    @OneToOne(mappedBy = "booking")
+    private Reviews review;
+
 }

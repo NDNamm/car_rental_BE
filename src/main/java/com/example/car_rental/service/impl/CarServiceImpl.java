@@ -311,6 +311,8 @@ public class CarServiceImpl implements CarService {
                 .depositAmount(car.getDepositAmount())
                 .status(car.getStatus())
                 .tripCount(car.getTripCount())
+                .totalReviews(car.getTotalReviews())
+                .averageRating(car.getAverageRating())
                 .description(car.getDescription())
                 .createdAt(car.getCreatedAt())
                 .categoryId(car.getCategory().getId())

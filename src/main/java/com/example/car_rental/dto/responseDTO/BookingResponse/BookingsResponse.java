@@ -31,4 +31,5 @@ public class BookingsResponse {
     private List<BookingDetailResponse> bookingDetailResponse;
     private List<BookingStatusResponse> bookingStatusResponses;
     private String qrCodeUrl;
+    private Boolean hasReview;
 }

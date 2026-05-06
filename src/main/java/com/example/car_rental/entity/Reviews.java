@@ -29,6 +29,9 @@ public class Reviews {
     @Column(name = "comment")
     private String comment;
 
+    @Column(name = "reason")
+    private String reason;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private ReviewStatus status = ReviewStatus.PENDING;
@@ -46,8 +49,8 @@ public class Reviews {
     @JoinColumn(name = "user_id")
     private Users user;
 
-    @OneToOne(mappedBy = "booking", cascade = CascadeType.ALL)
-    @JsonIgnore
+    @OneToOne
+    @JoinColumn(name = "booking_id")
     private Bookings booking;
 
 }

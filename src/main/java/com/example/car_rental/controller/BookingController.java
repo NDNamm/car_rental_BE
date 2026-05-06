@@ -12,12 +12,14 @@ import com.example.car_rental.service.BookingsService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/bookings")
@@ -68,7 +70,9 @@ public class BookingController {
                                                                   @RequestParam(defaultValue = "5") int size) {
 
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-
+        System.out.println("EMAIL AUTH: " + email);
+        log.info("EMAIL AUTH: " + email);
+        System.out.println(SecurityContextHolder.getContext().getAuthentication());
         return ApiResponse.<Page<BookingsResponse>>builder()
                 .code(200)
                 .data(bookingsService.getAllBookingUser(email, bookingCode, status, page, size))

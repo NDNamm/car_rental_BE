@@ -39,12 +39,10 @@ public class CarHandovers {
     private String note;
 
     @OneToOne
-    @JsonIgnore
-    @JoinColumn(name = "booking_detail_id")
+    @JoinColumn(name = "booking_detail_id", unique = true)
     private BookingDetails bookingDetails;
 
-    @OneToOne
-    @JsonIgnore
+    @ManyToOne
     @JoinColumn(name = "staff_id")
     private Users staff;
 

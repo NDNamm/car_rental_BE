@@ -85,7 +85,9 @@ public enum ErrorCode {
     BOOKING_NOT_COMPLETED(14001, "Booking not completed", HttpStatus.BAD_REQUEST),
     REVIEW_ALREADY_EXISTS(15001, "Review already exists for this booking", HttpStatus.BAD_REQUEST),
     REVIEW_NOT_FOUND(15002, "Review not found", HttpStatus.NOT_FOUND),
-    REVIEW_ALREADY_APPROVED(15003, "Review already approved", HttpStatus.BAD_REQUEST);
+    REVIEW_ALREADY_APPROVED(15003, "Review already approved", HttpStatus.BAD_REQUEST),
+
+    INVALID_STATUS(15004, "Status invalid", HttpStatus.BAD_REQUEST);
 
     private final int code;
     private final String message;

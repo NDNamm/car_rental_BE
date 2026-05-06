@@ -55,7 +55,7 @@ public class RefundServiceImpl implements RefundService {
                         (status == null || status.isBlank());
 
         if (noFilter) {
-            refundsPage = refundRepository.findAll(pageable);
+            refundsPage = refundRepository.findRefundByUser(email,null, null,pageable);
         } else {
             RefundStatus statusEnum = null;
 

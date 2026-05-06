@@ -51,10 +51,11 @@ public interface BookingsRepository extends JpaRepository<Bookings, Long> {
     );
 
     @Query("""
-                SELECT b FROM Bookings b WHERE b.user.email = :email
-                  AND (:bookingCode IS NULL OR LOWER(b.bookingCode) LIKE LOWER(CONCAT('%', :bookingCode, '%')))
-                  AND (:status IS NULL OR LOWER(b.status) LIKE LOWER(CONCAT('%', :status, '%')))
-            """)
+    SELECT b FROM Bookings b 
+    WHERE b.user.email = :email
+      AND (:bookingCode IS NULL OR LOWER(b.bookingCode) LIKE LOWER(CONCAT('%', :bookingCode, '%')))
+      AND (:status IS NULL OR b.status = :status)
+""")
     Page<Bookings> findBookingsByUser(
             @Param("email") String email,
             @Param("bookingCode") String bookingCode,

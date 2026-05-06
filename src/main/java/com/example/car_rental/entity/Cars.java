@@ -45,6 +45,12 @@ public class Cars {
     @Column(name = "trip_count")
     private int tripCount;
 
+    @Column(name = "average_rating")
+    private Double averageRating = 0.0;
+
+    @Column(name = "total_reviews")
+    private Long totalReviews = 0L;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 

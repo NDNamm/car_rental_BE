@@ -36,10 +36,10 @@ public class VerificationController {
                 .build();
     }
 
-    @PutMapping("/{userId}/status")
-    public ApiResponse<Void> updateStatus(@PathVariable Long userId,
+    @PutMapping("/{verId}/status")
+    public ApiResponse<Void> updateStatus(@PathVariable Long verId,
                                           @RequestBody UpdateVerificationStatusRequest request) {
-        verificationService.updateStatus(userId, request);
+        verificationService.updateStatus(verId, request);
         return ApiResponse.<Void>builder()
                 .code(200)
                 .message("Verification status updated successfully")

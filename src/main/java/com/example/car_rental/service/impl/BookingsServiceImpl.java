@@ -33,10 +33,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -54,6 +51,7 @@ public class BookingsServiceImpl implements BookingsService {
     final BookingStatusHistoryRepository bookingStatusHistoryRepository;
     final RefundService refundService;
     final RefundCalculate refundCalculate;
+    final ReviewRepository reviewRepository;
 
 
     @Override
@@ -458,26 +456,47 @@ public class BookingsServiceImpl implements BookingsService {
 
     @Override
     public Page<BookingsResponse> getAllBookingUser(String email, String bookingCode, String status, int page, int size) {
+
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Bookings> bookingsPage = null;
+
+        Page<Bookings> bookingsPage;
+
         boolean noFilter =
                 (bookingCode == null || bookingCode.isBlank()) &&
                         (status == null || status.isBlank());
 
         if (noFilter) {
-            bookingsPage = bookingsRepository.findAll(pageable);
+            bookingsPage = bookingsRepository.findBookingsByUser(email, null, null, pageable);
         } else {
             BookingStatusEnum statusEnum = null;
 
             if (status != null && !status.isBlank()) {
                 statusEnum = BookingStatusEnum.valueOf(status.toUpperCase());
             }
+
             bookingsPage = bookingsRepository.findBookingsByUser(email, bookingCode, statusEnum, pageable);
         }
 
-        return bookingsPage.map(this::getBooking);
-    }
+        // ✅ LẤY LIST BOOKING IDS
+        List<Long> bookingIds = bookingsPage.getContent()
+                .stream()
+                .map(Bookings::getId)
+                .toList();
 
+        // ✅ QUERY NHỮNG BOOKING ĐÃ REVIEW
+        List<Long> reviewedIds = reviewRepository.findBookingIdsHaveReview(bookingIds);
+
+        Set<Long> reviewedSet = new HashSet<>(reviewedIds);
+
+        // ✅ MAP + SET hasReview
+        return bookingsPage.map(booking -> {
+            BookingsResponse res = getBooking(booking);
+
+            res.setHasReview(reviewedSet.contains(booking.getId()));
+
+            return res;
+        });
+    }
     @Override
     @Transactional
     public void cancelBooking(String email, Long bookingId, RefundRequest request, MultipartFile qrCode) {

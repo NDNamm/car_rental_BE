@@ -23,6 +23,11 @@ spring:
         format_sql: true
         physical_strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
 
+#  logging:
+#    level:
+#      org.hibernate.SQL: DEBUG
+#      org.hibernate.orm.jdbc.bind: TRACE
+
   data:
     redis:
       host: localhost
@@ -51,15 +56,6 @@ sepay:
     api-key: NDNammRentalSecret0812
   booking:
     prefix: BK_
-
-#logging:
-#  level:
-#    org:
-#      hibernate:
-#        orm:
-#          jdbc:
-#            bind: TRACE
-#        SQL: DEBUG
 
 server:
   port: 8080

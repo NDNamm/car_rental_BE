@@ -65,11 +65,9 @@ public class VerificationServiceImpl implements VerificationService {
 
     @Override
     @Transactional
-    public void updateStatus(Long id, UpdateVerificationStatusRequest request) {
-        Users user = userRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+    public void updateStatus(Long verId, UpdateVerificationStatusRequest request) {
 
-        Verifications verification = verificationRepository.findByUserId(user.getId())
+        Verifications verification = verificationRepository.findById(verId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_VERIFIED));
 
         try {
