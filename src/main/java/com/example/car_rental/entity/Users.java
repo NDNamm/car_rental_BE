@@ -50,6 +50,12 @@ public class Users {
     @Column(name = "created_at")
     private LocalDate createdAt;
 
+    @Column(name = "is_active")
+    private Boolean isActive;
+
+    @Column(name = "reason")
+    private String reason;
+
     @ManyToOne
     @JsonIgnore
     @JoinColumn(name = "role_id")

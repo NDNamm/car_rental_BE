@@ -1,14 +1,10 @@
 package com.example.car_rental.entity;
 
-import com.example.car_rental.entity.enums.CarStatusEnum;
-import com.example.car_rental.entity.enums.ReviewStatus;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
 @Getter
@@ -32,9 +28,8 @@ public class Reviews {
     @Column(name = "reason")
     private String reason;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
-    private ReviewStatus status = ReviewStatus.PENDING;
+    @Column(name = "is_hidden")
+    private Boolean isHidden;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

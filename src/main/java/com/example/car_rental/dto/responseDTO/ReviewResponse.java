@@ -1,6 +1,5 @@
 package com.example.car_rental.dto.responseDTO;
 
-import com.example.car_rental.entity.enums.ReviewStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,7 +19,7 @@ public class ReviewResponse {
     private String fullName;
     private Integer rating;
     private LocalDateTime createdAt;
-    private ReviewStatus status;
+    private Boolean isHidden;
     private String reason;
     private String email;
 }

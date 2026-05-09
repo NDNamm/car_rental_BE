@@ -1,6 +1,5 @@
 package com.example.car_rental.dto.requestDTO.ReviewRequest;
 
-import com.example.car_rental.entity.enums.ReviewStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,6 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UpdateReviewRequest {
-    private ReviewStatus status;
+    private Boolean isHidden;
     private String reason;
 }

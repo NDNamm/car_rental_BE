@@ -31,32 +31,21 @@ public interface UserRepository extends JpaRepository<Users, Long> {
 //    );
 
     @Query("""
-    SELECT u FROM Users u
-    WHERE (:role IS NULL OR u.role.roleName = :role)
-      AND (:search IS NULL OR LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%'))
-          OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :search, '%')) 
-          OR u.phoneNumber LIKE CONCAT('%', :search, '%'))
-""")
+        SELECT u
+        FROM Users u
+        WHERE (:role IS NULL OR u.role.roleName = :role)
+          AND (:isActive IS NULL OR u.isActive = :isActive)
+          AND (
+                :search IS NULL
+                OR LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%'))
+                OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :search, '%'))
+                OR u.phoneNumber LIKE CONCAT('%', :search, '%')
+          )
+    """)
     Page<Users> finByUser(
             @Param("search") String search,
             @Param("role") String role,
-            Pageable pageable
-    );
-
-    @Query("""
-    SELECT b FROM Bookings b
-    WHERE (:status IS NULL OR b.status = :status)
-    AND (
-        :search IS NULL OR
-        LOWER(b.bookingCode) LIKE LOWER(CONCAT('%', :search, '%')) OR
-        LOWER(b.customerEmail) LIKE LOWER(CONCAT('%', :search, '%')) OR
-        LOWER(b.customerName) LIKE LOWER(CONCAT('%', :search, '%')) OR
-        LOWER(b.customerPhone) LIKE LOWER(CONCAT('%', :search, '%'))
-    )
-""")
-    Page<Bookings> searchBookings(
-            @Param("search") String search,
-            @Param("status") BookingStatusEnum status,
+            @Param("isActive") Boolean isActive,
             Pageable pageable
     );
 

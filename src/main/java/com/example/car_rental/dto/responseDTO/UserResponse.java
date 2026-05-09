@@ -22,4 +22,6 @@ public class UserResponse {
     private String phoneNumber;
     private String roleName;
     private LocalDate createdAt;
+    private Boolean isActive;
+    private String reason;
 }
