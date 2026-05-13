@@ -245,15 +245,17 @@ public class CarServiceImpl implements CarService {
     }
 
     @Override
-    public Page<CarResponse> getAllCar(String name, String status, int page, int size) {
+    public Page<CarResponse> getAllCar(String name, String city, String status, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
-        Page<Cars> carsPage;
+//        Page<Cars> carsPage;
+//
+//        if (name != null && !name.isEmpty()) {
+//            carsPage = carRepository.findByCars(name, status, pageable);
+//        } else {
+//            carsPage = carRepository.findAll(pageable);
+//        }
 
-        if (name != null && !name.isEmpty()) {
-            carsPage = carRepository.findByCars(name, status, pageable);
-        } else {
-            carsPage = carRepository.findAll(pageable);
-        }
+        Page<Cars> carsPage = carRepository.findCars(name, city, status, pageable);
 
         return carsPage.map(this::mapToCarResponse);
     }
@@ -277,6 +279,14 @@ public class CarServiceImpl implements CarService {
     @Override
     public List<BookingTimeResponse> getBookedRanges(Long carId) {
         return bookingDetailRepository.findBookedRanges(carId);
+    }
+
+    @Override
+    public Page<String> getAllCities(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<String> citiesPage = carRepository.findAllCities(pageable);
+        return citiesPage;
+
     }
 
     private CarResponse mapToCarResponse(Cars car) {

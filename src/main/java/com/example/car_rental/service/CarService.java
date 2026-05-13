@@ -15,8 +15,9 @@ public interface CarService {
     void updateCar(Long carId, CarRequest request, MultipartFile[] images);
     void deleteCar(Long carId);
     void updateStatusCar(Long carId, UpdateCarStatusRequest request);
-    Page<CarResponse> getAllCar(String name,String status ,int page, int size);
+    Page<CarResponse> getAllCar(String name, String city,String status ,int page, int size);
     CarResponse getCarById(Long carId);
     Page<CarResponse> getAllCarsByCategoryId(Long categoryId, int page, int size);
     List<BookingTimeResponse> getBookedRanges(Long carId);
+    Page<String> getAllCities(int page, int size);
 }

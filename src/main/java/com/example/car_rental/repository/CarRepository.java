@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Repository
 public interface CarRepository extends JpaRepository<Cars, Long> {
@@ -17,14 +18,28 @@ public interface CarRepository extends JpaRepository<Cars, Long> {
     boolean existsByNameAndIdNot(String name, Long id);
 
     @Query("""
-          select c from Cars c
-          where (:name is null or LOWER(c.name) LIKE LOWER(CONCAT('%', :name, '%')))
-                  AND (:status IS NULL OR LOWER(c.status) LIKE LOWER(CONCAT('%', :status, '%')))
-          """)
-    Page<Cars> findByCars(@Param("name") String name,
-                          @Param("status") String status,
-                          Pageable pageable);
-
+    SELECT c FROM Cars c
+    JOIN c.carDetail cd
+    WHERE (:name IS NULL OR LOWER(c.name) LIKE LOWER(CONCAT('%', :name, '%')))
+      AND (:city IS NULL OR LOWER(cd.city) LIKE LOWER(CONCAT('%', :city, '%')))
+      AND (:status IS NULL OR LOWER(c.status) LIKE LOWER(CONCAT('%', :status, '%')))
+""")
+    Page<Cars> findCars(
+            @Param("name") String name,
+            @Param("city") String city,
+            @Param("status") String status,
+            Pageable pageable
+    );
 
     Page<Cars> findByCategoryId(Long categoryId, Pageable pageable);
+
+
+    @Query("""
+    SELECT DISTINCT cd.city
+    FROM Cars c
+    JOIN c.carDetail cd
+    WHERE cd.city IS NOT NULL
+    ORDER BY cd.city ASC
+""")
+    Page<String> findAllCities(Pageable pageable);
 }

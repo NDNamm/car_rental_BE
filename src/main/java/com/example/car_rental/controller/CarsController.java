@@ -27,10 +27,20 @@ public class CarsController {
     public ApiResponse<Page<CarResponse>> getAllCars(@RequestParam(defaultValue = "0", required = false) int page,
                                                      @RequestParam(defaultValue = "5") int size,
                                                      @RequestParam(required = false) String name,
+                                                     @RequestParam(required = false) String city,
                                                      @RequestParam(required = false) String status) {
         return ApiResponse.<Page<CarResponse>>builder()
                 .code(200)
-                .data(carService.getAllCar(name,status, page, size))
+                .data(carService.getAllCar(name, city, status, page, size))
+                .build();
+    }
+
+    @GetMapping("/city")
+    public ApiResponse<Page<String>> getAllCity(@RequestParam(defaultValue = "0", required = false) int page,
+                                                @RequestParam(defaultValue = "5") int size) {
+        return ApiResponse.<Page<String>>builder()
+                .code(200)
+                .data(carService.getAllCities(page, size))
                 .build();
     }
 
@@ -59,8 +69,8 @@ public class CarsController {
 
     @PutMapping(value = "/{carId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<Void> updateCar(@PathVariable(value = "carId") Long carId,
-                                    @RequestPart(value = "carRequest", required = false) String request,
-                                    @RequestPart(value = "images", required = false) MultipartFile[] images) throws JsonProcessingException {
+                                       @RequestPart(value = "carRequest", required = false) String request,
+                                       @RequestPart(value = "images", required = false) MultipartFile[] images) throws JsonProcessingException {
 
         ObjectMapper objectMapper = new ObjectMapper();
         CarRequest carRequest = objectMapper.readValue(request, CarRequest.class);
@@ -74,7 +84,7 @@ public class CarsController {
 
     @PatchMapping(value = "/{carId}")
     public ApiResponse<Void> updateCar(@PathVariable(value = "carId") Long carId,
-                                       @RequestBody UpdateCarStatusRequest request)  {
+                                       @RequestBody UpdateCarStatusRequest request) {
 
         carService.updateStatusCar(carId, request);
 
