@@ -282,9 +282,9 @@ public class CarServiceImpl implements CarService {
     }
 
     @Override
-    public Page<String> getAllCities(int page, int size) {
+    public Page<String> getAllCities(String city, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<String> citiesPage = carRepository.findAllCities(pageable);
+        Page<String> citiesPage = carRepository.findAllCities(city, pageable);
         return citiesPage;
 
     }

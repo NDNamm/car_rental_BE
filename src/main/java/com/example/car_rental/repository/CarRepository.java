@@ -38,8 +38,15 @@ public interface CarRepository extends JpaRepository<Cars, Long> {
     SELECT DISTINCT cd.city
     FROM Cars c
     JOIN c.carDetail cd
-    WHERE cd.city IS NOT NULL
+    WHERE (
+        :city IS NULL
+        OR LOWER(cd.city) LIKE LOWER(CONCAT('%', :city, '%'))
+    )
+    AND cd.city IS NOT NULL
     ORDER BY cd.city ASC
 """)
-    Page<String> findAllCities(Pageable pageable);
+    Page<String> findAllCities(
+            @Param("city") String city,
+            Pageable pageable
+    );
 }

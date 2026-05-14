@@ -36,11 +36,12 @@ public class CarsController {
     }
 
     @GetMapping("/city")
-    public ApiResponse<Page<String>> getAllCity(@RequestParam(defaultValue = "0", required = false) int page,
+    public ApiResponse<Page<String>> getAllCity(@RequestParam(required = false) String city,
+                                                @RequestParam(defaultValue = "0", required = false) int page,
                                                 @RequestParam(defaultValue = "5") int size) {
         return ApiResponse.<Page<String>>builder()
                 .code(200)
-                .data(carService.getAllCities(page, size))
+                .data(carService.getAllCities(city, page, size))
                 .build();
     }
 
