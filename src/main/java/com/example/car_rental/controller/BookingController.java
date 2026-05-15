@@ -4,6 +4,7 @@ import com.example.car_rental.dto.requestDTO.BookingsRequest.BookingStatusReques
 import com.example.car_rental.dto.requestDTO.BookingsRequest.BookingRequest;
 import com.example.car_rental.dto.requestDTO.CarRequest.CarRequest;
 import com.example.car_rental.dto.requestDTO.RefundRequest;
+import com.example.car_rental.dto.requestDTO.handoverRequest.HandoverRequest;
 import com.example.car_rental.dto.responseDTO.ApiResponse;
 import com.example.car_rental.dto.responseDTO.BookingResponse.BookingCodeResponse;
 import com.example.car_rental.dto.responseDTO.BookingResponse.BookingsResponse;
@@ -42,9 +43,22 @@ public class BookingController {
 
     @PatchMapping("/{bookingId}")
     public ApiResponse<Void> updateStatus(@PathVariable(value = "bookingId") Long bookingId,
-                                          @RequestBody(required = false) BookingStatusRequest request) {
+                                          @RequestPart(value = "bookingRequest",required = false) String request,
+                                          @RequestPart(value = "handoverRequest",required = false) String handover,
+                                          @RequestPart(required = false) MultipartFile[] images) throws JsonProcessingException {
 
-        bookingsService.updateBookingsStatus(request, bookingId);
+        ObjectMapper objectMapper = new ObjectMapper();
+        HandoverRequest handoverRequest = new HandoverRequest();
+        if (handover != null && !handover.isBlank()) {
+            handoverRequest = objectMapper.readValue(handover, HandoverRequest.class);
+        }
+
+        BookingStatusRequest bookingRequest = new BookingStatusRequest();
+        if (request != null && !request.isBlank()) {
+            bookingRequest = objectMapper.readValue(request, BookingStatusRequest.class);
+        }
+
+        bookingsService.updateBookingsStatus(bookingRequest, bookingId, handoverRequest, images);
         return ApiResponse.<Void>builder()
                 .code(200)
                 .message("Update status booking successful")
@@ -110,7 +124,10 @@ public class BookingController {
 
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         ObjectMapper objectMapper = new ObjectMapper();
-        RefundRequest refundRequest = objectMapper.readValue(request, RefundRequest.class);
+        RefundRequest refundRequest = new RefundRequest();
+        if (request != null && !request.isBlank()) {
+            refundRequest = objectMapper.readValue(request, RefundRequest.class);
+        }
 
         bookingsService.cancelBooking(email, bookingId, refundRequest, qrCode );
         return ApiResponse.<Void>builder()

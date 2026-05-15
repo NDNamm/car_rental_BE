@@ -2,11 +2,12 @@ package com.example.car_rental.service.impl;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
-import com.example.car_rental.entity.CarImages;
-import com.example.car_rental.entity.Cars;
+import com.example.car_rental.entity.*;
 import com.example.car_rental.exception.AppException;
 import com.example.car_rental.exception.ErrorCode;
+import com.example.car_rental.repository.CarHandoverRepository;
 import com.example.car_rental.repository.CarImagesRepository;
+import com.example.car_rental.repository.HandoverImagesRepository;
 import com.example.car_rental.service.ImageService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ public class ImageServiceImpl implements ImageService {
 
     private final Cloudinary cloudinary;
     private final CarImagesRepository imagesRepository;
+    private final HandoverImagesRepository handoverImagesRepository;
 
     @Override
     @Transactional
@@ -80,6 +82,40 @@ public class ImageServiceImpl implements ImageService {
                 images.setCar(car);
 
                 imagesRepository.save(images);
+                list.add(images);
+
+            } catch (IOException e) {
+                throw new AppException(ErrorCode.UPDATE_IMAGE_FAIL);
+            }
+        }
+        return list;
+    }
+
+    @Override
+    public List<HandoverImages> uploadHandoverImages(MultipartFile[] file, String folder, String bookingCode, String name, CarHandovers carHandovers) {
+        List<HandoverImages> list = new ArrayList<>();
+
+        String safeName = sanitize(name);
+
+        for (MultipartFile fileItem : file) {
+            try {
+                Map<?, ?> results = cloudinary.uploader().upload(
+                        fileItem.getBytes(),
+                        ObjectUtils.asMap(
+                                "folder", "car_rental/" + folder + "/" + bookingCode + "/" + safeName,
+                                "overwrite", true
+                        )
+                );
+
+                String url = results.get("secure_url").toString();
+                String publicId = results.get("public_id").toString();
+
+                HandoverImages images = new HandoverImages();;
+                images.setImageUrl(url);
+                images.setPublicId(publicId);
+                images.setCarHandovers(carHandovers);
+
+                handoverImagesRepository.save(images);
                 list.add(images);
 
             } catch (IOException e) {

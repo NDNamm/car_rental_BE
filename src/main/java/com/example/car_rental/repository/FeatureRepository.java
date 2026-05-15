@@ -16,5 +16,5 @@ public interface FeatureRepository extends JpaRepository<Features, Long> {
           select f from Features f
           where (:name is null or LOWER(f.name) LIKE LOWER(CONCAT('%', :name, '%')))
           """)
-    Page<Features> findByName(@Param("name") String name, Pageable pageable);
+    Page<Features> findByFeature(@Param("name") String name, Pageable pageable);
 }

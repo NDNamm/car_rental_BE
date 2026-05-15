@@ -49,7 +49,7 @@ public class VerificationServiceImpl implements VerificationService {
                         (status == null || status.isBlank());
 
         if(noFilter){
-            versPage = verificationRepository.findAll(pageable);
+            versPage = verificationRepository.findAllVerification(null, null, null, pageable);
         } else {
             VerStatusEnum statusEnum = null;
 

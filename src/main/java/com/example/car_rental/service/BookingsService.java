@@ -3,6 +3,7 @@ package com.example.car_rental.service;
 import com.example.car_rental.dto.requestDTO.BookingsRequest.BookingStatusRequest;
 import com.example.car_rental.dto.requestDTO.BookingsRequest.BookingRequest;
 import com.example.car_rental.dto.requestDTO.RefundRequest;
+import com.example.car_rental.dto.requestDTO.handoverRequest.HandoverRequest;
 import com.example.car_rental.dto.responseDTO.BookingResponse.BookingCodeResponse;
 import com.example.car_rental.dto.responseDTO.BookingResponse.BookingsResponse;
 import org.springframework.data.domain.Page;
@@ -13,7 +14,7 @@ public interface BookingsService {
     //ADMIN
 //    Page<BookingsResponse> getAllBookings(String bookingCode, String email, String name, String phoneNumber, String status, int page, int size);
     Page<BookingsResponse> getAllBookings(String search, String status, int page, int size);
-    void updateBookingsStatus(BookingStatusRequest request, Long bookingId);
+    void updateBookingsStatus(BookingStatusRequest request, Long bookingId, HandoverRequest handoverRequest, MultipartFile[] images);
     void deleteBooking(Long bookingId);
 
     //USER

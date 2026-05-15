@@ -65,10 +65,10 @@ public class FeatureServiceImpl implements FeatureService {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
         Page<Features> carFeatures;
 
-        if (name != null && !name.isEmpty()) {
-            carFeatures = featureRepository.findByName(name, pageable);
+        if (name == null || name.isEmpty()) {
+            carFeatures = featureRepository.findByFeature(null, pageable);
         } else {
-            carFeatures = featureRepository.findAll(pageable);
+            carFeatures = featureRepository.findByFeature(name, pageable);
         }
 
         return carFeatures.map(features -> FeatureResponse.builder()

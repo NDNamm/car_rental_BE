@@ -20,7 +20,7 @@ public interface RefundRepository extends JpaRepository<Refunds, Long> {
           and (:status is null or LOWER(r.status) LIKE LOWER(CONCAT('%', :status, '%')))
           """)
     Page<Refunds> findByBookingCode(@Param("bookingCode") String bookingCode,
-                                    @Param("status") String status,
+                                    @Param("status") RefundStatus status,
                                     Pageable pageable);
 
     @Query("""

@@ -49,7 +49,11 @@ public class BookingDetails {
     @JoinColumn(name = "car_id")
     private Cars car;
 
-    @OneToOne(mappedBy = "bookingDetails", cascade = CascadeType.ALL)
-    private CarHandovers carHandovers;
+
+    @OneToMany(mappedBy = "bookingDetails", cascade = CascadeType.ALL)
+    private List<CarHandovers> carHandovers;
+
+    @OneToMany(mappedBy = "bookingDetail", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Penalties> penalties;
 
 }

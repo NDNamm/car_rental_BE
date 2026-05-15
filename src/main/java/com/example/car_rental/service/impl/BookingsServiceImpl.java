@@ -5,6 +5,7 @@ import com.example.car_rental.dto.requestDTO.BookingsRequest.BookingDetailReques
 import com.example.car_rental.dto.requestDTO.BookingsRequest.BookingStatusRequest;
 import com.example.car_rental.dto.requestDTO.BookingsRequest.BookingRequest;
 import com.example.car_rental.dto.requestDTO.RefundRequest;
+import com.example.car_rental.dto.requestDTO.handoverRequest.HandoverRequest;
 import com.example.car_rental.dto.responseDTO.BookingResponse.BookingCodeResponse;
 import com.example.car_rental.dto.responseDTO.BookingResponse.BookingDetailResponse;
 import com.example.car_rental.dto.responseDTO.BookingResponse.BookingStatusResponse;
@@ -18,6 +19,7 @@ import com.example.car_rental.exception.AppException;
 import com.example.car_rental.exception.ErrorCode;
 import com.example.car_rental.repository.*;
 import com.example.car_rental.service.BookingsService;
+import com.example.car_rental.service.CarHandoverService;
 import com.example.car_rental.service.PaymentsService;
 import com.example.car_rental.service.RefundService;
 import lombok.RequiredArgsConstructor;
@@ -52,6 +54,7 @@ public class BookingsServiceImpl implements BookingsService {
     final RefundService refundService;
     final RefundCalculate refundCalculate;
     final ReviewRepository reviewRepository;
+    final CarHandoverService carHandoverService;
 
 
     @Override
@@ -68,7 +71,7 @@ public class BookingsServiceImpl implements BookingsService {
                         (status == null || status.isBlank());
 
         if (noFilter) {
-            bookingsPage = bookingsRepository.findAll(pageable);
+            bookingsPage = bookingsRepository.searchBookings(null, null, pageable);
         } else {
             BookingStatusEnum statusEnum = null;
 
@@ -153,7 +156,7 @@ public class BookingsServiceImpl implements BookingsService {
 
     @Override
     @Transactional
-    public void updateBookingsStatus(BookingStatusRequest request, Long bookingId) {
+    public void updateBookingsStatus(BookingStatusRequest request, Long bookingId, HandoverRequest handoverRequest, MultipartFile[] images) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         Users staff = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
@@ -190,16 +193,7 @@ public class BookingsServiceImpl implements BookingsService {
             if (next == BookingStatusEnum.RENTED) {
                 car.setStatus(CarStatusEnum.RENTED);
 
-                // Tìm hoặc tạo mới biên bản (Lúc này chắc chắn là tạo mới vì mới bắt đầu đi)
-                CarHandovers handover = carHandoverRepository.findByBookingDetails_Id(detail.getId())
-                        .orElse(new CarHandovers());
-
-                handover.setReason(request.getReason());
-                handover.setHandoverTime(LocalDateTime.now()); // GIỜ GIAO XE
-                handover.setCarConditionAfter(request.getNote()); // Tình trạng sau khi bàn giao
-                handover.setStaff(staff);
-                handover.setBookingDetails(detail);
-                carHandoverRepository.save(handover);
+                carHandoverService.createHandover(booking.getBookingDetailsList().get(0), staff, handoverRequest, images);
             }
 
             // TRƯỜNG HỢP: KHÁCH TRẢ XE (HOÀN THÀNH)
@@ -207,23 +201,14 @@ public class BookingsServiceImpl implements BookingsService {
                 car.setStatus(CarStatusEnum.AVAILABLE);
                 car.setTripCount(car.getTripCount() + 1);
 
-                // TÌM LẠI biên bản đã tạo lúc Giao xe để cập nhật
-                CarHandovers handover = carHandoverRepository.findByBookingDetails_Id(detail.getId())
-                        .orElseThrow(() -> new AppException(ErrorCode.HANDOVER_NOT_FOUND));
-
-                handover.setReturnTime(LocalDateTime.now());
-                handover.setCarConditionBefore(request.getNote());
-                handover.setStaff(staff);
-                carHandoverRepository.save(handover);
+                carHandoverService.returnCar(booking.getBookingDetailsList().get(0), staff, handoverRequest, images);
             }
 
             // TRƯỜNG HỢP: HỦY ĐƠN
             else if (next == BookingStatusEnum.CANCELLED) {
                 car.setStatus(CarStatusEnum.AVAILABLE);
             }
-
             carRepository.save(car);
-
             BookingStatusHistory history = BookingStatusHistory.builder()
                     .booking(booking)
                     .oldStatus(current)
@@ -252,19 +237,14 @@ public class BookingsServiceImpl implements BookingsService {
     @Override
     @Transactional
     public BookingCodeResponse addBooking(String email, BookingRequest request) {
-
         Users user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-
         Verifications verification = verificationRepository.findByUserId(user.getId())
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_VERIFIED));
-
         if (verification.getStatus() != VerStatusEnum.APPROVED) {
             throw new AppException(ErrorCode.VERIFICATION_PENDING_OR_REJECTED);
         }
-
         String bookingCode = "BK_" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-
         Bookings booking = Bookings.builder()
                 .user(user)
                 .bookingCode(bookingCode)
@@ -281,7 +261,6 @@ public class BookingsServiceImpl implements BookingsService {
         BigDecimal totalDeposit = BigDecimal.ZERO;
 
         for (BookingDetailRequest d : request.getBookingDetailRequest()) {
-
             if (d.getCarRequest() == null || d.getCarRequest().getId() == null) {
                 throw new AppException(ErrorCode.INVALID_REQUEST);
             }
@@ -296,13 +275,7 @@ public class BookingsServiceImpl implements BookingsService {
                 throw new AppException(ErrorCode.CAR_NOT_AVAILABLE);
             }
             // 🔥 check trùng lịch (thuê theo ngày)
-            validateCarAvailability(
-                    car.getId(),
-                    null,
-                    d.getStartDate(),
-                    d.getEndDate()
-            );
-
+            validateCarAvailability(car.getId(), null, d.getStartDate(), d.getEndDate());
             BigDecimal subTotal = car.getPricePerDay().multiply(BigDecimal.valueOf(days));
 
             BookingDetails detail = BookingDetails.builder()
@@ -325,10 +298,8 @@ public class BookingsServiceImpl implements BookingsService {
         booking.setBookingDetailsList(detailsList);
         booking.setTotalPrice(totalPrice);
         booking.setTotalDepositAmount(totalDeposit);
-
         String qr = paymentsService.generateQrUrl(booking);
         booking.setQrCodeUrl(qr);
-
         Bookings saved = bookingsRepository.save(booking);
 
         paymentsRepository.save(Payments.builder()
@@ -408,12 +379,9 @@ public class BookingsServiceImpl implements BookingsService {
         if (request.getCustomerPhone() != null && !request.getCustomerPhone().isBlank()) {
             booking.setCustomerPhone(request.getCustomerPhone());
         }
-
         booking.setTotalPrice(totalPrice);
         booking.setTotalDepositAmount(totalDeposit);
-
         bookingsRepository.save(booking);
-
         return BookingCodeResponse.builder()
                 .bookingCode(booking.getBookingCode())
                 .qrCodeUrl(booking.getQrCodeUrl())
@@ -422,16 +390,13 @@ public class BookingsServiceImpl implements BookingsService {
 
     // Hàm tính số ngày thuê // check tg
     private long calculateRentalDays(LocalDateTime start, LocalDateTime end) {
-
         if (start == null || end == null) {
             throw new AppException(ErrorCode.INVALID_DATE_RANGE);
         }
         if (!end.isAfter(start)) {
             throw new AppException(ErrorCode.INVALID_DATE_RANGE);
         }
-
         LocalDateTime now = LocalDateTime.now();
-
         if (start.isBefore(now)) {
             throw new AppException(ErrorCode.START_DATE_IN_PAST);
         }
@@ -439,15 +404,10 @@ public class BookingsServiceImpl implements BookingsService {
                 start.toLocalDate(),
                 end.toLocalDate()
         );
-
         return (days == 0) ? 1 : days;
     }
 
-    private void validateCarAvailability(Long carId,
-                                         Long bookingId,
-                                         LocalDateTime start,
-                                         LocalDateTime end) {
-
+    private void validateCarAvailability(Long carId, Long bookingId, LocalDateTime start, LocalDateTime end) {
         long count = bookingDetailRepository.countOverlappingBookings(carId, bookingId, start, end);
         if (count > 0) {
             throw new AppException(ErrorCode.CAR_ALREADY_BOOKED_IN_THIS_TIME);
@@ -456,15 +416,11 @@ public class BookingsServiceImpl implements BookingsService {
 
     @Override
     public Page<BookingsResponse> getAllBookingUser(String email, String bookingCode, String status, int page, int size) {
-
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-
         Page<Bookings> bookingsPage;
-
         boolean noFilter =
                 (bookingCode == null || bookingCode.isBlank()) &&
                         (status == null || status.isBlank());
-
         if (noFilter) {
             bookingsPage = bookingsRepository.findBookingsByUser(email, null, null, pageable);
         } else {
@@ -473,30 +429,24 @@ public class BookingsServiceImpl implements BookingsService {
             if (status != null && !status.isBlank()) {
                 statusEnum = BookingStatusEnum.valueOf(status.toUpperCase());
             }
-
             bookingsPage = bookingsRepository.findBookingsByUser(email, bookingCode, statusEnum, pageable);
         }
-
         // ✅ LẤY LIST BOOKING IDS
         List<Long> bookingIds = bookingsPage.getContent()
                 .stream()
                 .map(Bookings::getId)
                 .toList();
-
         // ✅ QUERY NHỮNG BOOKING ĐÃ REVIEW
         List<Long> reviewedIds = reviewRepository.findBookingIdsHaveReview(bookingIds);
-
         Set<Long> reviewedSet = new HashSet<>(reviewedIds);
-
         // ✅ MAP + SET hasReview
         return bookingsPage.map(booking -> {
             BookingsResponse res = getBooking(booking);
-
             res.setHasReview(reviewedSet.contains(booking.getId()));
-
             return res;
         });
     }
+
     @Override
     @Transactional
     public void cancelBooking(String email, Long bookingId, RefundRequest request, MultipartFile qrCode) {
@@ -515,6 +465,23 @@ public class BookingsServiceImpl implements BookingsService {
         }
 
         RefundResponse refundResponse = null;
+
+        if (booking.getStatus() == BookingStatusEnum.PENDING) {
+            booking.setStatus(BookingStatusEnum.CANCELLED);
+            BookingStatusHistory history = BookingStatusHistory.builder()
+                    .booking(booking)
+                    .oldStatus(BookingStatusEnum.PENDING)
+                    .newStatus(BookingStatusEnum.CANCELLED)
+                    .reason("Khách hàng hủy đơn")
+                    .changedAt(LocalDateTime.now())
+                    .changedBy(booking.getUser())
+                    .build();
+
+            bookingStatusHistoryRepository.save(history);
+            bookingsRepository.save(booking);
+
+            return;
+        }
 
         if (booking.getStatus() == BookingStatusEnum.CONFIRMED) {
             LocalDateTime startDate = booking.getBookingDetailsList().get(0).getStartDate();
@@ -548,5 +515,6 @@ public class BookingsServiceImpl implements BookingsService {
         bookingsRepository.save(booking);
 
     }
+
 
 }

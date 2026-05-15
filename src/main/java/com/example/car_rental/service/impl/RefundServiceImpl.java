@@ -72,7 +72,6 @@ public class RefundServiceImpl implements RefundService {
     @Transactional
     public RefundResponse createRefund(Bookings booking, RefundRequest request, MultipartFile qrCode) {
 
-        // ❗ tránh double refund
         if (refundRepository.existsByBooking(booking)) {
             throw new AppException(ErrorCode.REFUND_ALREADY_EXISTS);
         }
@@ -198,13 +197,24 @@ public class RefundServiceImpl implements RefundService {
     public Page<RefundResponse> getAllRefund(String bookingCode, String status, int page, int size) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Refunds> responsePage;
+        Page<Refunds> refundsPage;
 
-        if (bookingCode == null || bookingCode.isEmpty()) {
-            responsePage = refundRepository.findAll(pageable);
+
+        boolean noFilter =
+                (bookingCode == null || bookingCode.isBlank()) &&
+                        (status == null || status.isBlank());
+
+        if (noFilter) {
+            refundsPage = refundRepository.findByBookingCode(null, null, pageable);
         } else {
-            responsePage = refundRepository.findByBookingCode(bookingCode,status, pageable);
+            RefundStatus statusEnum = null;
+
+            if (status != null && !status.isBlank()) {
+                statusEnum = RefundStatus.valueOf(status.toUpperCase());
+            }
+            refundsPage = refundRepository.findByBookingCode(bookingCode, statusEnum, pageable);
         }
-        return responsePage.map(this::getRefund);
+
+        return refundsPage.map(this::getRefund);
     }
 }

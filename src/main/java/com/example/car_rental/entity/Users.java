@@ -79,4 +79,8 @@ public class Users {
     @OneToMany(mappedBy = "user",  cascade = CascadeType.ALL)
     @JsonIgnore
     private List<Reviews> review;
+
+    @OneToMany(mappedBy = "staff",  cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<Incidents> incidents;
 }

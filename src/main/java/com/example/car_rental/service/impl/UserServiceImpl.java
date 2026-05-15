@@ -51,7 +51,7 @@ public class UserServiceImpl implements UserService {
                         (isActive == null);
 
         if (noFilter) {
-            usersPage = userRepository.findAll(pageable);
+            usersPage = userRepository.finByUser(null, null, null, pageable);
         } else {
             usersPage = userRepository.finByUser(search, role, isActive ,pageable);
         }

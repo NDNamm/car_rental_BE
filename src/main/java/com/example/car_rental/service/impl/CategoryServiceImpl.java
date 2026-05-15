@@ -69,10 +69,10 @@ public class CategoryServiceImpl implements CategoryService {
         Page<Categories> categoriesPage;
 
         if (name == null || name.isBlank()) {
-            categoriesPage = categoryRepository.findAll(pageable);
+            categoriesPage = categoryRepository.findByCate(null, pageable);
         }
         else {
-            categoriesPage = categoryRepository.findByName(name, pageable);
+            categoriesPage = categoryRepository.findByCate(name, pageable);
         }
 
         return categoriesPage.map(categories -> CategoryResponse.builder()
