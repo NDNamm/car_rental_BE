@@ -18,6 +18,7 @@ public class RefundResponse {
     private Long id;
     private String bookingCode;
     private String customerName;
+    private String customerEmail;
     private BigDecimal amount;
     private String reason;
     private Long hoursBefore;

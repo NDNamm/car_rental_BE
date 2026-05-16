@@ -1,6 +1,7 @@
 package com.example.car_rental.entity;
 
 import com.example.car_rental.entity.enums.PenaltyStatusEnum;
+import com.example.car_rental.entity.enums.SourceEnum;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -30,11 +31,15 @@ public class Penalties {
     @Enumerated(EnumType.STRING)
     private PenaltyStatusEnum status;
 
+    @Column(name = "source")
+    @Enumerated(EnumType.STRING)
+    private SourceEnum source;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "booking_detail_id")
-    private BookingDetails bookingDetail;
+    @JoinColumn(name = "incident_id")
+    private Incidents incident;
 
 }

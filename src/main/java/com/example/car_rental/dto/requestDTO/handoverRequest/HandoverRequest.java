@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class HandoverRequest {
+    private Long bookingDetailId;
     private Integer mileage;
     private Integer fuelLevel;
     private String noteHandover;

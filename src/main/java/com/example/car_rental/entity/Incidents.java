@@ -26,7 +26,6 @@ public class Incidents {
     @Column(name = "description")
     private String description;
 
-
     @Column(name = "type")
     @Enumerated(EnumType.STRING)
     private IncidentEnum type;
@@ -36,9 +35,12 @@ public class Incidents {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")
-    private Users staff;
+    private Users createdBy;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "booking_detail_id")
     private BookingDetails bookingDetail;
+
+    @OneToMany(mappedBy = "incident", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Penalties> penalties;
 }

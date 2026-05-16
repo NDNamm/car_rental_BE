@@ -128,6 +128,7 @@ public class RefundServiceImpl implements RefundService {
                 .id(refunds.getId())
                 .bookingCode(refunds.getBookingCode())
                 .customerName(refunds.getBooking().getCustomerName())
+                .customerEmail(refunds.getBooking().getCustomerEmail())
                 .reason(refunds.getReason())
                 .amount(refunds.getAmount())
                 .hoursBefore(refunds.getHoursBefore())

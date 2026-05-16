@@ -80,7 +80,7 @@ public class Users {
     @JsonIgnore
     private List<Reviews> review;
 
-    @OneToMany(mappedBy = "staff",  cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "createdBy",  cascade = CascadeType.ALL)
     @JsonIgnore
     private List<Incidents> incidents;
 }

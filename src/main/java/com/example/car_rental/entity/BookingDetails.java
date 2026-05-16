@@ -53,7 +53,5 @@ public class BookingDetails {
     @OneToMany(mappedBy = "bookingDetails", cascade = CascadeType.ALL)
     private List<CarHandovers> carHandovers;
 
-    @OneToMany(mappedBy = "bookingDetail", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Penalties> penalties;
 
 }
