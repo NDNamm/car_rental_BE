@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -18,5 +19,5 @@ import java.time.LocalDateTime;
 public class IncidentRequest {
     private String description;
     private IncidentEnum type;
-    private LocalDateTime createdAt;
+    private BigDecimal amount;
 }

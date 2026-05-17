@@ -20,7 +20,6 @@ import java.time.LocalDateTime;
 public class PenaltyResponse {
     private Long id;
     private BigDecimal amount;
-    private String reason;
     private PenaltyStatusEnum status;
     private SourceEnum source;
     private LocalDateTime createdAt;

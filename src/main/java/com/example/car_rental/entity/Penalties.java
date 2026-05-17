@@ -24,21 +24,14 @@ public class Penalties {
     @Column(name = "amount")
     private BigDecimal amount;
 
-    @Column(name = "reason")
-    private String reason;
-
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
     private PenaltyStatusEnum status;
 
-    @Column(name = "source")
-    @Enumerated(EnumType.STRING)
-    private SourceEnum source;
-
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "incident_id")
     private Incidents incident;
 

@@ -30,7 +30,7 @@ public class CarHandovers {
     private LocalDateTime handoverTime;
 
     @Column(name = "mileage")
-    private Integer mileage;
+    private Long mileage;
 
     @Column(name = "fuel_level")
     private Integer fuel_level;

@@ -18,6 +18,7 @@ import com.example.car_rental.repository.*;
 import com.example.car_rental.service.CarHandoverService;
 import com.example.car_rental.service.CarService;
 import com.example.car_rental.service.ImageService;
+import com.example.car_rental.service.IncidentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -42,48 +43,45 @@ public class CarHandoverServiceImpl implements CarHandoverService {
 
     private final CarHandoverRepository carHandoverRepository;
     private final ImageService imageService;
+    private final IncidentService incidentService;
+    private final BookingDetailRepository bookingDetailRepository;
 
     @Override
     @Transactional
-    public void createHandover(BookingDetails detail, Users staff, HandoverRequest request, MultipartFile[] images) {
+    public void processHandover(Long bookingDetailId, Users staff, HandoverRequest request, MultipartFile[] images) {
+
+        BookingDetails detail = bookingDetailRepository.findById(bookingDetailId)
+                .orElseThrow(() -> new AppException(ErrorCode.BOOKING_DETAIL_NOT_FOUND));
 
         CarHandovers handover = CarHandovers.builder()
-                .bookingDetails(detail)
-                .staff(staff)
-                .type(CarHandoverEnum.OUT)
-                .handoverTime(LocalDateTime.now())
-                .mileage(request.getMileage())
-                .fuel_level(request.getFuelLevel())
-                .note(request.getNoteHandover())
-                .createdAt(LocalDateTime.now())
-                .build();
+                        .bookingDetails(detail)
+                        .staff(staff)
+                        .type(request.getType())
+                        .handoverTime(LocalDateTime.now())
+                        .mileage(request.getMileage())
+                        .fuel_level(request.getFuelLevel())
+                        .note(request.getNoteHandover())
+                        .createdAt(LocalDateTime.now())
+                        .build();
+
         carHandoverRepository.save(handover);
 
-        List<HandoverImages> handoverImages =
-                imageService.uploadHandoverImages(images, "handovers", detail.getBooking().getBookingCode(),"Ảnh bàn giao xe" ,handover);
+        String folderName = request.getType() == CarHandoverEnum.OUT
+                        ? "Ảnh bàn giao xe"
+                        : "Ảnh thu hồi xe";
+
+        List<HandoverImages> handoverImages = imageService.uploadHandoverImages(images, "handovers", detail.getBooking().getBookingCode(), folderName, handover);
 
         handover.setHandoverImages(handoverImages);
         carHandoverRepository.save(handover);
-    }
 
-    @Override
-    public void returnCar(BookingDetails detail, Users staff, HandoverRequest request, MultipartFile[] images) {
-        CarHandovers handover = CarHandovers.builder()
-                .bookingDetails(detail)
-                .staff(staff)
-                .type(CarHandoverEnum.IN)
-                .handoverTime(LocalDateTime.now())
-                .mileage(request.getMileage())
-                .fuel_level(request.getFuelLevel())
-                .note(request.getNoteHandover())
-                .createdAt(LocalDateTime.now())
-                .build();
-        carHandoverRepository.save(handover);
 
-        List<HandoverImages> handoverImages =
-                imageService.uploadHandoverImages(images, "handovers", detail.getBooking().getBookingCode(),"Ảnh thu nhận lại xe" ,handover);
+        if (request.getType() == CarHandoverEnum.IN) {
+            incidentService.handleLateReturn(bookingDetailId);
+//            incidentService.handleExceededMileage(bookingDetailId, request.getMileage());
+//            incidentService.handleFuelLoss(bookingDetailId, request.getFuelLevel());
 
-        handover.setHandoverImages(handoverImages);
-        carHandoverRepository.save(handover);
+            incidentService.createManualIncident(bookingDetailId, request.getIncidentRequests(), staff);
+        }
     }
 }

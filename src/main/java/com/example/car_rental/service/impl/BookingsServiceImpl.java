@@ -193,7 +193,7 @@ public class BookingsServiceImpl implements BookingsService {
             if (next == BookingStatusEnum.RENTED) {
                 car.setStatus(CarStatusEnum.RENTED);
 
-                carHandoverService.createHandover(booking.getBookingDetailsList().get(0), staff, handoverRequest, images);
+                carHandoverService.processHandover(detail.getId(), staff, handoverRequest, images);
             }
 
             // TRƯỜNG HỢP: KHÁCH TRẢ XE (HOÀN THÀNH)
@@ -201,7 +201,7 @@ public class BookingsServiceImpl implements BookingsService {
                 car.setStatus(CarStatusEnum.AVAILABLE);
                 car.setTripCount(car.getTripCount() + 1);
 
-                carHandoverService.returnCar(booking.getBookingDetailsList().get(0), staff, handoverRequest, images);
+                carHandoverService.processHandover(detail.getId(), staff, handoverRequest, images);
             }
 
             // TRƯỜNG HỢP: HỦY ĐƠN

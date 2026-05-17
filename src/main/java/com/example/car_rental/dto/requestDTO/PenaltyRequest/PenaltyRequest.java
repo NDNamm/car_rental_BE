@@ -14,6 +14,5 @@ import java.math.BigDecimal;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PenaltyRequest {
     private BigDecimal amount;
-    private String reason;
     private PenaltyStatusEnum status;
 }

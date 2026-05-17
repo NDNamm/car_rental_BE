@@ -2,6 +2,7 @@ package com.example.car_rental.entity;
 
 import com.example.car_rental.entity.enums.CarHandoverEnum;
 import com.example.car_rental.entity.enums.IncidentEnum;
+import com.example.car_rental.entity.enums.SourceEnum;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
@@ -30,6 +31,10 @@ public class Incidents {
     @Enumerated(EnumType.STRING)
     private IncidentEnum type;
 
+    @Column(name = "source")
+    @Enumerated(EnumType.STRING)
+    private SourceEnum source;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -41,6 +46,6 @@ public class Incidents {
     @JoinColumn(name = "booking_detail_id")
     private BookingDetails bookingDetail;
 
-    @OneToMany(mappedBy = "incident", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Penalties> penalties;
+    @OneToOne(mappedBy = "incident", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Penalties penalties;
 }

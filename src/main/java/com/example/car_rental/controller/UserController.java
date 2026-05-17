@@ -35,8 +35,7 @@ public class UserController {
                                                       @RequestParam(defaultValue = "0") int page,
                                                       @RequestParam(defaultValue = "10") int size) {
 
-        Page<UserResponse> users =
-                userService.getAllUsers(search, role, isActive, page, size);
+        Page<UserResponse> users = userService.getAllUsers(search, role, isActive, page, size);
 
         return ApiResponse.<Page<UserResponse>>builder()
                 .code(200)
