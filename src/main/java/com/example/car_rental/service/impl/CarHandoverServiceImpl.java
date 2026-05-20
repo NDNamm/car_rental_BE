@@ -77,11 +77,17 @@ public class CarHandoverServiceImpl implements CarHandoverService {
 
 
         if (request.getType() == CarHandoverEnum.IN) {
-            incidentService.handleLateReturn(bookingDetailId);
+            incidentService.handleLateReturn(handover.getId());
 //            incidentService.handleExceededMileage(bookingDetailId, request.getMileage());
 //            incidentService.handleFuelLoss(bookingDetailId, request.getFuelLevel());
 
-            incidentService.createManualIncident(bookingDetailId, request.getIncidentRequests(), staff);
+            if (request.getIncidentRequests() != null) {
+                incidentService.createManualIncident(
+                        handover.getId(),
+                        request.getIncidentRequests(),
+                        staff
+                );
+            }
         }
     }
 }

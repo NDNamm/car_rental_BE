@@ -6,10 +6,7 @@ import com.example.car_rental.entity.enums.IncidentEnum;
 import com.example.car_rental.entity.enums.SourceEnum;
 import com.example.car_rental.exception.AppException;
 import com.example.car_rental.exception.ErrorCode;
-import com.example.car_rental.repository.BookingDetailRepository;
-import com.example.car_rental.repository.IncidentRepository;
-import com.example.car_rental.repository.PenaltyRuleRepository;
-import com.example.car_rental.repository.UserRepository;
+import com.example.car_rental.repository.*;
 import com.example.car_rental.service.IncidentService;
 import com.example.car_rental.service.PenaltyService;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -28,14 +26,16 @@ public class IncidentServiceImpl implements IncidentService {
     private final PenaltyService penaltyService;
     private final PenaltyRuleRepository penaltyRuleRepository;
     private final UserRepository usersRepository;
+    private final CarHandoverRepository carHandoverRepository;
 
     @Override
-    public Incidents createAutoIncident(Long bookingDetailId, Users staff, IncidentEnum type, String description) {
-        BookingDetails bookingDetail = bookingDetailRepository.findById(bookingDetailId)
-                .orElseThrow(() -> new AppException(ErrorCode.BOOKING_DETAIL_NOT_FOUND));
+    public Incidents createAutoIncident(Long handoverId, Users staff, IncidentEnum type, String description) {
+
+        CarHandovers carHandovers = carHandoverRepository.findById(handoverId)
+                .orElseThrow(() -> new AppException(ErrorCode.HANDOVER_NOT_FOUND));
 
         Incidents incidents = Incidents.builder()
-                .bookingDetail(bookingDetail)
+                .handover(carHandovers)
                 .createdBy(staff)
                 .type(type)
                 .source(SourceEnum.AUTO)
@@ -47,14 +47,14 @@ public class IncidentServiceImpl implements IncidentService {
     }
 
     @Override
-    public void handleLateReturn(Long bookingDetailId) {
+    public void handleLateReturn(Long handoverId) {
         Users staff = usersRepository.findByEmail("system@local")
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        BookingDetails detail = bookingDetailRepository.findById(bookingDetailId)
-                .orElseThrow(() -> new AppException(ErrorCode.BOOKING_DETAIL_NOT_FOUND));
+        CarHandovers carHandovers = carHandoverRepository.findById(handoverId)
+                .orElseThrow(() -> new AppException(ErrorCode.HANDOVER_NOT_FOUND));
 
-        LocalDateTime expected = detail.getEndDate();
+        LocalDateTime expected = carHandovers.getBookingDetails().getEndDate();
 
         LocalDateTime actual = LocalDateTime.now();
 
@@ -63,7 +63,7 @@ public class IncidentServiceImpl implements IncidentService {
         }
 
         long lateMinutes = Duration.between(expected, actual).toMinutes();
-        handleLateMinutes(lateMinutes, detail, staff);
+        handleLateMinutes(lateMinutes, carHandovers , staff);
 
     }
 
@@ -84,7 +84,7 @@ public class IncidentServiceImpl implements IncidentService {
 //
 //    }
 
-    public void handleLateMinutes(long lateMinutes, BookingDetails detail, Users staff) {
+    public void handleLateMinutes(long lateMinutes,CarHandovers carHandovers, Users staff) {
         BigDecimal amount;
         String reason;
         if (lateMinutes < 60) {
@@ -104,33 +104,35 @@ public class IncidentServiceImpl implements IncidentService {
                 extraDays = 1;
             }
 
-            amount = detail.getCar().getDepositAmount().multiply(BigDecimal.valueOf(extraDays));
+            BigDecimal dailyRate = carHandovers.getBookingDetails().getCar().getPricePerDay();
+            amount = dailyRate.multiply(BigDecimal.valueOf(extraDays));
             reason = "Trả xe quá hạn " + extraDays + " ngày";
         }
 
-        Incidents incident = createAutoIncident(detail.getId(), staff, IncidentEnum.LATE_RETURN, reason);
+        Incidents incident = createAutoIncident(carHandovers.getId(), staff, IncidentEnum.LATE_RETURN, reason);
 
         penaltyService.createPenalty(incident.getId(), amount);
     }
 
     @Override
-    public void createManualIncident(Long bookingDetailId, IncidentRequest request, Users staff) {
-        BookingDetails detail = bookingDetailRepository.findById(bookingDetailId)
-                .orElseThrow(() -> new AppException(ErrorCode.BOOKING_DETAIL_NOT_FOUND));
+    public void createManualIncident(Long handoverId, List<IncidentRequest> requests, Users staff) {
+        CarHandovers carHandovers = carHandoverRepository.findById(handoverId)
+                .orElseThrow(() -> new AppException(ErrorCode.HANDOVER_NOT_FOUND));
 
-        Incidents incident = Incidents.builder()
-                .bookingDetail(detail)
-                .createdBy(staff)
-                .type(request.getType())
-                .source(SourceEnum.MANUAL)
-                .description(request.getDescription())
-                .type(request.getType())
-                .createdAt(LocalDateTime.now())
-                .build();
+        for (IncidentRequest request : requests) {
+            Incidents incidents = Incidents.builder()
+                    .handover(carHandovers)
+                    .createdBy(staff)
+                    .type(request.getType())
+                    .source(SourceEnum.MANUAL)
+                    .description(request.getDescription())
+                    .createdAt(LocalDateTime.now())
+                    .build();
 
-        incidentRepository.save(incident);
+            incidentRepository.save(incidents);
 
-        penaltyService.createPenalty(incident.getId(), request.getAmount());
+            penaltyService.createPenalty(incidents.getId(), request.getAmount());
+        }
     }
-
 }
+

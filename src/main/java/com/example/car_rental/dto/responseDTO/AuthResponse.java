@@ -17,4 +17,5 @@ public class AuthResponse {
     private String roleName;
     private String avatarUrl;
     private String token;
+    private Boolean isActive;
 }

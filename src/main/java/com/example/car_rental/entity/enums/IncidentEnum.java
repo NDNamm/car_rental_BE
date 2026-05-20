@@ -10,5 +10,7 @@ public enum IncidentEnum {
     FUEL_LOSS,
     ACCIDENT,
     ODO_EXCEEDED,
+    TIRE_DAMAGE,
+    INTERIOR_DAMAGE,
     OTHER;
 }

@@ -42,10 +42,11 @@ public class Incidents {
     @JoinColumn(name = "created_by")
     private Users createdBy;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "booking_detail_id")
-    private BookingDetails bookingDetail;
-
     @OneToOne(mappedBy = "incident", cascade = CascadeType.ALL, orphanRemoval = true)
     private Penalties penalties;
+
+    @ManyToOne
+    @JoinColumn(name = "handover_id")
+    @JsonIgnore
+    private CarHandovers handover;
 }

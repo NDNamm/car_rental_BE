@@ -19,5 +19,5 @@ public class HandoverRequest {
     private Integer fuelLevel;
     private String noteHandover;
     private CarHandoverEnum type;
-    private IncidentRequest incidentRequests;
+    private List<IncidentRequest> incidentRequests;
 }

@@ -84,15 +84,7 @@ public class AuthServiceImpl implements AuthService {
         cookie.setMaxAge(7 * 24 * 60 * 60);
         response.addCookie(cookie);
 
-        return AuthResponse.builder()
-                .id(user.getId())
-                .fullName(user.getFullName())
-                .email(user.getEmail())
-                .phoneNumber(user.getPhoneNumber())
-                .avatarUrl(user.getAvatarUrl())
-                .roleName(user.getRole().getRoleName())
-                .token(accessToken)
-                .build();
+        return mapToAuthResponse(user, accessToken);
     }
 
 
@@ -125,12 +117,7 @@ public class AuthServiceImpl implements AuthService {
 
         verificationRepository.save(verifications);
 
-        return AuthResponse.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .fullName(user.getFullName())
-                .roleName(user.getRole().getRoleName())
-                .build();
+        return mapToAuthResponse(user, null);
     }
 
     @Override
@@ -281,14 +268,7 @@ public class AuthServiceImpl implements AuthService {
 
             response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
-            return AuthResponse.builder()
-                    .id(user.getId())
-                    .fullName(user.getFullName())
-                    .email(user.getEmail())
-                    .roleName(role)
-                    .token(accessToken)
-                    .avatarUrl(user.getAvatarUrl())
-                    .build();
+            return mapToAuthResponse(user, accessToken);
 
         } catch (Exception e) {
             throw new AppException(ErrorCode.INVALID_CREDENTIALS);
@@ -307,5 +287,18 @@ public class AuthServiceImpl implements AuthService {
         return null;
     }
 
+    public AuthResponse mapToAuthResponse(Users user, String token) {
+        return AuthResponse.builder()
+                .id(user.getId())
+                .fullName(user.getFullName())
+                .email(user.getEmail())
+                .phoneNumber(user.getPhoneNumber())
+                .avatarUrl(user.getAvatarUrl())
+                .roleName(user.getRole().getRoleName())
+                .token(token)
+                .isActive(user.getIsActive())
+
+                .build();
+    }
 
 }

@@ -7,6 +7,7 @@ import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -52,5 +53,10 @@ public class CarHandovers {
     @OneToMany(mappedBy = "carHandovers", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<HandoverImages> handoverImages;
+
+    @OneToMany(mappedBy = "handover",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true)
+    private List<Incidents> incidents = new ArrayList<>();
 
 }

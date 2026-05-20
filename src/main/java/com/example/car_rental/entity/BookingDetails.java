@@ -49,7 +49,6 @@ public class BookingDetails {
     @JoinColumn(name = "car_id")
     private Cars car;
 
-
     @OneToMany(mappedBy = "bookingDetails", cascade = CascadeType.ALL)
     private List<CarHandovers> carHandovers;
 

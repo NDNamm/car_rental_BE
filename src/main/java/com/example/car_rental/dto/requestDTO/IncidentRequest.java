@@ -1,5 +1,6 @@
 package com.example.car_rental.dto.requestDTO;
 
+import com.example.car_rental.dto.requestDTO.PenaltyRequest.PenaltyRequest;
 import com.example.car_rental.entity.enums.IncidentEnum;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
@@ -20,4 +21,5 @@ public class IncidentRequest {
     private String description;
     private IncidentEnum type;
     private BigDecimal amount;
+    private PenaltyRequest penaltyRequest;
 }

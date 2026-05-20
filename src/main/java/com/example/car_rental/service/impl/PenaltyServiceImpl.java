@@ -1,10 +1,9 @@
 package com.example.car_rental.service.impl;
 
-import com.example.car_rental.dto.requestDTO.PenaltyRequest.PenaltyRequest;
+
 import com.example.car_rental.entity.Incidents;
 import com.example.car_rental.entity.Penalties;
 import com.example.car_rental.entity.enums.PenaltyStatusEnum;
-import com.example.car_rental.entity.enums.SourceEnum;
 import com.example.car_rental.exception.AppException;
 import com.example.car_rental.exception.ErrorCode;
 import com.example.car_rental.repository.IncidentRepository;

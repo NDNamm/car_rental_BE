@@ -23,6 +23,7 @@ import com.example.car_rental.service.CarHandoverService;
 import com.example.car_rental.service.PaymentsService;
 import com.example.car_rental.service.RefundService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -38,6 +39,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class BookingsServiceImpl implements BookingsService {
@@ -188,7 +190,7 @@ public class BookingsServiceImpl implements BookingsService {
         // XỬ LÝ LOGIC CHI TIẾT THEO TRẠNG THÁI MỚI
         booking.getBookingDetailsList().forEach(detail -> {
             Cars car = detail.getCar();
-
+            log.info("Car {} trip count increased to {}", car.getId(), car.getTripCount());
             // TRƯỜNG HỢP: GIAO XE CHO KHÁCH
             if (next == BookingStatusEnum.RENTED) {
                 car.setStatus(CarStatusEnum.RENTED);
