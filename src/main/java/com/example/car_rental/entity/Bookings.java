@@ -80,4 +80,7 @@ public class Bookings {
     @OneToOne(mappedBy = "booking")
     private Reviews review;
 
+    @OneToOne(mappedBy = "booking", cascade = CascadeType.ALL)
+    private Invoices invoices;
+
 }

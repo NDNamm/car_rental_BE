@@ -87,7 +87,9 @@ public enum ErrorCode {
     REVIEW_ALREADY_EXISTS(14001, "Review already exists for this booking", HttpStatus.BAD_REQUEST),
     REVIEW_NOT_FOUND(14002, "Review not found", HttpStatus.NOT_FOUND),
     REVIEW_ALREADY_APPROVED(14003, "Review already approved", HttpStatus.BAD_REQUEST),
-    INVALID_STATUS(14004, "Status invalid", HttpStatus.BAD_REQUEST);
+    INVALID_STATUS(14004, "Status invalid", HttpStatus.BAD_REQUEST),
+
+    INVOICE_NOT_FOUND(15001, "Invoice not found", HttpStatus.NOT_FOUND);
 
     private final int code;
     private final String message;

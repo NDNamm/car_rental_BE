@@ -13,6 +13,7 @@ import com.example.car_rental.repository.BookingStatusHistoryRepository;
 import com.example.car_rental.repository.BookingsRepository;
 import com.example.car_rental.repository.PaymentsRepository;
 import com.example.car_rental.repository.UserRepository;
+import com.example.car_rental.service.InvoiceService;
 import com.example.car_rental.service.PaymentsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +35,7 @@ public class PaymentsServiceImpl implements PaymentsService {
     private final PaymentsRepository paymentsRepository;
     private final BookingStatusHistoryRepository bookingStatusHistoryRepository;
     private final UserRepository userRepository;
+    private final InvoiceService invoiceService;
 
     @Value("${sepay.webhook.api-key}")
     private String sepayApiKey;
@@ -48,6 +50,21 @@ public class PaymentsServiceImpl implements PaymentsService {
                 booking.getTotalDepositAmount().toPlainString(),
                 booking.getBookingCode()
         );
+    }
+
+    @Override
+    public void createPayment(Bookings booking) {
+        Payments payment = Payments.builder()
+                .booking(booking)
+                .amount(booking.getTotalDepositAmount())
+                .status(PaymentStatusEnum.UNPAID)
+                .paymentType(PaymentTypeEnum.DEPOSIT)
+                .paymentMethod(PaymentMethodEnum.BANK_TRANSFER)
+                .paymentContent(booking.getBookingCode())
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        paymentsRepository.save(payment);
     }
 
     @Override
@@ -73,17 +90,10 @@ public class PaymentsServiceImpl implements PaymentsService {
             booking.getBookingDetailsList().forEach(detail ->
                     detail.getCar().setStatus(CarStatusEnum.AVAILABLE)
             );
-            Users systemUser = userRepository.findByEmail("system@local")
-                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-            BookingStatusHistory history = BookingStatusHistory.builder()
-                    .booking(booking)
-                    .newStatus(BookingStatusEnum.CANCELLED)
-                    .reason("Hết hạn thanh toán - Auto cancel")
-                    .changedAt(LocalDateTime.now())
-                    .changedBy(systemUser)
-                    .build();
-            bookingStatusHistoryRepository.save(history);
             bookingsRepository.save(booking);
+
+            createBookingHistory(booking);
+            invoiceService.updateInvoiceStatus(booking.getId(), InvoiceStatusEnum.CANCELLED);
             log.warn("Booking {} bị cancel do quá hạn thanh toán", bookingCode);
             return;
         }
@@ -105,20 +115,13 @@ public class PaymentsServiceImpl implements PaymentsService {
         payment.setStatus(PaymentStatusEnum.SUCCESS);
         payment.setTransactionCode(request.getReferenceCode());
         payment.setPaymentMethod(PaymentMethodEnum.BANK_TRANSFER);
+        paymentsRepository.save(payment);
 
         booking.setStatus(BookingStatusEnum.CONFIRMED);
-        BookingStatusHistory history = BookingStatusHistory.builder()
-                .booking(booking)
-                .newStatus(BookingStatusEnum.CONFIRMED)
-                .reason("Thanh toán cọc thành công")
-                .changedAt(LocalDateTime.now())
-                .changedBy(userRepository.findByEmail("system@local")
-                        .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND)))
-                .build();
-
-        bookingStatusHistoryRepository.save(history);
-        paymentsRepository.save(payment);
         bookingsRepository.save(booking);
+
+        createBookingHistory(booking);
+        invoiceService.updateInvoiceStatus(booking.getId(), InvoiceStatusEnum.PARTIAL);
 
         log.info("Thanh toán cọc thành công cho booking: {}", bookingCode);
     }
@@ -169,5 +172,28 @@ public class PaymentsServiceImpl implements PaymentsService {
         }
 
         return code;
+    }
+
+    private void createBookingHistory(Bookings booking) {
+        Users systemUser = userRepository.findByEmail("system@local")
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        BookingStatusEnum newStatus = booking.getStatus();
+        String reason;
+
+        if(newStatus == BookingStatusEnum.CONFIRMED) {
+            reason = "Thanh toán cọc thành công";
+        } else if (newStatus == BookingStatusEnum.CANCELLED) {
+            reason = "Hết hạn thanh toán - Auto cancel";
+        } else {
+            reason = "Cập nhật trạng thái tự động";
+        }
+        BookingStatusHistory history = BookingStatusHistory.builder()
+                .booking(booking)
+                .newStatus(newStatus)
+                .reason(reason)
+                .changedAt(LocalDateTime.now())
+                .changedBy(systemUser)
+                .build();
+        bookingStatusHistoryRepository.save(history);
     }
 }

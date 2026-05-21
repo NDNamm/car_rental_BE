@@ -6,8 +6,9 @@ import com.example.car_rental.entity.Bookings;
 
 public interface PaymentsService {
 
-    public void processSePayWebhook(SePayWebhookRequest request, String apiKeyHeader);
-    public String generateQrUrl(Bookings booking);
+    void createPayment(Bookings booking);
+    void processSePayWebhook(SePayWebhookRequest request, String apiKeyHeader);
+    String generateQrUrl(Bookings booking);
     BookingCodeResponse getQrUrlByBookingCode(String bookingCode);
     String checkStatus(String bookingCode);
 }

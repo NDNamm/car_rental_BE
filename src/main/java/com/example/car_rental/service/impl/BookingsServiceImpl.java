@@ -18,10 +18,7 @@ import com.example.car_rental.entity.enums.*;
 import com.example.car_rental.exception.AppException;
 import com.example.car_rental.exception.ErrorCode;
 import com.example.car_rental.repository.*;
-import com.example.car_rental.service.BookingsService;
-import com.example.car_rental.service.CarHandoverService;
-import com.example.car_rental.service.PaymentsService;
-import com.example.car_rental.service.RefundService;
+import com.example.car_rental.service.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -51,12 +48,12 @@ public class BookingsServiceImpl implements BookingsService {
     final PaymentsRepository paymentsRepository;
     final PaymentsService paymentsService;
     final VerificationRepository verificationRepository;
-    final CarHandoverRepository carHandoverRepository;
     final BookingStatusHistoryRepository bookingStatusHistoryRepository;
     final RefundService refundService;
     final RefundCalculate refundCalculate;
     final ReviewRepository reviewRepository;
     final CarHandoverService carHandoverService;
+    final InvoiceService invoiceService;
 
 
     @Override
@@ -302,17 +299,11 @@ public class BookingsServiceImpl implements BookingsService {
         booking.setTotalDepositAmount(totalDeposit);
         String qr = paymentsService.generateQrUrl(booking);
         booking.setQrCodeUrl(qr);
-        Bookings saved = bookingsRepository.save(booking);
 
-        paymentsRepository.save(Payments.builder()
-                .booking(saved)
-                .amount(totalDeposit)
-                .status(PaymentStatusEnum.UNPAID)
-                .paymentMethod(PaymentMethodEnum.BANK_TRANSFER)
-                .paymentType(PaymentTypeEnum.DEPOSIT)
-                .createdAt(LocalDateTime.now())
-                .paymentContent(bookingCode)
-                .build());
+       bookingsRepository.save(booking);
+
+        paymentsService.createPayment(booking);
+        invoiceService.generateInvoice(booking.getId());
 
         return BookingCodeResponse.builder()
                 .bookingCode(bookingCode)
