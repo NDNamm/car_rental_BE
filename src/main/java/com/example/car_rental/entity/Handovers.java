@@ -16,8 +16,8 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "car_handovers")
-public class CarHandovers {
+@Table(name = "handovers")
+public class Handovers {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -50,7 +50,7 @@ public class CarHandovers {
     @JoinColumn(name = "staff_id")
     private Users staff;
 
-    @OneToMany(mappedBy = "carHandovers", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "handovers", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<HandoverImages> handoverImages;
 

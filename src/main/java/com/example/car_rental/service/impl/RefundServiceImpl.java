@@ -7,10 +7,7 @@ import com.example.car_rental.entity.Bookings;
 import com.example.car_rental.entity.Payments;
 import com.example.car_rental.entity.Refunds;
 import com.example.car_rental.entity.Users;
-import com.example.car_rental.entity.enums.BookingStatusEnum;
-import com.example.car_rental.entity.enums.PaymentStatusEnum;
-import com.example.car_rental.entity.enums.PaymentTypeEnum;
-import com.example.car_rental.entity.enums.RefundStatus;
+import com.example.car_rental.entity.enums.*;
 import com.example.car_rental.exception.AppException;
 import com.example.car_rental.exception.ErrorCode;
 import com.example.car_rental.repository.BookingsRepository;
@@ -18,6 +15,7 @@ import com.example.car_rental.repository.PaymentsRepository;
 import com.example.car_rental.repository.RefundRepository;
 import com.example.car_rental.repository.UserRepository;
 import com.example.car_rental.service.ImageService;
+import com.example.car_rental.service.NotificationService;
 import com.example.car_rental.service.RefundService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +32,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -44,9 +43,11 @@ public class RefundServiceImpl implements RefundService {
     final ImageService imageService;
     final PaymentsRepository paymentsRepository;
     final RefundCalculate refundCalculate;
+    final NotificationService notificationService;
+    final UserRepository userRepository;
 
     @Override
-    public Page<RefundResponse> getAllRefundUser(String email,String bookingCode, String status, int page, int size) {
+    public Page<RefundResponse> getAllRefundUser(String email, String bookingCode, String status, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Refunds> refundsPage = null;
 
@@ -55,7 +56,7 @@ public class RefundServiceImpl implements RefundService {
                         (status == null || status.isBlank());
 
         if (noFilter) {
-            refundsPage = refundRepository.findRefundByUser(email,null, null,pageable);
+            refundsPage = refundRepository.findRefundByUser(email, null, null, pageable);
         } else {
             RefundStatus statusEnum = null;
 
@@ -118,7 +119,8 @@ public class RefundServiceImpl implements RefundService {
         }
 
         refundRepository.save(refund);
-
+        createBookingNotification(booking.getUser(), RefundStatus.PENDING, booking.getBookingCode());
+        createBookingNotificationAdmin(booking.getBookingCode());
         return getRefund(refund);
     }
 
@@ -181,16 +183,14 @@ public class RefundServiceImpl implements RefundService {
                 throw new AppException(ErrorCode.UPDATE_IMAGE_FAIL);
             }
 
-        }
-
-        else if (request.getStatus() == RefundStatus.REJECTED) {
+        } else if (request.getStatus() == RefundStatus.REJECTED) {
             refunds.setStatus(RefundStatus.REJECTED);
             refunds.setNote(request.getNote());
 
         }
 
         refundRepository.save(refunds);
-
+        createBookingNotification(refunds.getBooking().getUser(), refunds.getStatus(), refunds.getBookingCode());
         return getRefund(refunds);
     }
 
@@ -217,5 +217,22 @@ public class RefundServiceImpl implements RefundService {
         }
 
         return refundsPage.map(this::getRefund);
+    }
+
+    private void createBookingNotification(Users user, RefundStatus status, String bookingCode) {
+        String message = switch (status) {
+            case REJECTED -> "Yêu cầu hoàn tiền đơn đặt xe:  " + bookingCode + " của bạn đã bị từ chối.";
+            case COMPLETED -> "Đã hoàn tiền thành công đơn đặt xe:  " + bookingCode;
+            default ->
+                    "Bạn đã yêu cầu hoàn tiền đơn đặt xe:  " + bookingCode + ". Chúng tôi sẽ xem xét và phản hồi sớm nhất có thể.";
+        };
+        notificationService.createNotification(user.getId(), NotificationTypeEnum.REFUND, message);
+    }
+
+    private void createBookingNotificationAdmin(String bookingCode) {
+        List<Users> admins = userRepository.findByRole_RoleName("ADMIN");
+        for(Users adminUser : admins) {
+            notificationService.createNotification(adminUser.getId(), NotificationTypeEnum.REFUND, "Yêu cầu hoàn tiền đơn đặt xe:  " + bookingCode + " đang chờ xử lý. Vui lòng kiểm tra và cập nhật trạng thái.");
+        }
     }
 }

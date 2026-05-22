@@ -14,13 +14,19 @@ public interface BookingsService {
     //ADMIN
 //    Page<BookingsResponse> getAllBookings(String bookingCode, String email, String name, String phoneNumber, String status, int page, int size);
     Page<BookingsResponse> getAllBookings(String search, String status, int page, int size);
+
     void updateBookingsStatus(BookingStatusRequest request, Long bookingId, HandoverRequest handoverRequest, MultipartFile[] images);
+
     void deleteBooking(Long bookingId);
 
     //USER
     BookingCodeResponse addBooking(String email, BookingRequest bookingRequest);
+
     BookingCodeResponse updateBooking(String email, BookingRequest bookingRequest, Long bookingId);
-    Page<BookingsResponse> getAllBookingUser(String email, String bookingCode,String status, int page, int size);
+
+    Page<BookingsResponse> getAllBookingUser(String email, String bookingCode, String status, int page, int size);
+
     void cancelBooking(String email, Long bookingId, RefundRequest request, MultipartFile qrCode);
 
+    BookingsResponse getBookingById(String email, Long bookingId);
 }

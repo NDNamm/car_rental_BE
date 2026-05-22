@@ -40,7 +40,7 @@ public interface BookingDetailRepository extends JpaRepository<BookingDetails, L
     )
     FROM BookingDetails bd
     WHERE bd.car.id = :carId
-    AND bd.booking.status IN ('PENDING', 'CONFIRMED', 'RENTED')
+    AND bd.booking.status IN ('PENDING', 'CONFIRMED', 'RENTED', "RETURNING")
 """)
     List<BookingTimeResponse> findBookedRanges(@Param("carId") Long carId);
 

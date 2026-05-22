@@ -14,6 +14,7 @@ import com.example.car_rental.repository.BookingsRepository;
 import com.example.car_rental.repository.PaymentsRepository;
 import com.example.car_rental.repository.UserRepository;
 import com.example.car_rental.service.InvoiceService;
+import com.example.car_rental.service.NotificationService;
 import com.example.car_rental.service.PaymentsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +37,7 @@ public class PaymentsServiceImpl implements PaymentsService {
     private final BookingStatusHistoryRepository bookingStatusHistoryRepository;
     private final UserRepository userRepository;
     private final InvoiceService invoiceService;
+    private final NotificationService notificationService;
 
     @Value("${sepay.webhook.api-key}")
     private String sepayApiKey;
@@ -94,6 +96,7 @@ public class PaymentsServiceImpl implements PaymentsService {
 
             createBookingHistory(booking);
             invoiceService.updateInvoiceStatus(booking.getId(), InvoiceStatusEnum.CANCELLED);
+            notificationService.createNotification(booking.getUser().getId(), NotificationTypeEnum.BOOKING, "Đơn đặt xe " + bookingCode + " đã bị hủy do quá hạn thanh toán.");
             log.warn("Booking {} bị cancel do quá hạn thanh toán", bookingCode);
             return;
         }
@@ -122,7 +125,8 @@ public class PaymentsServiceImpl implements PaymentsService {
 
         createBookingHistory(booking);
         invoiceService.updateInvoiceStatus(booking.getId(), InvoiceStatusEnum.PARTIAL);
-
+        invoiceService.recalculateInvoice(booking.getId());
+        notificationService.createNotification(booking.getUser().getId(), NotificationTypeEnum.BOOKING, "Đơn đặt xe " + bookingCode + " đã được xác nhận thanh toán cọc.");
         log.info("Thanh toán cọc thành công cho booking: {}", bookingCode);
     }
 
@@ -180,7 +184,7 @@ public class PaymentsServiceImpl implements PaymentsService {
         BookingStatusEnum newStatus = booking.getStatus();
         String reason;
 
-        if(newStatus == BookingStatusEnum.CONFIRMED) {
+        if (newStatus == BookingStatusEnum.CONFIRMED) {
             reason = "Thanh toán cọc thành công";
         } else if (newStatus == BookingStatusEnum.CANCELLED) {
             reason = "Hết hạn thanh toán - Auto cancel";

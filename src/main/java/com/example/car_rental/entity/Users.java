@@ -66,7 +66,7 @@ public class Users {
 
     @OneToMany(mappedBy = "staff", cascade = CascadeType.ALL)
     @JsonIgnore
-    private List<CarHandovers> carHandovers;
+    private List<Handovers> handovers;
 
     @OneToMany(mappedBy = "user")
     @JsonIgnore
@@ -83,4 +83,8 @@ public class Users {
     @OneToMany(mappedBy = "createdBy",  cascade = CascadeType.ALL)
     @JsonIgnore
     private List<Incidents> incidents;
+
+    @OneToMany(mappedBy = "user",  cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<Notifications> notifications;
 }

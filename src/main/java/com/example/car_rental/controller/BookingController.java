@@ -93,6 +93,16 @@ public class BookingController {
                 .build();
     }
 
+    @GetMapping("/me/{bookingId}")
+    public ApiResponse<BookingsResponse> getBookingUser(@PathVariable Long bookingId) {
+
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return ApiResponse.<BookingsResponse>builder()
+                .code(200)
+                .data(bookingsService.getBookingById(email, bookingId))
+                .build();
+    }
+
     @PostMapping("/me")
     public ApiResponse<BookingCodeResponse> addBooking(@RequestBody BookingRequest request) {
 

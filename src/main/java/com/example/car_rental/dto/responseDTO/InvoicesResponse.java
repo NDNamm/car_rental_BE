@@ -1,9 +1,6 @@
 package com.example.car_rental.dto.responseDTO;
 
-import com.example.car_rental.entity.Bookings;
 import com.example.car_rental.entity.enums.InvoiceStatusEnum;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -26,7 +23,10 @@ public class InvoicesResponse {
     private InvoiceStatusEnum status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private Bookings booking;
-
+    private Long bookingId;
+    private String bookingCode;
+    private String customerName;
+    private String customerEmail;
+    private String customerPhone;
 
 }

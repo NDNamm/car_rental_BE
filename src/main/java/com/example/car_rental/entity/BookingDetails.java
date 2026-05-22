@@ -50,7 +50,7 @@ public class BookingDetails {
     private Cars car;
 
     @OneToMany(mappedBy = "bookingDetails", cascade = CascadeType.ALL)
-    private List<CarHandovers> carHandovers;
+    private List<Handovers> handovers;
 
 
 }

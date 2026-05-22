@@ -5,9 +5,11 @@ import com.example.car_rental.dto.requestDTO.ReviewRequest.UpdateReviewRequest;
 import com.example.car_rental.dto.responseDTO.ReviewResponse;
 import com.example.car_rental.entity.*;
 import com.example.car_rental.entity.enums.BookingStatusEnum;
+import com.example.car_rental.entity.enums.NotificationTypeEnum;
 import com.example.car_rental.exception.AppException;
 import com.example.car_rental.exception.ErrorCode;
 import com.example.car_rental.repository.*;
+import com.example.car_rental.service.NotificationService;
 import com.example.car_rental.service.ReviewService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -27,6 +29,7 @@ public class ReviewServiceImpl implements ReviewService {
     final ReviewRepository reviewRepository;
     final UserRepository userRepository;
     final CarRepository carRepository;
+    final private NotificationService notificationService;
 
     @Override
     public Page<ReviewResponse> getAllReviewUser(String email, Boolean isHidden, int page, int size
@@ -74,7 +77,7 @@ public class ReviewServiceImpl implements ReviewService {
         reviewRepository.save(review);
 
         updateCarRating(review.getCar().getId());
-
+        createReviewNotification(user);
         return mapToReviewResponse(review);
     }
 
@@ -138,6 +141,7 @@ public class ReviewServiceImpl implements ReviewService {
 
         if (Boolean.TRUE.equals(isHidden)) {
             review.setReason(request.getReason());
+            createReviewHiddenNotification(review.getUser());
         } else {
             review.setReason(null);
         }
@@ -178,5 +182,23 @@ public class ReviewServiceImpl implements ReviewService {
         car.setTotalReviews(count);
 
         carRepository.save(car);
+    }
+
+    private void createReviewNotification(Users user) {
+        String message = "Bạn đã gửi đánh giá thành công. Cảm ơn bạn đã sử dụng dịch vụ!";
+        notificationService.createNotification(
+                user.getId(),
+                NotificationTypeEnum.REVIEW,
+                message
+        );
+    }
+
+    private void createReviewHiddenNotification(Users user) {
+        String message = "Đánh giá của bạn đã bị ẩn do vi phạm chính sách. Vui lòng kiểm tra lại nội dung.";
+        notificationService.createNotification(
+                user.getId(),
+                NotificationTypeEnum.REVIEW,
+                message
+        );
     }
 }

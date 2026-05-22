@@ -1,5 +1,6 @@
 package com.example.car_rental.dto.responseDTO.BookingResponse;
 
+import com.example.car_rental.dto.responseDTO.InvoicesResponse;
 import com.example.car_rental.entity.enums.BookingStatusEnum;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,5 +32,6 @@ public class BookingsResponse {
     private List<BookingDetailResponse> bookingDetailResponse;
     private List<BookingStatusResponse> bookingStatusResponses;
     private String qrCodeUrl;
-    private Boolean hasReview;
+    private InvoicesResponse invoicesResponse;
+    private boolean hasReview;
 }

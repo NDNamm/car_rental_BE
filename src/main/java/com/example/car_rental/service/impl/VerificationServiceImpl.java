@@ -6,12 +6,14 @@ import com.example.car_rental.dto.responseDTO.UserResponse;
 import com.example.car_rental.dto.responseDTO.VerificationResponse;
 import com.example.car_rental.entity.Users;
 import com.example.car_rental.entity.Verifications;
+import com.example.car_rental.entity.enums.NotificationTypeEnum;
 import com.example.car_rental.entity.enums.VerStatusEnum;
 import com.example.car_rental.exception.AppException;
 import com.example.car_rental.exception.ErrorCode;
 import com.example.car_rental.repository.UserRepository;
 import com.example.car_rental.repository.VerificationRepository;
 import com.example.car_rental.service.ImageService;
+import com.example.car_rental.service.NotificationService;
 import com.example.car_rental.service.VerificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 
 @RequiredArgsConstructor
@@ -36,6 +39,7 @@ public class VerificationServiceImpl implements VerificationService {
     private final VerificationRepository verificationRepository;
     private final UserRepository userRepository;
     private final ImageService imageService;
+    final private NotificationService notificationService;
 
     //ADMIN
     @Override
@@ -48,7 +52,7 @@ public class VerificationServiceImpl implements VerificationService {
                         (fullName == null || fullName.isBlank()) &&
                         (status == null || status.isBlank());
 
-        if(noFilter){
+        if (noFilter) {
             versPage = verificationRepository.findAllVerification(null, null, null, pageable);
         } else {
             VerStatusEnum statusEnum = null;
@@ -70,15 +74,12 @@ public class VerificationServiceImpl implements VerificationService {
         Verifications verification = verificationRepository.findById(verId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_VERIFIED));
 
-        try {
-            VerStatusEnum newStatus = VerStatusEnum.valueOf(request.getStatus().toUpperCase());
-            verification.setStatus(newStatus);
-            verification.setNote(request.getNote());
-            verificationRepository.save(verification);
+        VerStatusEnum newStatus = request.getStatus();
+        verification.setStatus(newStatus);
+        verification.setNote(request.getNote());
+        verificationRepository.save(verification);
 
-        } catch (IllegalArgumentException e) {
-            throw new AppException(ErrorCode.INVALID_VERIFICATION_STATUS);
-        }
+        createNotificationVerification(verification.getUser().getId(), newStatus);
 
     }
 
@@ -165,6 +166,10 @@ public class VerificationServiceImpl implements VerificationService {
         verification.setCreatedAt(LocalDate.now());
 
         verificationRepository.save(verification);
+        List<Users> admins = userRepository.findByRole_RoleName("ADMIN");
+        for (Users admin : admins) {
+            createNotificationVerification(admin.getId(), VerStatusEnum.PENDING);
+        }
 
     }
 
@@ -183,5 +188,16 @@ public class VerificationServiceImpl implements VerificationService {
                 .licenseExpiredDate(verification.getLicenseExpiredDate())
                 .createdAt(verification.getCreatedAt())
                 .build();
+    }
+
+    public void createNotificationVerification(Long userId, VerStatusEnum status) {
+
+        String message = switch (status) {
+            case APPROVED -> "Tài khoản của bạn đã được xác minh thành công.";
+            case REJECTED -> "Tài khoản của bạn đã bị từ chối xác minh. Vui lòng kiểm tra lại thông tin và thử lại.";
+            case PENDING -> "Có một yêu cầu xác minh mới đang chờ xử lý. Vui lòng kiểm tra và cập nhật trạng thái.";
+            default -> "Xác minh tài khoản để đặt xe";
+        };
+         notificationService.createNotification(userId, NotificationTypeEnum.VERIFICATION, message);
     }
 }

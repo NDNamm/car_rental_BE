@@ -26,5 +26,5 @@ public class HandoverImages {
 
     @ManyToOne
     @JoinColumn(name = "handover_id")
-    private CarHandovers carHandovers;
+    private Handovers handovers;
 }

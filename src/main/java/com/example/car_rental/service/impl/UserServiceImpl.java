@@ -6,12 +6,14 @@ import com.example.car_rental.dto.requestDTO.UserRequest.UserRequest;
 import com.example.car_rental.dto.responseDTO.UserResponse;
 import com.example.car_rental.entity.Roles;
 import com.example.car_rental.entity.Users;
+import com.example.car_rental.entity.enums.NotificationTypeEnum;
 import com.example.car_rental.exception.AppException;
 import com.example.car_rental.exception.ErrorCode;
 import com.example.car_rental.repository.RoleRepository;
 import com.example.car_rental.repository.UserRepository;
 import com.example.car_rental.repository.VerificationRepository;
 import com.example.car_rental.service.ImageService;
+import com.example.car_rental.service.NotificationService;
 import com.example.car_rental.service.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +40,7 @@ public class UserServiceImpl implements UserService {
     private final ImageService imageService;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final NotificationService notificationService;
 
     //ADMIN
     @Override
@@ -94,8 +97,10 @@ public class UserServiceImpl implements UserService {
             user.setIsActive(request.getIsActive());
             if (Boolean.FALSE.equals(request.getIsActive())) {
                 user.setReason(request.getReason());
+                createNotificationUser(user);
             } else {
                 user.setReason(null);
+                createUserActiveNotification(user);
             }
         }
 
@@ -208,5 +213,23 @@ public class UserServiceImpl implements UserService {
                 .isActive(user.getIsActive())
                 .reason(user.getReason())
                 .build();
+    }
+
+    private void createNotificationUser(Users user) {
+        String message = "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ với chúng tôi để biết thêm chi tiết.";
+        notificationService.createNotification(
+                user.getId(),
+                NotificationTypeEnum.ACCOUNT,
+                message
+        );
+    }
+
+    private void createUserActiveNotification(Users user) {
+        String message = "Tài khoản của bạn đã được kích hoạt lại. Bạn có thể đặt xe ngay bây giờ!";
+        notificationService.createNotification(
+                user.getId(),
+                NotificationTypeEnum.ACCOUNT,
+                message
+        );
     }
 }

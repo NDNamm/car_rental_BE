@@ -54,6 +54,7 @@ public class Invoices {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @OneToOne
     @JoinColumn(name = "booking_id")
     @JsonIgnore
     private Bookings booking;

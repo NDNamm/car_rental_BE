@@ -15,6 +15,7 @@ import com.example.car_rental.repository.UserRepository;
 import com.example.car_rental.repository.VerificationRepository;
 import com.example.car_rental.security.JwtUtils;
 import com.example.car_rental.service.AuthService;
+import com.example.car_rental.service.VerificationService;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -49,6 +50,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtUtils jwtUtils;
     private final RedisTemplate<String, Object> redisTemplate;
     private final VerificationRepository verificationRepository;
+    private final VerificationServiceImpl verificationService;
 
     @Value("${clientId}")
     private String clientId;
@@ -116,6 +118,7 @@ public class AuthServiceImpl implements AuthService {
                 .build();
 
         verificationRepository.save(verifications);
+        verificationService.createNotificationVerification(user.getId(), VerStatusEnum.UNVERIFIED);
 
         return mapToAuthResponse(user, null);
     }
@@ -243,6 +246,7 @@ public class AuthServiceImpl implements AuthService {
                         .build();
 
                 verificationRepository.save(verification);
+                verificationService.createNotificationVerification(savedUser.getId(), VerStatusEnum.UNVERIFIED);
                 return savedUser;
             });
 

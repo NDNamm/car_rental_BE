@@ -5,7 +5,6 @@ import com.cloudinary.utils.ObjectUtils;
 import com.example.car_rental.entity.*;
 import com.example.car_rental.exception.AppException;
 import com.example.car_rental.exception.ErrorCode;
-import com.example.car_rental.repository.CarHandoverRepository;
 import com.example.car_rental.repository.CarImagesRepository;
 import com.example.car_rental.repository.HandoverImagesRepository;
 import com.example.car_rental.service.ImageService;
@@ -16,7 +15,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -92,7 +90,7 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
-    public List<HandoverImages> uploadHandoverImages(MultipartFile[] file, String folder, String bookingCode, String name, CarHandovers carHandovers) {
+    public List<HandoverImages> uploadHandoverImages(MultipartFile[] file, String folder, String bookingCode, String name, Handovers handovers) {
         List<HandoverImages> list = new ArrayList<>();
 
         String safeName = sanitize(name);
@@ -113,7 +111,7 @@ public class ImageServiceImpl implements ImageService {
                 HandoverImages images = new HandoverImages();;
                 images.setImageUrl(url);
                 images.setPublicId(publicId);
-                images.setCarHandovers(carHandovers);
+                images.setHandovers(handovers);
 
                 handoverImagesRepository.save(images);
                 list.add(images);

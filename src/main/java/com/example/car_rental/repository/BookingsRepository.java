@@ -68,4 +68,6 @@ public interface BookingsRepository extends JpaRepository<Bookings, Long> {
             BookingStatusEnum status,
             LocalDateTime time
     );
+
+    Bookings findByIdAndUserEmail(Long id, String email);
 }

@@ -1,5 +1,6 @@
 package com.example.car_rental.dto.responseDTO;
 
+import com.example.car_rental.entity.enums.IncidentEnum;
 import com.example.car_rental.entity.enums.PenaltyStatusEnum;
 import com.example.car_rental.entity.enums.SourceEnum;
 import lombok.AllArgsConstructor;
@@ -16,8 +17,9 @@ import java.time.LocalDateTime;
 @Builder
 public class IncidentResponse {
     private Long id;
-    private BigDecimal amount;
-    private PenaltyStatusEnum status;
+    private String description;
+    private IncidentEnum type;
     private SourceEnum source;
     private LocalDateTime createdAt;
+    private BigDecimal amount;
 }
