@@ -45,14 +45,13 @@ public class BookingsServiceImpl implements BookingsService {
     final CarRepository carRepository;
     final UserRepository userRepository;
     final BookingDetailRepository bookingDetailRepository;
-    final PaymentsRepository paymentsRepository;
     final PaymentsService paymentsService;
     final VerificationRepository verificationRepository;
     final BookingStatusHistoryRepository bookingStatusHistoryRepository;
     final RefundService refundService;
     final RefundCalculate refundCalculate;
     final ReviewRepository reviewRepository;
-    final CarHandoverService carHandoverService;
+    final HandoverService handoverService;
     final InvoiceService invoiceService;
 
 
@@ -175,7 +174,8 @@ public class BookingsServiceImpl implements BookingsService {
         boolean isValid = switch (current) {
             case PENDING -> next == BookingStatusEnum.CONFIRMED || next == BookingStatusEnum.CANCELLED;
             case CONFIRMED -> next == BookingStatusEnum.RENTED || next == BookingStatusEnum.CANCELLED;
-            case RENTED -> next == BookingStatusEnum.COMPLETED;
+            case RENTED -> next == BookingStatusEnum.RETURNING;
+            case RETURNING -> next == BookingStatusEnum.COMPLETED;
             default -> false;
         };
 
@@ -192,15 +192,17 @@ public class BookingsServiceImpl implements BookingsService {
             if (next == BookingStatusEnum.RENTED) {
                 car.setStatus(CarStatusEnum.RENTED);
 
-                carHandoverService.processHandover(detail.getId(), staff, handoverRequest, images);
+                handoverService.processHandover(detail.getId(), staff, handoverRequest, images);
+            }
+
+            else if(next == BookingStatusEnum.RETURNING) {
+                handoverService.processHandover(detail.getId(), staff, handoverRequest, images);
             }
 
             // TRƯỜNG HỢP: KHÁCH TRẢ XE (HOÀN THÀNH)
             else if (next == BookingStatusEnum.COMPLETED) {
                 car.setStatus(CarStatusEnum.AVAILABLE);
                 car.setTripCount(car.getTripCount() + 1);
-
-                carHandoverService.processHandover(detail.getId(), staff, handoverRequest, images);
             }
 
             // TRƯỜNG HỢP: HỦY ĐƠN
@@ -208,17 +210,7 @@ public class BookingsServiceImpl implements BookingsService {
                 car.setStatus(CarStatusEnum.AVAILABLE);
             }
             carRepository.save(car);
-            BookingStatusHistory history = BookingStatusHistory.builder()
-                    .booking(booking)
-                    .oldStatus(current)
-                    .newStatus(next)
-                    .reason(request.getReason())
-                    .note(request.getNote())
-                    .changedAt(LocalDateTime.now())
-                    .changedBy(staff)
-                    .build();
-
-            bookingStatusHistoryRepository.save(history);
+            createBookingHistory(booking, current, next, request.getReason(), request.getNote(), staff);
         });
     }
 
@@ -304,6 +296,7 @@ public class BookingsServiceImpl implements BookingsService {
 
         paymentsService.createPayment(booking);
         invoiceService.generateInvoice(booking.getId());
+        createBookingHistory(booking, null, BookingStatusEnum.PENDING, "Người dùng đã tạo đơn", null, user);
 
         return BookingCodeResponse.builder()
                 .bookingCode(bookingCode)
@@ -509,5 +502,17 @@ public class BookingsServiceImpl implements BookingsService {
 
     }
 
+    private void createBookingHistory(Bookings booking, BookingStatusEnum oldStatus, BookingStatusEnum newStatus, String reason, String note, Users staff) {
+        BookingStatusHistory history = BookingStatusHistory.builder()
+                .booking(booking)
+                .oldStatus(oldStatus)
+                .newStatus(newStatus)
+                .reason(reason)
+                .note(note)
+                .changedAt(LocalDateTime.now())
+                .changedBy(staff)
+                .build();
+        bookingStatusHistoryRepository.save(history);
+    }
 
 }

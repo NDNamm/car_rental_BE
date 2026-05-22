@@ -7,7 +7,7 @@ public enum BookingStatusEnum {
     PENDING,
     CONFIRMED,
     RENTED,
-    RETURN_PENDING,
+    RETURNING,
     COMPLETED,
     CANCELLED,
     REFUND;

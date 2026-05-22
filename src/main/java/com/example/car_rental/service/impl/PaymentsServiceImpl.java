@@ -122,6 +122,7 @@ public class PaymentsServiceImpl implements PaymentsService {
 
         createBookingHistory(booking);
         invoiceService.updateInvoiceStatus(booking.getId(), InvoiceStatusEnum.PARTIAL);
+        invoiceService.recalculateInvoice(booking.getId());
 
         log.info("Thanh toán cọc thành công cho booking: {}", bookingCode);
     }

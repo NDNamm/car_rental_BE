@@ -47,6 +47,5 @@ public class Incidents {
 
     @ManyToOne
     @JoinColumn(name = "handover_id")
-    @JsonIgnore
-    private CarHandovers handover;
+    private Handovers handover;
 }

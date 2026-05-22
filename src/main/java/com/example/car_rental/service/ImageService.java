@@ -11,5 +11,5 @@ public interface ImageService {
     Map<String, String> uploadImages(MultipartFile image, String folder, String name, String nameImage) throws IOException;
     void deleteImages(String publicId) throws IOException;
     List<CarImages> uploadCarImages(MultipartFile[] file, String folder, String name, Cars car);
-    List<HandoverImages> uploadHandoverImages(MultipartFile[] file, String folder, String bookingCode, String name, CarHandovers carHandovers);;
+    List<HandoverImages> uploadHandoverImages(MultipartFile[] file, String folder, String bookingCode, String name, Handovers handovers);;
 }

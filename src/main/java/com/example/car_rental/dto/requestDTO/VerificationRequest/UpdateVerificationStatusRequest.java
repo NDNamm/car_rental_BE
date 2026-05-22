@@ -1,5 +1,6 @@
 package com.example.car_rental.dto.requestDTO.VerificationRequest;
 
+import com.example.car_rental.entity.enums.VerStatusEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,6 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UpdateVerificationStatusRequest {
-    private String status;
+    private VerStatusEnum status;
     private String note;
 }

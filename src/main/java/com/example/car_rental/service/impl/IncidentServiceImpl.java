@@ -26,16 +26,16 @@ public class IncidentServiceImpl implements IncidentService {
     private final PenaltyService penaltyService;
     private final PenaltyRuleRepository penaltyRuleRepository;
     private final UserRepository usersRepository;
-    private final CarHandoverRepository carHandoverRepository;
+    private final HandoverRepository handoverRepository;
 
     @Override
     public Incidents createAutoIncident(Long handoverId, Users staff, IncidentEnum type, String description) {
 
-        CarHandovers carHandovers = carHandoverRepository.findById(handoverId)
+        Handovers handovers = handoverRepository.findById(handoverId)
                 .orElseThrow(() -> new AppException(ErrorCode.HANDOVER_NOT_FOUND));
 
         Incidents incidents = Incidents.builder()
-                .handover(carHandovers)
+                .handover(handovers)
                 .createdBy(staff)
                 .type(type)
                 .source(SourceEnum.AUTO)
@@ -51,10 +51,10 @@ public class IncidentServiceImpl implements IncidentService {
         Users staff = usersRepository.findByEmail("system@local")
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
-        CarHandovers carHandovers = carHandoverRepository.findById(handoverId)
+        Handovers handovers = handoverRepository.findById(handoverId)
                 .orElseThrow(() -> new AppException(ErrorCode.HANDOVER_NOT_FOUND));
 
-        LocalDateTime expected = carHandovers.getBookingDetails().getEndDate();
+        LocalDateTime expected = handovers.getBookingDetails().getEndDate();
 
         LocalDateTime actual = LocalDateTime.now();
 
@@ -63,7 +63,7 @@ public class IncidentServiceImpl implements IncidentService {
         }
 
         long lateMinutes = Duration.between(expected, actual).toMinutes();
-        handleLateMinutes(lateMinutes, carHandovers , staff);
+        handleLateMinutes(lateMinutes, handovers , staff);
 
     }
 
@@ -84,7 +84,7 @@ public class IncidentServiceImpl implements IncidentService {
 //
 //    }
 
-    public void handleLateMinutes(long lateMinutes,CarHandovers carHandovers, Users staff) {
+    public void handleLateMinutes(long lateMinutes,Handovers handovers, Users staff) {
         BigDecimal amount;
         String reason;
         if (lateMinutes < 60) {
@@ -92,11 +92,10 @@ public class IncidentServiceImpl implements IncidentService {
         }
 
         if (lateMinutes <= 180) {
-            PenaltyRules rule = penaltyRuleRepository.findById(1L)
-                    .orElseThrow(() -> new AppException(ErrorCode.PENALTY_RULES_NOT_FOUND));
 
+            BigDecimal hourlyFine = BigDecimal.valueOf(100000);
             long lateHours = (long) Math.ceil(lateMinutes / 60.0);
-            amount = rule.getUnitPrice().multiply(BigDecimal.valueOf(lateHours));
+            amount = hourlyFine.multiply(BigDecimal.valueOf(lateHours));
             reason = "Trả xe quá " + lateHours + " giờ";
         } else {
             long extraDays = (long) Math.ceil(lateMinutes / 1440.0);
@@ -104,24 +103,24 @@ public class IncidentServiceImpl implements IncidentService {
                 extraDays = 1;
             }
 
-            BigDecimal dailyRate = carHandovers.getBookingDetails().getCar().getPricePerDay();
+            BigDecimal dailyRate = handovers.getBookingDetails().getCar().getPricePerDay();
             amount = dailyRate.multiply(BigDecimal.valueOf(extraDays));
             reason = "Trả xe quá hạn " + extraDays + " ngày";
         }
 
-        Incidents incident = createAutoIncident(carHandovers.getId(), staff, IncidentEnum.LATE_RETURN, reason);
+        Incidents incident = createAutoIncident(handovers.getId(), staff, IncidentEnum.LATE_RETURN, reason);
 
         penaltyService.createPenalty(incident.getId(), amount);
     }
 
     @Override
     public void createManualIncident(Long handoverId, List<IncidentRequest> requests, Users staff) {
-        CarHandovers carHandovers = carHandoverRepository.findById(handoverId)
+        Handovers handovers = handoverRepository.findById(handoverId)
                 .orElseThrow(() -> new AppException(ErrorCode.HANDOVER_NOT_FOUND));
 
         for (IncidentRequest request : requests) {
             Incidents incidents = Incidents.builder()
-                    .handover(carHandovers)
+                    .handover(handovers)
                     .createdBy(staff)
                     .type(request.getType())
                     .source(SourceEnum.MANUAL)

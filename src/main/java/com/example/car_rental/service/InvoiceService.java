@@ -8,4 +8,6 @@ public interface InvoiceService {
     void generateInvoice(Long bookingId);
     void recalculateInvoice(Long bookingId);
     void updateInvoiceStatus(Long bookingId, InvoiceStatusEnum status);
+
+    InvoicesResponse getInvoiceByBookingIdUser(Long bookingId, String email);
 }

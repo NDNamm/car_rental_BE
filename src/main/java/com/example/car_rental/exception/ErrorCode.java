@@ -89,7 +89,9 @@ public enum ErrorCode {
     REVIEW_ALREADY_APPROVED(14003, "Review already approved", HttpStatus.BAD_REQUEST),
     INVALID_STATUS(14004, "Status invalid", HttpStatus.BAD_REQUEST),
 
-    INVOICE_NOT_FOUND(15001, "Invoice not found", HttpStatus.NOT_FOUND);
+    INVOICE_NOT_FOUND(15001, "Invoice not found", HttpStatus.NOT_FOUND),
+
+    NOTIFICATION_NOT_FOUND(16001, "Notification not found", HttpStatus.NOT_FOUND);
 
     private final int code;
     private final String message;
