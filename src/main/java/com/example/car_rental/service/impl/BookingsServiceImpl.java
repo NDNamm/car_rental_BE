@@ -45,6 +45,7 @@ public class BookingsServiceImpl implements BookingsService {
     final CarRepository carRepository;
     final UserRepository userRepository;
     final BookingDetailRepository bookingDetailRepository;
+    final PaymentsRepository paymentsRepository;
     final PaymentsService paymentsService;
     final VerificationRepository verificationRepository;
     final BookingStatusHistoryRepository bookingStatusHistoryRepository;
@@ -101,7 +102,6 @@ public class BookingsServiceImpl implements BookingsService {
                 .qrCodeUrl(booking.getQrCodeUrl())
                 .bookingDetailResponse(getBookingDetails(booking.getBookingDetailsList()))
                 .bookingStatusResponses(getBookingStatusHistory(booking.getBookingStatusHistory()))
-                .invoicesResponse(invoiceService.getInvoiceByBookingIdUser(booking.getId(), booking.getUser().getEmail()))
                 .build();
     }
 
@@ -132,6 +132,7 @@ public class BookingsServiceImpl implements BookingsService {
                             .build())
                     .collect(Collectors.toList());
 
+            // 3. Build BookingDetailResponse
             return BookingDetailResponse.builder()
                     .id(detail.getId())
                     .rentalDays(detail.getRentalDays())
@@ -149,8 +150,6 @@ public class BookingsServiceImpl implements BookingsService {
                             .categoryName(currentCar.getCategory().getName())
                             .carImageResponses(carImages)
                             .build())
-                    .handoverResponses(handoverService.getHandoversByBookingDetailId(detail.getId()))
-
                     .build();
         }).collect(Collectors.toList());
     }
@@ -177,8 +176,7 @@ public class BookingsServiceImpl implements BookingsService {
         boolean isValid = switch (current) {
             case PENDING -> next == BookingStatusEnum.CONFIRMED || next == BookingStatusEnum.CANCELLED;
             case CONFIRMED -> next == BookingStatusEnum.RENTED || next == BookingStatusEnum.CANCELLED;
-            case RENTED -> next == BookingStatusEnum.RETURNING;
-            case RETURNING -> next == BookingStatusEnum.COMPLETED;
+            case RENTED -> next == BookingStatusEnum.COMPLETED;
             default -> false;
         };
 
@@ -195,17 +193,15 @@ public class BookingsServiceImpl implements BookingsService {
             if (next == BookingStatusEnum.RENTED) {
                 car.setStatus(CarStatusEnum.RENTED);
 
-                handoverService.processHandover(detail.getId(), staff, handoverRequest, images);
-            }
-
-            else if(next == BookingStatusEnum.RETURNING) {
-                handoverService.processHandover(detail.getId(), staff, handoverRequest, images);
+                carHandoverService.processHandover(detail.getId(), staff, handoverRequest, images);
             }
 
             // TRƯỜNG HỢP: KHÁCH TRẢ XE (HOÀN THÀNH)
             else if (next == BookingStatusEnum.COMPLETED) {
                 car.setStatus(CarStatusEnum.AVAILABLE);
                 car.setTripCount(car.getTripCount() + 1);
+
+                carHandoverService.processHandover(detail.getId(), staff, handoverRequest, images);
             }
 
             // TRƯỜNG HỢP: HỦY ĐƠN
@@ -213,8 +209,17 @@ public class BookingsServiceImpl implements BookingsService {
                 car.setStatus(CarStatusEnum.AVAILABLE);
             }
             carRepository.save(car);
-            createBookingHistory(booking, current, next, request.getReason(), request.getNote(), staff);
-            createBookingNotification(booking.getUser(), next, booking.getBookingCode());
+            BookingStatusHistory history = BookingStatusHistory.builder()
+                    .booking(booking)
+                    .oldStatus(current)
+                    .newStatus(next)
+                    .reason(request.getReason())
+                    .note(request.getNote())
+                    .changedAt(LocalDateTime.now())
+                    .changedBy(staff)
+                    .build();
+
+            bookingStatusHistoryRepository.save(history);
         });
     }
 
@@ -300,8 +305,6 @@ public class BookingsServiceImpl implements BookingsService {
 
         paymentsService.createPayment(booking);
         invoiceService.generateInvoice(booking.getId());
-        createBookingHistory(booking, null, BookingStatusEnum.PENDING, "Người dùng đã tạo đơn", null, user);
-        createBookingNotification(booking.getUser(), BookingStatusEnum.PENDING, booking.getBookingCode());
 
         return BookingCodeResponse.builder()
                 .bookingCode(bookingCode)
@@ -505,40 +508,7 @@ public class BookingsServiceImpl implements BookingsService {
         booking.setStatus(BookingStatusEnum.CANCELLED);
         bookingsRepository.save(booking);
 
-        createBookingNotification(booking.getUser(), BookingStatusEnum.CANCELLED, booking.getBookingCode());
-
     }
 
-    @Override
-    public BookingsResponse getBookingById(String email, Long bookingId) {
-        Bookings booking = bookingsRepository.findByIdAndUserEmail(bookingId, email);
-        return getBooking(booking);
-    }
-
-    private void createBookingHistory(Bookings booking, BookingStatusEnum oldStatus, BookingStatusEnum newStatus, String reason, String note, Users staff) {
-        BookingStatusHistory history = BookingStatusHistory.builder()
-                .booking(booking)
-                .oldStatus(oldStatus)
-                .newStatus(newStatus)
-                .reason(reason)
-                .note(note)
-                .changedAt(LocalDateTime.now())
-                .changedBy(staff)
-                .build();
-        bookingStatusHistoryRepository.save(history);
-    }
-
-    private void createBookingNotification(Users user, BookingStatusEnum status, String bookingCode) {
-        String message = switch (status) {
-            case PENDING -> "Đơn hàng " + bookingCode + " của bạn đã được tạo thành công và đang chờ xác nhận.";
-            case CONFIRMED -> "Đơn hàng " + bookingCode + " của bạn đã được xác nhận.";
-            case RENTED -> "Xe đã được giao, chúc bạn có chuyến đi vui vẻ!";
-            case RETURNING -> "Cảm ơn bạn đã sử dụng dịch vụ, chúng tôi đang chờ xe trả về.";
-            case COMPLETED -> "Đơn hàng " + bookingCode + " của bạn đã hoàn thành. Hãy để lại đánh giá về trải nghiệm của bạn!";
-            case CANCELLED -> "Đơn hàng " + bookingCode + " của bạn đã bị hủy.";
-            default -> "Trạng thái đơn hàng của bạn đã thay đổi: " + status;
-        };
-        notificationService.createNotification(user.getId(), NotificationTypeEnum.BOOKING, message);
-    }
 
 }
