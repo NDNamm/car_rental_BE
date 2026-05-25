@@ -3,6 +3,7 @@ package com.example.car_rental.service.impl;
 import com.example.car_rental.dto.responseDTO.InvoicesResponse;
 import com.example.car_rental.entity.Bookings;
 import com.example.car_rental.entity.Invoices;
+import com.example.car_rental.entity.enums.BookingStatusEnum;
 import com.example.car_rental.entity.enums.InvoiceStatusEnum;
 import com.example.car_rental.exception.AppException;
 import com.example.car_rental.exception.ErrorCode;
@@ -73,7 +74,15 @@ public class InvoiceServiceImpl implements InvoiceService {
         invoice.setFinalAmount(finalAmount);
         invoice.setUpdatedAt(LocalDateTime.now());
         invoice.setPaidTotal(booking.getTotalDepositAmount());
-        invoice.setRemainingAmount(finalAmount);
+        if(booking.getStatus().equals(BookingStatusEnum.COMPLETED)){
+            invoice.setRemainingAmount(BigDecimal.ZERO);
+            invoice.setStatus(InvoiceStatusEnum.PAID);
+        } else if(booking.getStatus().equals(BookingStatusEnum.CANCELLED)){
+            invoice.setRemainingAmount(finalAmount);
+            invoice.setStatus(InvoiceStatusEnum.CANCELLED);
+        }else{
+            invoice.setRemainingAmount(finalAmount);
+        }
         invoice.setNote("Điều chỉnh hóa đơn sau kiểm tra tình trạng xe");
         invoiceRepository.save(invoice);
     }

@@ -102,6 +102,7 @@ public class BookingsServiceImpl implements BookingsService {
                 .qrCodeUrl(booking.getQrCodeUrl())
                 .bookingDetailResponse(getBookingDetails(booking.getBookingDetailsList()))
                 .bookingStatusResponses(getBookingStatusHistory(booking.getBookingStatusHistory()))
+                .invoicesResponse(invoiceService.getInvoiceByBookingId(booking.getId()))
                 .build();
     }
 
@@ -150,6 +151,7 @@ public class BookingsServiceImpl implements BookingsService {
                             .categoryName(currentCar.getCategory().getName())
                             .carImageResponses(carImages)
                             .build())
+                    .handoverResponses(handoverService.getHandoversByBookingDetailId(detail.getId()))
                     .build();
         }).collect(Collectors.toList());
     }
@@ -176,7 +178,8 @@ public class BookingsServiceImpl implements BookingsService {
         boolean isValid = switch (current) {
             case PENDING -> next == BookingStatusEnum.CONFIRMED || next == BookingStatusEnum.CANCELLED;
             case CONFIRMED -> next == BookingStatusEnum.RENTED || next == BookingStatusEnum.CANCELLED;
-            case RENTED -> next == BookingStatusEnum.COMPLETED;
+            case RENTED -> next == BookingStatusEnum.RETURNING || next == BookingStatusEnum.CANCELLED;
+            case RETURNING -> next == BookingStatusEnum.COMPLETED;
             default -> false;
         };
 
@@ -193,15 +196,16 @@ public class BookingsServiceImpl implements BookingsService {
             if (next == BookingStatusEnum.RENTED) {
                 car.setStatus(CarStatusEnum.RENTED);
 
-                carHandoverService.processHandover(detail.getId(), staff, handoverRequest, images);
+                handoverService.processHandover(detail.getId(), staff, handoverRequest, images);
+            } else if (next == BookingStatusEnum.RETURNING) {
+                handoverService.processHandover(detail.getId(), staff, handoverRequest, images);
             }
 
             // TRƯỜNG HỢP: KHÁCH TRẢ XE (HOÀN THÀNH)
             else if (next == BookingStatusEnum.COMPLETED) {
                 car.setStatus(CarStatusEnum.AVAILABLE);
                 car.setTripCount(car.getTripCount() + 1);
-
-                carHandoverService.processHandover(detail.getId(), staff, handoverRequest, images);
+                invoiceService.recalculateInvoice(booking.getId());
             }
 
             // TRƯỜNG HỢP: HỦY ĐƠN
@@ -209,17 +213,8 @@ public class BookingsServiceImpl implements BookingsService {
                 car.setStatus(CarStatusEnum.AVAILABLE);
             }
             carRepository.save(car);
-            BookingStatusHistory history = BookingStatusHistory.builder()
-                    .booking(booking)
-                    .oldStatus(current)
-                    .newStatus(next)
-                    .reason(request.getReason())
-                    .note(request.getNote())
-                    .changedAt(LocalDateTime.now())
-                    .changedBy(staff)
-                    .build();
-
-            bookingStatusHistoryRepository.save(history);
+            createHistoryStatusChange(booking, next, request.getReason(), request.getNote());
+            createNotificationBooking(booking, next);
         });
     }
 
@@ -301,10 +296,12 @@ public class BookingsServiceImpl implements BookingsService {
         String qr = paymentsService.generateQrUrl(booking);
         booking.setQrCodeUrl(qr);
 
-       bookingsRepository.save(booking);
+        bookingsRepository.save(booking);
 
         paymentsService.createPayment(booking);
         invoiceService.generateInvoice(booking.getId());
+        createNotificationBooking(booking, booking.getStatus());
+        createHistoryStatusChange(booking, BookingStatusEnum.PENDING, "Đã tạo đơn đặt xe thành công", null);
 
         return BookingCodeResponse.builder()
                 .bookingCode(bookingCode)
@@ -376,6 +373,7 @@ public class BookingsServiceImpl implements BookingsService {
         booking.setTotalPrice(totalPrice);
         booking.setTotalDepositAmount(totalDeposit);
         bookingsRepository.save(booking);
+        createHistoryStatusChange(booking, BookingStatusEnum.PENDING, "Bạn đã cập nhật thông tin đặt xe", null);
         return BookingCodeResponse.builder()
                 .bookingCode(booking.getBookingCode())
                 .qrCodeUrl(booking.getQrCodeUrl())
@@ -458,8 +456,6 @@ public class BookingsServiceImpl implements BookingsService {
             throw new AppException(ErrorCode.CANNOT_CANCEL_BOOKING);
         }
 
-        RefundResponse refundResponse = null;
-
         if (booking.getStatus() == BookingStatusEnum.PENDING) {
             booking.setStatus(BookingStatusEnum.CANCELLED);
             BookingStatusHistory history = BookingStatusHistory.builder()
@@ -473,6 +469,8 @@ public class BookingsServiceImpl implements BookingsService {
 
             bookingStatusHistoryRepository.save(history);
             bookingsRepository.save(booking);
+
+            invoiceService.recalculateInvoice(booking.getId());
 
             return;
         }
@@ -493,22 +491,52 @@ public class BookingsServiceImpl implements BookingsService {
             carRepository.save(detail.getCar());
         });
 
-        // history
-        BookingStatusHistory history = BookingStatusHistory.builder()
-                .booking(booking)
-                .oldStatus(booking.getStatus())
-                .newStatus(BookingStatusEnum.CANCELLED)
-                .reason("Khách hàng hủy đơn")
-                .changedAt(LocalDateTime.now())
-                .changedBy(booking.getUser())
-                .build();
-
-        bookingStatusHistoryRepository.save(history);
-
+        createHistoryStatusChange(booking, BookingStatusEnum.CANCELLED, "Khách hàng hủy đơn", request.getNote());
         booking.setStatus(BookingStatusEnum.CANCELLED);
         bookingsRepository.save(booking);
 
     }
 
+    @Override
+    public BookingsResponse getBookingById(String email, Long bookingId) {
+
+        Bookings bookings = bookingsRepository.findByIdAndUserEmail(bookingId, email);
+        return getBooking(bookings);
+    }
+
+    private void createHistoryStatusChange(Bookings booking, BookingStatusEnum newStatus, String reason, String note) {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        Users staff = userRepository.findByEmail(email)
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+
+        BookingStatusHistory history = BookingStatusHistory.builder()
+                .booking(booking)
+                .oldStatus(booking.getStatus())
+                .newStatus(newStatus)
+                .reason(reason)
+                .note(note)
+                .changedAt(LocalDateTime.now())
+                .changedBy(staff)
+                .build();
+
+        bookingStatusHistoryRepository.save(history);
+    }
+
+    private void createNotificationBooking(Bookings booking, BookingStatusEnum newStatus) {
+        String message = switch (newStatus) {
+            case CONFIRMED -> "Đơn đặt xe " + booking.getBookingCode() + " của bạn đã được xác nhận.";
+            case RENTED ->
+                    "Chúc mừng! Bạn đã nhận xe thành công cho đơn hàng " + booking.getBookingCode() + ". Chúc bạn có những trải nghiệm tuyệt vời với chiếc xe!";
+            case RETURNING ->
+                    "Bạn đang trong quá trình trả xe cho đơn hàng " + booking.getBookingCode();
+            case COMPLETED ->
+                    "Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi! Đơn hàng " + booking.getBookingCode() + " đã hoàn thành. Chúng tôi hy vọng bạn hài lòng với trải nghiệm thuê xe và mong được phục vụ bạn trong những lần tiếp theo.";
+            case CANCELLED ->
+                    "Đơn đặt xe " + booking.getBookingCode() + " của bạn đã bị hủy. Nếu bạn có bất kỳ thắc mắc nào, vui lòng liên hệ với chúng tôi để được hỗ trợ.";
+            default -> "Bạn đã tạo đơn đặt xe thành công với mã " + booking.getBookingCode() + ". Vui lòng thanh toán trong vong 1 giờ để xác nhận đơn hàng.";
+        };
+
+        notificationService.createNotification(booking.getUser().getId(), NotificationTypeEnum.BOOKING, message);
+    }
 
 }
