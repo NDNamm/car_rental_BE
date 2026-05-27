@@ -15,7 +15,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 
-
 @Configuration
 @RequiredArgsConstructor
 @EnableMethodSecurity(prePostEnabled = true)
@@ -32,11 +31,11 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
 
                         .requestMatchers("/api/auth/**", "/api/v1/webhooks/**").permitAll()
-                        .requestMatchers("/api/users/me/change-password").hasAnyRole("USER", "ADMIN","STAFF")
-                        .requestMatchers(HttpMethod.GET, "/api/cars/**", "/api/categories/**", "/api/features/**","/api/reviews/car/**").permitAll()
+                        .requestMatchers("/api/users/me/change-password").hasAnyRole("USER", "ADMIN", "STAFF")
+                        .requestMatchers(HttpMethod.GET, "/api/cars/**", "/api/categories/**", "/api/features/**", "/api/reviews/car/**").permitAll()
 
                         .requestMatchers("/api/verification/me/**").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/api/users/me/**").hasAnyRole("USER", "ADMIN","STAFF")
+                        .requestMatchers("/api/users/me/**").hasAnyRole("USER", "ADMIN", "STAFF")
                         .requestMatchers("/api/bookings/me/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/api/payments/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/api/refunds/me/**").hasAnyRole("USER", "ADMIN")
@@ -53,6 +52,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/penalty-rules/**").hasRole("ADMIN")
                         .requestMatchers("/api/dashboard/bookings/**").hasRole("ADMIN")
                         .requestMatchers("/api/dashboard/cars/**").hasRole("ADMIN")
+                        .requestMatchers("/api/dashboard/incidents/**").hasRole("ADMIN")
+                        .requestMatchers("/api/dashboard/invoices/**").hasRole("ADMIN")
                         .requestMatchers("/api/reviews/**").hasAnyRole("USER", "ADMIN")
 
                         .anyRequest().authenticated()

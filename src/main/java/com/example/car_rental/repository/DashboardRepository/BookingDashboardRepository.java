@@ -67,7 +67,7 @@ public interface BookingDashboardRepository extends JpaRepository<Bookings, Long
             GROUP BY b.status
             """)
     List<StatusCountResponse> getBookingStatusCount();
-//sdasdas
+
     @Query("""
             SELECT COUNT(b)
             FROM Bookings b

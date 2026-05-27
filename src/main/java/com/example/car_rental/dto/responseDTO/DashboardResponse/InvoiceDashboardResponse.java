@@ -18,19 +18,18 @@ public class InvoiceDashboardResponse {
     private LocalDate  date;
     private int month;
     private BigDecimal revenue;
-    private String status;
-    private Long bookingCount;
+    private Long count;
+    private Object label;
 
-    public InvoiceDashboardResponse(LocalDateTime date, BigDecimal revenue, Long bookingCount) {
+    public InvoiceDashboardResponse(LocalDateTime date, BigDecimal revenue, Long count) {
         this.date = date.toLocalDate();
         this.revenue = revenue;
-        this.bookingCount = bookingCount;
+        this.count = count;
     }
 
-
-    public InvoiceDashboardResponse(int month, BigDecimal revenue, Long bookingCount) {
-        this.month = month;
+    public InvoiceDashboardResponse(Object label, BigDecimal revenue, Long count) {
+        this.label = label;
         this.revenue = revenue;
-        this.bookingCount = bookingCount;
+        this.count = count;
     }
 }

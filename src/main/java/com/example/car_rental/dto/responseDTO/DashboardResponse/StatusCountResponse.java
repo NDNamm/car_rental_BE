@@ -1,7 +1,6 @@
 package com.example.car_rental.dto.responseDTO.DashboardResponse;
 
-import com.example.car_rental.entity.enums.BookingStatusEnum;
-import com.example.car_rental.entity.enums.CarStatusEnum;
+import com.example.car_rental.entity.enums.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,6 +14,7 @@ public class StatusCountResponse {
     private BookingStatusEnum status;
     private Long count;
     private CarStatusEnum carStatus;
+    private InvoiceStatusEnum invoiceStatus;
 
     public StatusCountResponse(BookingStatusEnum status, Long count) {
         this.status = status;
@@ -25,4 +25,10 @@ public class StatusCountResponse {
         this.carStatus = carStatus;
         this.count = count;
     }
+
+    public StatusCountResponse(InvoiceStatusEnum invoiceStatus, Long count) {
+        this.invoiceStatus = invoiceStatus;
+        this.count = count;
+    }
+
 }
