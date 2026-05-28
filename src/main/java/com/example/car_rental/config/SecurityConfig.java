@@ -50,10 +50,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/categories/**").hasRole("ADMIN")
                         .requestMatchers("/api/features/**").hasRole("ADMIN")
                         .requestMatchers("/api/penalty-rules/**").hasRole("ADMIN")
-                        .requestMatchers("/api/dashboard/bookings/**").hasRole("ADMIN")
-                        .requestMatchers("/api/dashboard/cars/**").hasRole("ADMIN")
-                        .requestMatchers("/api/dashboard/incidents/**").hasRole("ADMIN")
-                        .requestMatchers("/api/dashboard/invoices/**").hasRole("ADMIN")
+                        .requestMatchers("/api/dashboard/**").hasRole("ADMIN")
                         .requestMatchers("/api/reviews/**").hasAnyRole("USER", "ADMIN")
 
                         .anyRequest().authenticated()

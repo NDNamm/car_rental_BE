@@ -1,4 +1,4 @@
-package com.example.car_rental.dto.responseDTO.DashboardResponse;
+package com.example.car_rental.dto.responseDTO.DashboardResponse.Booking;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,9 +11,10 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class BookingDashboardResponse {
+public class BookingChartResponse {
 
     private Object label;
-    private BigDecimal totalRevenue;
     private Long totalBookings;
+    private BigDecimal revenue;
+
 }

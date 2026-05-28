@@ -1,12 +1,7 @@
 package com.example.car_rental.repository.DashboardRepository;
 
-import com.example.car_rental.dto.responseDTO.DashboardResponse.CarDashboardResponse;
-import com.example.car_rental.dto.responseDTO.DashboardResponse.CustomerResponse;
-import com.example.car_rental.dto.responseDTO.DashboardResponse.StatusCountResponse;
-import com.example.car_rental.entity.Cars;
+import com.example.car_rental.dto.responseDTO.DashboardResponse.Customer.CustomerTopResponse;
 import com.example.car_rental.entity.Users;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -17,51 +12,49 @@ import java.util.List;
 public interface CustomerDashboardRepository extends JpaRepository<Users, Long> {
 
     @Query("""
-                SELECT new com.example.car_rental.dto.responseDTO.DashboardResponse.CustomerResponse(
-                    b.user.email,
-                    b.user.fullName,
-                    COUNT(b.id),
-                    SUM(b.totalPrice)
-                )
-                FROM Bookings b
-                WHERE b.status = 'COMPLETED'
-                GROUP BY b.user.id, b.user.fullName, b.user.email
-                ORDER BY COUNT(b.id) DESC
-            """)
-    Page<CustomerResponse> getTopCustomers(Pageable pageable);
-
-    @Query("""
-                SELECT new com.example.car_rental.dto.responseDTO.DashboardResponse.CustomerResponse(
-                     b.user.email,
-                     b.user.fullName,
-                    COUNT(b.id),
-                    SUM(b.totalPrice)
-                )
-                FROM Bookings b
-                WHERE b.status = 'COMPLETED'
-                GROUP BY b.user.id, b.user.fullName, b.user.email
-                ORDER BY COALESCE(SUM(b.totalPrice), 0) DESC
-            """)
-    Page<CustomerResponse> getTopSpendingCustomers(Pageable pageable);
-
-    @Query("""
-                SELECT new com.example.car_rental.dto.responseDTO.DashboardResponse.CustomerResponse(
-                     b.user.email,
-                     b.user.fullName,
-                    COUNT(b.id),
-                    SUM(b.totalPrice)
-                )
-                FROM Bookings b
-                WHERE b.status = 'CANCELLED'
-                GROUP BY b.user.id, b.user.fullName, b.user.email
-                ORDER BY COUNT(b.id) DESC
-            """)
-    Page<CustomerResponse> getTopCustomerCancelled(Pageable pageable);
-
-    @Query("""
-                SELECT COUNT(u)
-                FROM Users u
-                WHERE u.role.roleName = 'USER'
-            """)
+        SELECT COUNT(u)
+        FROM Users u
+        WHERE u.role.roleName = 'USER'
+    """)
     Long getTotalCustomers();
+
+    @Query("SELECT COUNT(u) FROM Users u " +
+            "WHERE u.role.roleName = 'USER'" +
+            "AND u.isActive = true")
+    Long countActiveUsers();
+
+    @Query("SELECT COUNT(u) FROM Users u " +
+            "WHERE u.role.roleName = 'USER'" +
+            "AND u.isActive = false")
+    Long countInactiveUsers();
+
+    // TOP SPENDING
+    @Query("""
+        SELECT new com.example.car_rental.dto.responseDTO.DashboardResponse.Customer.CustomerTopResponse(
+            b.user.email,
+            b.user.fullName,
+            COUNT(b),
+            COALESCE(SUM(b.totalPrice),0)
+        )
+        FROM Bookings b
+        WHERE b.status = 'COMPLETED'
+        GROUP BY b.user.id, b.user.email, b.user.fullName
+        ORDER BY SUM(b.totalPrice) DESC
+    """)
+    List<CustomerTopResponse> getTopSpendingCustomers();
+
+    // TOP CANCELLED
+    @Query("""
+        SELECT new com.example.car_rental.dto.responseDTO.DashboardResponse.Customer.CustomerTopResponse(
+            b.user.email,
+            b.user.fullName,
+            COUNT(b),
+            COALESCE(SUM(b.totalPrice),0)
+        )
+        FROM Bookings b
+        WHERE b.status = 'CANCELLED'
+        GROUP BY b.user.id, b.user.email, b.user.fullName
+        ORDER BY COUNT(b) DESC
+    """)
+    List<CustomerTopResponse> getTopCancelledCustomers();
 }
