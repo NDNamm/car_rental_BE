@@ -301,7 +301,6 @@ public class AuthServiceImpl implements AuthService {
                 .roleName(user.getRole().getRoleName())
                 .token(token)
                 .isActive(user.getIsActive())
-
                 .build();
     }
 

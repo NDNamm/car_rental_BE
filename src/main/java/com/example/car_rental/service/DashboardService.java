@@ -18,7 +18,9 @@ public interface DashboardService {
 
     // ================= BOOKING =================
     BookingStatisticsResponse getBookingStats();
-    List<BookingChartResponse> getBookingChart();
+    List<BookingChartResponse> getBookingDailyChart();
+    List<BookingChartResponse> getBookingMonthlyChart();
+    List<BookingChartResponse> getBookingYearlyChart();
 
     // ================= CAR =================
     CarStatisticsResponse getCarStats();
@@ -31,10 +33,15 @@ public interface DashboardService {
 
     // ================= INVOICE =================
     InvoiceStatisticsResponse getInvoiceStats();
-    List<InvoiceChartResponse> getInvoiceChart();
+    List<InvoiceChartResponse> getInvoiceDailyChart();
+    List<InvoiceChartResponse> getInvoiceMonthlyChart();
+    List<InvoiceChartResponse> getInvoiceYearlyChart();
+
 
     // ================= INCIDENT =================
     IncidentStatisticsResponse getIncidentStats();
-    List<IncidentChartResponse> getIncidentChart();
+    List<IncidentChartResponse> getIncidentDailyChart();
+    List<IncidentChartResponse> getIncidentMonthlyChart();
+    List<IncidentChartResponse> getIncidentYearlyChart();
     List<IncidentTopResponse> getTopIncidents();
 }

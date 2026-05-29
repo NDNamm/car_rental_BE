@@ -19,6 +19,7 @@ import com.example.car_rental.service.DashboardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -33,27 +34,47 @@ public class DashboardServiceImpl implements DashboardService {
 
     @Override
     public BookingStatisticsResponse getBookingStats() {
+
         return BookingStatisticsResponse.builder()
                 .totalBookings(bookingRepo.countBy())
+                .pendingBookings(bookingRepo.countByStatus(BookingStatusEnum.PENDING))
+                .confirmedBookings(bookingRepo.countByStatus(BookingStatusEnum.CONFIRMED))
+                .rentedBookings(bookingRepo.countByStatus(BookingStatusEnum.RENTED))
+                .returningBookings(bookingRepo.countByStatus(BookingStatusEnum.RETURNING))
                 .completedBookings(bookingRepo.countByStatus(BookingStatusEnum.COMPLETED))
                 .cancelledBookings(bookingRepo.countByStatus(BookingStatusEnum.CANCELLED))
-                .pendingBookings(bookingRepo.countByStatus(BookingStatusEnum.PENDING))
+                .refundBookings(bookingRepo.countByStatus(BookingStatusEnum.REFUND))
                 .totalRevenue(bookingRepo.getTotalRevenue())
                 .build();
     }
 
+
+
     @Override
-    public List<BookingChartResponse> getBookingChart() {
-        return bookingRepo.getDailyChart();
+    public List<BookingChartResponse> getBookingDailyChart() {
+        LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
+        return bookingRepo.getDailyChart(sevenDaysAgo);
     }
+
+    @Override
+    public List<BookingChartResponse> getBookingMonthlyChart() {
+        return bookingRepo.getMonthlyChart();
+    }
+
+    @Override
+    public List<BookingChartResponse> getBookingYearlyChart() {
+        return bookingRepo.getYearlyChart();
+    }
+
+
 
     @Override
     public CarStatisticsResponse getCarStats() {
         return CarStatisticsResponse.builder()
                 .totalCars(carRepo.countBy())
                 .availableCars(carRepo.countByStatus(CarStatusEnum.AVAILABLE))
-                .availableCars(carRepo.countByStatus(CarStatusEnum.RENTED))
-                .availableCars(carRepo.countByStatus(CarStatusEnum.MAINTENANCE))
+                .rentedCars(carRepo.countByStatus(CarStatusEnum.RENTED))
+                .maintenanceCars(carRepo.countByStatus(CarStatusEnum.MAINTENANCE))
                 .build();
     }
 
@@ -94,9 +115,21 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     @Override
-    public List<InvoiceChartResponse> getInvoiceChart() {
-        return invoiceRepo.getDailyChart();
+    public List<InvoiceChartResponse> getInvoiceDailyChart() {
+        LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
+        return invoiceRepo.getDailyChart(sevenDaysAgo);
     }
+
+    @Override
+    public List<InvoiceChartResponse> getInvoiceMonthlyChart() {
+        return invoiceRepo.getMonthlyChart();
+    }
+
+    @Override
+    public List<InvoiceChartResponse> getInvoiceYearlyChart() {
+        return invoiceRepo.getYearlyChart();
+    }
+
 
     @Override
     public IncidentStatisticsResponse getIncidentStats() {
@@ -107,8 +140,19 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     @Override
-    public List<IncidentChartResponse> getIncidentChart() {
-        return incidentRepo.getDailyChart();
+    public List<IncidentChartResponse> getIncidentDailyChart() {
+        LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
+        return incidentRepo.getDailyChart(sevenDaysAgo);
+    }
+
+    @Override
+    public List<IncidentChartResponse> getIncidentMonthlyChart() {
+        return incidentRepo.getMonthlyChart();
+    }
+
+    @Override
+    public List<IncidentChartResponse> getIncidentYearlyChart() {
+        return incidentRepo.getYearlyChart();
     }
 
     @Override

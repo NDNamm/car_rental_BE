@@ -14,8 +14,12 @@ import java.math.BigDecimal;
 @Builder
 public class BookingStatisticsResponse {
     private Long totalBookings;
+    private Long pendingBookings;
+    private Long confirmedBookings;
+    private Long rentedBookings;
+    private Long returningBookings;
     private Long completedBookings;
     private Long cancelledBookings;
-    private Long pendingBookings;
+    private Long refundBookings;
     private BigDecimal totalRevenue;
 }
