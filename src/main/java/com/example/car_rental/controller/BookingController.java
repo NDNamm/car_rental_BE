@@ -2,14 +2,17 @@ package com.example.car_rental.controller;
 
 import com.example.car_rental.dto.requestDTO.BookingsRequest.BookingStatusRequest;
 import com.example.car_rental.dto.requestDTO.BookingsRequest.BookingRequest;
+import com.example.car_rental.dto.requestDTO.BookingsRequest.ReplaceCarRequest;
 import com.example.car_rental.dto.requestDTO.CarRequest.CarRequest;
 import com.example.car_rental.dto.requestDTO.RefundRequest;
 import com.example.car_rental.dto.requestDTO.handoverRequest.HandoverRequest;
 import com.example.car_rental.dto.responseDTO.ApiResponse;
 import com.example.car_rental.dto.responseDTO.BookingResponse.BookingCodeResponse;
 import com.example.car_rental.dto.responseDTO.BookingResponse.BookingsResponse;
+import com.example.car_rental.dto.responseDTO.CarResponse.CarResponse;
 import com.example.car_rental.dto.responseDTO.RefundResponse;
 import com.example.car_rental.service.BookingsService;
+import com.example.car_rental.service.CarService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +23,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -27,6 +32,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class BookingController {
 
     final private BookingsService bookingsService;
+    private final CarService carService;
 
     //ADMIN
     @GetMapping("")
@@ -41,10 +47,19 @@ public class BookingController {
                 .build();
     }
 
+    @GetMapping("/{bookingId}")
+    public ApiResponse<BookingsResponse> getBookingById(@PathVariable Long bookingId) {
+
+        return ApiResponse.<BookingsResponse>builder()
+                .code(200)
+                .data(bookingsService.getBookingById(bookingId))
+                .build();
+    }
+
     @PatchMapping("/{bookingId}")
     public ApiResponse<Void> updateStatus(@PathVariable(value = "bookingId") Long bookingId,
-                                          @RequestPart(value = "bookingRequest",required = false) String request,
-                                          @RequestPart(value = "handoverRequest",required = false) String handover,
+                                          @RequestPart(value = "bookingRequest", required = false) String request,
+                                          @RequestPart(value = "handoverRequest", required = false) String handover,
                                           @RequestPart(required = false) MultipartFile[] images) throws JsonProcessingException {
 
         ObjectMapper objectMapper = new ObjectMapper();
@@ -75,6 +90,26 @@ public class BookingController {
                 .build();
     }
 
+    @GetMapping("/{bookingId}/available-cars")
+    public ApiResponse<List<CarResponse>> getAvailableCars(@PathVariable(value = "bookingId") Long bookingId) {
+
+        return ApiResponse.<List<CarResponse>>builder()
+                .code(200)
+                .data(carService.getAvailableReplacementCars(bookingId))
+                .build();
+    }
+
+    @PutMapping("/{bookingId}/replace-car")
+    public ApiResponse<Void> replaceCar(@PathVariable Long bookingId,
+                                        @RequestBody ReplaceCarRequest request) {
+
+        bookingsService.replaceCar(bookingId, request);
+        return ApiResponse.<Void>builder()
+                .code(200)
+                .message("Replace car success")
+                .build();
+    }
+
 
     //USER
     @GetMapping("/me")
@@ -99,7 +134,7 @@ public class BookingController {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return ApiResponse.<BookingsResponse>builder()
                 .code(200)
-                .data(bookingsService.getBookingById(email, bookingId))
+                .data(bookingsService.getBookingUserById(email, bookingId))
                 .build();
     }
 
@@ -116,21 +151,21 @@ public class BookingController {
     }
 
     @PutMapping("/me/{bookingId}")
-    public ApiResponse<BookingCodeResponse> updateBooking(@PathVariable(value = "bookingId") Long bookingId ,
-                                           @RequestBody BookingRequest request) {
+    public ApiResponse<BookingCodeResponse> updateBooking(@PathVariable(value = "bookingId") Long bookingId,
+                                                          @RequestBody BookingRequest request) {
 
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return ApiResponse.<BookingCodeResponse>builder()
                 .code(200)
                 .message("Update booking successful")
-                .data(bookingsService.updateBooking(email,request, bookingId ))
+                .data(bookingsService.updateBooking(email, request, bookingId))
                 .build();
     }
 
     @PatchMapping(value = "/me/{bookingId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<Void> cancelBooking(@PathVariable(value = "bookingId") Long bookingId,
-                                                     @RequestPart(value = "refundRequest", required = false) String request,
-                                                     @RequestPart(required = false) MultipartFile qrCode) throws JsonProcessingException {
+                                           @RequestPart(value = "refundRequest", required = false) String request,
+                                           @RequestPart(required = false) MultipartFile qrCode) throws JsonProcessingException {
 
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         ObjectMapper objectMapper = new ObjectMapper();
@@ -139,7 +174,7 @@ public class BookingController {
             refundRequest = objectMapper.readValue(request, RefundRequest.class);
         }
 
-        bookingsService.cancelBooking(email, bookingId, refundRequest, qrCode );
+        bookingsService.cancelBooking(email, bookingId, refundRequest, qrCode);
         return ApiResponse.<Void>builder()
                 .code(200)
                 .message("Cancel booking successful")

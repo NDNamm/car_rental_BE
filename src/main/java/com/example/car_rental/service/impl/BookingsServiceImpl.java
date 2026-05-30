@@ -4,6 +4,7 @@ import com.example.car_rental.domain.RefundCalculate;
 import com.example.car_rental.dto.requestDTO.BookingsRequest.BookingDetailRequest;
 import com.example.car_rental.dto.requestDTO.BookingsRequest.BookingStatusRequest;
 import com.example.car_rental.dto.requestDTO.BookingsRequest.BookingRequest;
+import com.example.car_rental.dto.requestDTO.BookingsRequest.ReplaceCarRequest;
 import com.example.car_rental.dto.requestDTO.RefundRequest;
 import com.example.car_rental.dto.requestDTO.handoverRequest.HandoverRequest;
 import com.example.car_rental.dto.responseDTO.BookingResponse.BookingCodeResponse;
@@ -82,6 +83,12 @@ public class BookingsServiceImpl implements BookingsService {
         }
 
         return bookingsPage.map(this::getBooking);
+    }
+
+    @Override
+    public BookingsResponse getBookingById(Long bookingId) {
+        Bookings bookings = bookingsRepository.findBookingById(bookingId);
+        return getBooking(bookings);
     }
 
     private BookingsResponse getBooking(Bookings booking) {
@@ -216,6 +223,54 @@ public class BookingsServiceImpl implements BookingsService {
             createHistoryStatusChange(booking, next, request.getReason(), request.getNote());
             createNotificationBooking(booking, next);
         });
+    }
+
+    @Override
+    @Transactional
+    public void replaceCar(Long bookingId, ReplaceCarRequest request) {
+        Bookings booking = bookingsRepository.findById(bookingId)
+                .orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
+
+        if(!booking.getStatus().equals(BookingStatusEnum.CONFIRMED)){
+            throw new AppException(ErrorCode.BOOKING_ALREADY_PROCESSED);
+        }
+
+        BookingDetails bookingDetail = bookingDetailRepository.findById(request.getBookingDetailId())
+                .orElseThrow(() -> new AppException(ErrorCode.DETAIL_NOT_FOUND));
+        Cars oldCar = bookingDetail.getCar();
+        Cars newCar = carRepository.findById(request.getNewCarId())
+                .orElseThrow(() -> new AppException(ErrorCode.CAR_NOT_FOUND));
+
+        LocalDateTime startDate = bookingDetail.getStartDate();
+        LocalDateTime endDate = bookingDetail.getEndDate();
+
+        // 🔥 check xe mới có bị trùng lịch không
+        validateCarAvailability(request.getNewCarId(), bookingId, startDate, endDate);
+
+        // 🔥 chỉ đổi nếu hợp lệ
+        bookingDetail.setCar(newCar);
+        bookingDetailRepository.save(bookingDetail);
+
+        // ⚠️ chỉ update status nếu thật sự cần (không ép logic cứng)
+        newCar.setStatus(CarStatusEnum.RENTED);
+
+        carRepository.save(newCar);
+        carRepository.save(oldCar);
+        recalculateBookingPrice(booking);
+
+        invoiceService.recalculateInvoice(booking.getId());
+        createHistoryStatusChange(
+                booking,
+                booking.getStatus(),
+                "Đổi xe trong đơn đặt xe",
+                "Xe cũ: " + oldCar.getName() + " → Xe mới: " + newCar.getName()
+        );
+
+        notificationService.createNotification(
+                booking.getUser().getId(),
+                NotificationTypeEnum.BOOKING,
+                "Đơn " + booking.getBookingCode() + " đã được đổi sang xe mới: " + newCar.getName()
+        );
     }
 
 
@@ -498,7 +553,7 @@ public class BookingsServiceImpl implements BookingsService {
     }
 
     @Override
-    public BookingsResponse getBookingById(String email, Long bookingId) {
+    public BookingsResponse getBookingUserById(String email, Long bookingId) {
 
         Bookings bookings = bookingsRepository.findByIdAndUserEmail(bookingId, email);
         return getBooking(bookings);
@@ -537,6 +592,22 @@ public class BookingsServiceImpl implements BookingsService {
         };
 
         notificationService.createNotification(booking.getUser().getId(), NotificationTypeEnum.BOOKING, message);
+    }
+
+    private void recalculateBookingPrice(Bookings booking) {
+
+        BigDecimal totalPrice = BigDecimal.ZERO;
+        for (BookingDetails detail : booking.getBookingDetailsList()) {
+            Cars car = detail.getCar();
+            long days = ChronoUnit.DAYS.between(detail.getStartDate().toLocalDate(), detail.getEndDate().toLocalDate());
+            days = (days <= 0) ? 1 : days;
+            BigDecimal subTotal = car.getPricePerDay().multiply(BigDecimal.valueOf(days));
+
+            detail.setPricePerDay(car.getPricePerDay());
+            detail.setSubTotal(subTotal);
+            totalPrice = totalPrice.add(subTotal);
+        }
+        booking.setTotalPrice(totalPrice);
     }
 
 }

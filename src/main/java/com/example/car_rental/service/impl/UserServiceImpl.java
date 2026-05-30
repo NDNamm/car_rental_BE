@@ -36,7 +36,6 @@ import java.util.Map;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-    private final VerificationRepository verificationRepository;
     private final ImageService imageService;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;

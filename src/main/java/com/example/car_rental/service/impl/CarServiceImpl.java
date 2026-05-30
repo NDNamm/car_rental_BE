@@ -41,6 +41,7 @@ public class CarServiceImpl implements CarService {
     private final CategoryRepository categoryRepository;
     private final ImageService imageService;
     private final BookingDetailRepository bookingDetailRepository;
+    private final BookingsRepository bookingsRepository;
 
     @Override
     @Transactional
@@ -287,6 +288,38 @@ public class CarServiceImpl implements CarService {
         Page<String> citiesPage = carRepository.findAllCities(city, pageable);
         return citiesPage;
 
+    }
+
+    @Override
+    public List<CarResponse> getAvailableReplacementCars(Long bookingId) {
+
+        Bookings booking = bookingsRepository.findById(bookingId)
+                .orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
+
+        BookingDetails bd = booking.getBookingDetailsList().get(0);
+
+        Cars oldCar = bd.getCar();
+
+        String city = oldCar.getCarDetail().getCity();
+        Long categoryId = oldCar.getCategory().getId();
+
+        LocalDateTime start = bd.getStartDate();
+        LocalDateTime end = bd.getEndDate();
+
+        List<Cars> cars = carRepository.findAvailableSameCityCars(categoryId, city, start, end);
+
+        return cars.stream()
+                .map(car -> CarResponse.builder()
+                        .id(car.getId())
+                        .name(car.getName())
+                        .licensePlate(car.getLicensePlate())
+                        .pricePerDay(car.getPricePerDay())
+                        .depositAmount(car.getDepositAmount())
+                        .categoryName(car.getCategory().getName())
+                        .city(car.getCarDetail().getCity())
+                        .build()
+                )
+                .toList();
     }
 
     private CarResponse mapToCarResponse(Cars car) {

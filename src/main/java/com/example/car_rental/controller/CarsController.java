@@ -106,9 +106,7 @@ public class CarsController {
     }
 
     @GetMapping("/{carId}/booked-times")
-    public ApiResponse<List<BookingTimeResponse>> getBookedTimes(
-            @PathVariable Long carId
-    ) {
+    public ApiResponse<List<BookingTimeResponse>> getBookedTimes(@PathVariable Long carId) {
         List<BookingTimeResponse> ranges = carService.getBookedRanges(carId);
 
         return ApiResponse.<List<BookingTimeResponse>>builder()

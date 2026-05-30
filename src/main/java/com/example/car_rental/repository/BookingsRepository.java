@@ -70,4 +70,6 @@ public interface BookingsRepository extends JpaRepository<Bookings, Long> {
     );
 
     Bookings findByIdAndUserEmail(Long id, String email);
+
+    Bookings findBookingById(Long bookingId);
 }

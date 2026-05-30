@@ -2,6 +2,7 @@ package com.example.car_rental.service;
 
 import com.example.car_rental.dto.requestDTO.BookingsRequest.BookingStatusRequest;
 import com.example.car_rental.dto.requestDTO.BookingsRequest.BookingRequest;
+import com.example.car_rental.dto.requestDTO.BookingsRequest.ReplaceCarRequest;
 import com.example.car_rental.dto.requestDTO.RefundRequest;
 import com.example.car_rental.dto.requestDTO.handoverRequest.HandoverRequest;
 import com.example.car_rental.dto.responseDTO.BookingResponse.BookingCodeResponse;
@@ -14,8 +15,11 @@ public interface BookingsService {
     //ADMIN
 //    Page<BookingsResponse> getAllBookings(String bookingCode, String email, String name, String phoneNumber, String status, int page, int size);
     Page<BookingsResponse> getAllBookings(String search, String status, int page, int size);
+    BookingsResponse getBookingById(Long bookingId);
 
     void updateBookingsStatus(BookingStatusRequest request, Long bookingId, HandoverRequest handoverRequest, MultipartFile[] images);
+
+    void replaceCar(Long bookingId, ReplaceCarRequest request);
 
     void deleteBooking(Long bookingId);
 
@@ -28,5 +32,5 @@ public interface BookingsService {
 
     void cancelBooking(String email, Long bookingId, RefundRequest request, MultipartFile qrCode);
 
-    BookingsResponse getBookingById(String email, Long bookingId);
+    BookingsResponse getBookingUserById(String email, Long bookingId);
 }

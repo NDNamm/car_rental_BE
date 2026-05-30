@@ -105,6 +105,7 @@ public class AuthServiceImpl implements AuthService {
                 .fullName(request.getFullName())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .createdAt(LocalDate.now())
+                .isActive(true)
                 .role(roleRepository.findByRoleName("USER")
                         .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND)))
                 .build();
@@ -234,6 +235,7 @@ public class AuthServiceImpl implements AuthService {
                         .avatarUrl(pictureUrl)
                         .password(passwordEncoder.encode("GOOGLE_LOGIN"))
                         .createdAt(LocalDate.now())
+                        .isActive(true)
                         .role(roleRepository.findByRoleName("USER")
                                 .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND)))
                         .build();

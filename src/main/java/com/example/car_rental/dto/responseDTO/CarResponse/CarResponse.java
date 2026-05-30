@@ -34,4 +34,5 @@ public class CarResponse {
     private CarDetailResponse carDetailResponse;
     private Double averageRating;
     private Long totalReviews;
+    private String city;
 }

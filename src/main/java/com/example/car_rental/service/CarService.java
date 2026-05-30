@@ -20,4 +20,6 @@ public interface CarService {
     Page<CarResponse> getAllCarsByCategoryId(Long categoryId, int page, int size);
     List<BookingTimeResponse> getBookedRanges(Long carId);
     Page<String> getAllCities(String city, int page, int size);
+
+    List<CarResponse> getAvailableReplacementCars(Long bookingId);
 }
