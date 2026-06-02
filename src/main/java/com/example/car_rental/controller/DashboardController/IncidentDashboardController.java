@@ -12,12 +12,18 @@ import com.example.car_rental.dto.responseDTO.DashboardResponse.Incident.Inciden
 import com.example.car_rental.dto.responseDTO.DashboardResponse.Incident.IncidentTopResponse;
 import com.example.car_rental.dto.responseDTO.DashboardResponse.Invoice.InvoiceChartResponse;
 import com.example.car_rental.dto.responseDTO.DashboardResponse.Invoice.InvoiceStatisticsResponse;
+import com.example.car_rental.entity.enums.DashboardGroupBy;
 import com.example.car_rental.service.DashboardService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @RestController
@@ -35,35 +41,37 @@ public class IncidentDashboardController {
                 .build();
     }
 
-    @GetMapping("/day")
-    public ApiResponse<List<IncidentChartResponse>> getIncidentDailyChart() {
-        return ApiResponse.<List<IncidentChartResponse>>builder()
+    @GetMapping("/stats/range")
+    public ApiResponse<IncidentStatisticsResponse> incidentStats(@RequestParam @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate from,
+                                                                 @RequestParam @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate to) {
+        LocalDateTime start = from.atStartOfDay();
+        LocalDateTime end = to.atTime(LocalTime.MAX);
+        return ApiResponse.<IncidentStatisticsResponse>builder()
                 .code(200)
-                .data(dashboardService.getIncidentDailyChart())
+                .data(dashboardService.getIncidentStats(start, end))
                 .build();
     }
 
-    @GetMapping("/month")
-    public ApiResponse<List<IncidentChartResponse>> getIncidentMonthlyChart() {
+    @GetMapping("/chart")
+    public ApiResponse<List<IncidentChartResponse>> getIncidentChart(@RequestParam @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate from,
+                                                                          @RequestParam @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate to,
+                                                                          @RequestParam DashboardGroupBy groupBy) {
+        LocalDateTime start = from.atStartOfDay();
+        LocalDateTime end = to.atTime(LocalTime.MAX);
         return ApiResponse.<List<IncidentChartResponse>>builder()
                 .code(200)
-                .data(dashboardService.getIncidentMonthlyChart())
-                .build();
-    }
-
-    @GetMapping("t/year")
-    public ApiResponse<List<IncidentChartResponse>> getIncidentYearlyChart() {
-        return ApiResponse.<List<IncidentChartResponse>>builder()
-                .code(200)
-                .data(dashboardService.getIncidentYearlyChart())
+                .data(dashboardService.getIncidentChart(start, end, groupBy))
                 .build();
     }
 
     @GetMapping("/top")
-    public ApiResponse<List<IncidentTopResponse>> getTopIncidents() {
+    public ApiResponse<List<IncidentTopResponse>> getTopIncidents(@RequestParam @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate from,
+                                                                  @RequestParam @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate to) {
+        LocalDateTime start = from.atStartOfDay();
+        LocalDateTime end = to.atTime(LocalTime.MAX);
         return ApiResponse.<List<IncidentTopResponse>>builder()
                 .code(200)
-                .data(dashboardService.getTopIncidents())
+                .data(dashboardService.getTopIncidents(start, end))
                 .build();
     }
 }

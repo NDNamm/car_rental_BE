@@ -18,14 +18,27 @@ public interface IncidentDashboardRepository extends JpaRepository<Incidents, Lo
 
     Long countBy();
 
+    Long countByCreatedAtBetween(LocalDateTime from, LocalDateTime to);
+
     @Query("""
                 SELECT COALESCE(SUM(p.amount),0)
                 FROM Incidents i
                 JOIN i.penalties p
             """)
-    BigDecimal getTotalDamageCost();
+    BigDecimal getTotalAllDamageCost();
 
-    // CHART
+    @Query("""
+                  SELECT COALESCE(SUM(p.amount),0)
+                  FROM Incidents i
+                  JOIN i.penalties p
+                  WHERE i.createdAt BETWEEN :startDate AND :endDate
+            """)
+    BigDecimal getTotalDamageCost(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
+
+    // ================= DAILY =================
     @Query("""
                 SELECT new com.example.car_rental.dto.responseDTO.DashboardResponse.Incident.IncidentChartResponse(
                     FUNCTION('DATE', i.createdAt),
@@ -34,12 +47,16 @@ public interface IncidentDashboardRepository extends JpaRepository<Incidents, Lo
                 )
                 FROM Incidents i
                 LEFT JOIN i.penalties p
-                WHERE i.createdAt >= :startDate
+                WHERE i.createdAt BETWEEN :startDate AND :endDate
                 GROUP BY FUNCTION('DATE', i.createdAt)
                 ORDER BY FUNCTION('DATE', i.createdAt)
             """)
-    List<IncidentChartResponse> getDailyChart(@Param("startDate") LocalDateTime startDate);
+    List<IncidentChartResponse> getDailyChart(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
 
+    // ================= MONTHLY =================
     @Query("""
                 SELECT new com.example.car_rental.dto.responseDTO.DashboardResponse.Incident.IncidentChartResponse(
                     MONTH(i.createdAt),
@@ -48,12 +65,16 @@ public interface IncidentDashboardRepository extends JpaRepository<Incidents, Lo
                 )
                 FROM Incidents i
                 LEFT JOIN i.penalties p
-                GROUP BY MONTH(i.createdAt)
-                ORDER BY MONTH(i.createdAt)
+                WHERE i.createdAt BETWEEN :startDate AND :endDate
+                GROUP BY MONTH(i.createdAt), YEAR(i.createdAt)
+                ORDER BY YEAR(i.createdAt), MONTH(i.createdAt)
             """)
-    List<IncidentChartResponse> getMonthlyChart();
+    List<IncidentChartResponse> getMonthlyChart(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
 
-
+    // ================= YEARLY =================
     @Query("""
                 SELECT new com.example.car_rental.dto.responseDTO.DashboardResponse.Incident.IncidentChartResponse(
                     YEAR(i.createdAt),
@@ -62,23 +83,31 @@ public interface IncidentDashboardRepository extends JpaRepository<Incidents, Lo
                 )
                 FROM Incidents i
                 LEFT JOIN i.penalties p
+                WHERE i.createdAt BETWEEN :startDate AND :endDate
                 GROUP BY YEAR(i.createdAt)
                 ORDER BY YEAR(i.createdAt)
             """)
-    List<IncidentChartResponse> getYearlyChart();
+    List<IncidentChartResponse> getYearlyChart(
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
 
-    // TOP INCIDENT (FREQUENCY + COST)
+    // ================= TOP =================
     @Query("""
-                SELECT new com.example.car_rental.dto.responseDTO.DashboardResponse.Incident.IncidentTopResponse(
-                    i.source,
-                    i.type,
-                    COUNT(i),
-                    COALESCE(SUM(p.amount),0)
-                )
-                FROM Incidents i
-                LEFT JOIN i.penalties p
-                GROUP BY i.source, i.type
-                ORDER BY COUNT(i) DESC
-            """)
-    List<IncidentTopResponse> getTopIncidentsByFrequency();
+    SELECT new com.example.car_rental.dto.responseDTO.DashboardResponse.Incident.IncidentTopResponse(
+        i.source,
+        i.type,
+        COUNT(i),
+        COALESCE(SUM(p.amount),0)
+    )
+    FROM Incidents i
+    LEFT JOIN i.penalties p
+    WHERE i.createdAt BETWEEN :from AND :to
+    GROUP BY i.source, i.type
+    ORDER BY COUNT(i) DESC
+""")
+    List<IncidentTopResponse> getTopIncidentsByFrequency(
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime to
+    );
 }

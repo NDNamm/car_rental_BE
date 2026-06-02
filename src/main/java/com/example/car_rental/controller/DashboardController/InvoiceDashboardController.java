@@ -12,12 +12,18 @@ import com.example.car_rental.dto.responseDTO.DashboardResponse.Incident.Inciden
 import com.example.car_rental.dto.responseDTO.DashboardResponse.Incident.IncidentTopResponse;
 import com.example.car_rental.dto.responseDTO.DashboardResponse.Invoice.InvoiceChartResponse;
 import com.example.car_rental.dto.responseDTO.DashboardResponse.Invoice.InvoiceStatisticsResponse;
+import com.example.car_rental.entity.enums.DashboardGroupBy;
 import com.example.car_rental.service.DashboardService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @RestController
@@ -35,27 +41,26 @@ public class InvoiceDashboardController {
                 .build();
     }
 
-    @GetMapping("/day")
-    public ApiResponse<List<InvoiceChartResponse>> invoiceDailyChart() {
-        return ApiResponse.<List<InvoiceChartResponse>>builder()
+    @GetMapping("/stats/range")
+    public ApiResponse<InvoiceStatisticsResponse> invoiceStats(@RequestParam @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate from,
+                                                               @RequestParam @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate to) {
+        LocalDateTime start = from.atStartOfDay();
+        LocalDateTime end = to.atTime(LocalTime.MAX);
+        return ApiResponse.<InvoiceStatisticsResponse>builder()
                 .code(200)
-                .data(dashboardService.getInvoiceDailyChart())
+                .data(dashboardService.getInvoiceStats(start, end))
                 .build();
     }
 
-    @GetMapping("/month")
-    public ApiResponse<List<InvoiceChartResponse>> invoiceMonthlyChart() {
+    @GetMapping("/chart")
+    public ApiResponse<List<InvoiceChartResponse>> invoiceChart(@RequestParam @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate from,
+                                                                     @RequestParam @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate to,
+                                                                     @RequestParam DashboardGroupBy groupBy) {
+        LocalDateTime start = from.atStartOfDay();
+        LocalDateTime end = to.atTime(LocalTime.MAX);
         return ApiResponse.<List<InvoiceChartResponse>>builder()
                 .code(200)
-                .data(dashboardService.getInvoiceMonthlyChart())
-                .build();
-    }
-
-    @GetMapping("/year")
-    public ApiResponse<List<InvoiceChartResponse>> invoiceYearlyChart() {
-        return ApiResponse.<List<InvoiceChartResponse>>builder()
-                .code(200)
-                .data(dashboardService.getInvoiceYearlyChart())
+                .data(dashboardService.getInvoiceChart(start, end, groupBy))
                 .build();
     }
 }

@@ -13,6 +13,7 @@ import com.example.car_rental.dto.responseDTO.DashboardResponse.Invoice.InvoiceC
 import com.example.car_rental.dto.responseDTO.DashboardResponse.Invoice.InvoiceStatisticsResponse;
 import com.example.car_rental.entity.enums.BookingStatusEnum;
 import com.example.car_rental.entity.enums.CarStatusEnum;
+import com.example.car_rental.entity.enums.DashboardGroupBy;
 import com.example.car_rental.entity.enums.InvoiceStatusEnum;
 import com.example.car_rental.repository.DashboardRepository.*;
 import com.example.car_rental.service.DashboardService;
@@ -44,28 +45,40 @@ public class DashboardServiceImpl implements DashboardService {
                 .completedBookings(bookingRepo.countByStatus(BookingStatusEnum.COMPLETED))
                 .cancelledBookings(bookingRepo.countByStatus(BookingStatusEnum.CANCELLED))
                 .refundBookings(bookingRepo.countByStatus(BookingStatusEnum.REFUND))
-                .totalRevenue(bookingRepo.getTotalRevenue())
+                .totalRevenue(bookingRepo.getTotalAllRevenue())
                 .build();
     }
 
-
-
     @Override
-    public List<BookingChartResponse> getBookingDailyChart() {
-        LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
-        return bookingRepo.getDailyChart(sevenDaysAgo);
+    public List<BookingChartResponse> getBookingChart(LocalDateTime from, LocalDateTime to, DashboardGroupBy groupBy) {
+        return switch (groupBy) {
+            case DAY -> bookingRepo.getDailyChart(from, to);
+            case MONTH -> bookingRepo.getMonthlyChart(from, to);
+            case YEAR -> bookingRepo.getYearlyChart(from, to);
+        };
     }
 
     @Override
-    public List<BookingChartResponse> getBookingMonthlyChart() {
-        return bookingRepo.getMonthlyChart();
+    public BookingStatisticsResponse getBookingStats(LocalDateTime from, LocalDateTime to) {
+        return BookingStatisticsResponse.builder()
+                .totalBookings(bookingRepo.countByCreatedAtBetween(from, to))
+                .pendingBookings(bookingRepo.countByStatusAndCreatedAtBetween(
+                        BookingStatusEnum.PENDING, from, to))
+                .confirmedBookings(bookingRepo.countByStatusAndCreatedAtBetween(
+                        BookingStatusEnum.CONFIRMED, from, to))
+                .rentedBookings(bookingRepo.countByStatusAndCreatedAtBetween(
+                        BookingStatusEnum.RENTED, from, to))
+                .returningBookings(bookingRepo.countByStatusAndCreatedAtBetween(
+                        BookingStatusEnum.RETURNING, from, to))
+                .completedBookings(bookingRepo.countByStatusAndCreatedAtBetween(
+                        BookingStatusEnum.COMPLETED, from, to))
+                .cancelledBookings(bookingRepo.countByStatusAndCreatedAtBetween(
+                        BookingStatusEnum.CANCELLED, from, to))
+                .refundBookings(bookingRepo.countByStatusAndCreatedAtBetween(
+                        BookingStatusEnum.REFUND, from, to))
+                .totalRevenue(bookingRepo.getTotalRevenue(from, to))
+                .build();
     }
-
-    @Override
-    public List<BookingChartResponse> getBookingYearlyChart() {
-        return bookingRepo.getYearlyChart();
-    }
-
 
 
     @Override
@@ -106,7 +119,7 @@ public class DashboardServiceImpl implements DashboardService {
     public InvoiceStatisticsResponse getInvoiceStats() {
         return InvoiceStatisticsResponse.builder()
                 .totalInvoices(invoiceRepo.countBy())
-                .totalRevenue(invoiceRepo.getTotalRevenue())
+                .totalRevenue(invoiceRepo.getTotalAllRevenue())
                 .cancelInvoices(invoiceRepo.countByStatus(InvoiceStatusEnum.CANCELLED))
                 .pendingInvoices(invoiceRepo.countByStatus(InvoiceStatusEnum.PENDING))
                 .partialInvoices(invoiceRepo.countByStatus(InvoiceStatusEnum.PARTIAL))
@@ -115,19 +128,24 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     @Override
-    public List<InvoiceChartResponse> getInvoiceDailyChart() {
-        LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
-        return invoiceRepo.getDailyChart(sevenDaysAgo);
+    public List<InvoiceChartResponse> getInvoiceChart(LocalDateTime from, LocalDateTime to, DashboardGroupBy groupBy) {
+        return switch (groupBy) {
+            case DAY -> invoiceRepo.getDailyChart(from, to);
+            case MONTH -> invoiceRepo.getMonthlyChart(from, to);
+            case YEAR -> invoiceRepo.getYearlyChart(from, to);
+        };
     }
 
     @Override
-    public List<InvoiceChartResponse> getInvoiceMonthlyChart() {
-        return invoiceRepo.getMonthlyChart();
-    }
-
-    @Override
-    public List<InvoiceChartResponse> getInvoiceYearlyChart() {
-        return invoiceRepo.getYearlyChart();
+    public InvoiceStatisticsResponse getInvoiceStats(LocalDateTime from, LocalDateTime to) {
+        return InvoiceStatisticsResponse.builder()
+                .totalInvoices(invoiceRepo.countByCreatedAtBetween(from, to))
+                .totalRevenue(invoiceRepo.getTotalRevenue(from, to))
+                .cancelInvoices(invoiceRepo.countByStatusAndCreatedAtBetween(InvoiceStatusEnum.CANCELLED, from, to))
+                .pendingInvoices(invoiceRepo.countByStatusAndCreatedAtBetween(InvoiceStatusEnum.PENDING, from, to))
+                .partialInvoices(invoiceRepo.countByStatusAndCreatedAtBetween(InvoiceStatusEnum.PARTIAL, from, to))
+                .paidInvoices(invoiceRepo.countByStatusAndCreatedAtBetween(InvoiceStatusEnum.PAID, from, to))
+                .build();
     }
 
 
@@ -135,28 +153,31 @@ public class DashboardServiceImpl implements DashboardService {
     public IncidentStatisticsResponse getIncidentStats() {
         return IncidentStatisticsResponse.builder()
                 .totalIncidents(incidentRepo.countBy())
-                .totalDamageCost(incidentRepo.getTotalDamageCost())
+                .totalDamageCost(incidentRepo.getTotalAllDamageCost())
                 .build();
     }
 
     @Override
-    public List<IncidentChartResponse> getIncidentDailyChart() {
-        LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
-        return incidentRepo.getDailyChart(sevenDaysAgo);
+    public List<IncidentChartResponse> getIncidentChart(LocalDateTime from, LocalDateTime to, DashboardGroupBy groupBy) {
+        return switch (groupBy) {
+            case DAY -> incidentRepo.getDailyChart(from, to);
+            case MONTH -> incidentRepo.getMonthlyChart(from, to);
+            case YEAR -> incidentRepo.getYearlyChart(from, to);
+        };
     }
 
     @Override
-    public List<IncidentChartResponse> getIncidentMonthlyChart() {
-        return incidentRepo.getMonthlyChart();
+    public List<IncidentTopResponse> getTopIncidents(LocalDateTime from, LocalDateTime to) {
+        return incidentRepo.getTopIncidentsByFrequency(from, to);
     }
 
     @Override
-    public List<IncidentChartResponse> getIncidentYearlyChart() {
-        return incidentRepo.getYearlyChart();
+    public IncidentStatisticsResponse getIncidentStats(LocalDateTime from, LocalDateTime to) {
+        return IncidentStatisticsResponse.builder()
+                .totalIncidents(incidentRepo.countByCreatedAtBetween(from, to))
+                .totalDamageCost(incidentRepo.getTotalDamageCost(from,to))
+                .build();
     }
 
-    @Override
-    public List<IncidentTopResponse> getTopIncidents() {
-        return incidentRepo.getTopIncidentsByFrequency();
-    }
+
 }

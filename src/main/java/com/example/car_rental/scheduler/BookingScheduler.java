@@ -46,7 +46,7 @@ public class BookingScheduler {
                 detail.getCar().setStatus(CarStatusEnum.AVAILABLE);
             });
 
-            Users user = userRepository.findByEmail("System@gmail.com")
+            Users user = userRepository.findByEmail("system@gmail.com")
                     .orElseThrow(() -> new RuntimeException("System user not found"));
 
             BookingStatusHistory his = BookingStatusHistory.builder()

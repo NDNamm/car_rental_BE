@@ -11,16 +11,16 @@ import com.example.car_rental.dto.responseDTO.DashboardResponse.Incident.Inciden
 import com.example.car_rental.dto.responseDTO.DashboardResponse.Incident.IncidentTopResponse;
 import com.example.car_rental.dto.responseDTO.DashboardResponse.Invoice.InvoiceChartResponse;
 import com.example.car_rental.dto.responseDTO.DashboardResponse.Invoice.InvoiceStatisticsResponse;
-
+import com.example.car_rental.entity.enums.DashboardGroupBy;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface DashboardService {
 
     // ================= BOOKING =================
     BookingStatisticsResponse getBookingStats();
-    List<BookingChartResponse> getBookingDailyChart();
-    List<BookingChartResponse> getBookingMonthlyChart();
-    List<BookingChartResponse> getBookingYearlyChart();
+    List<BookingChartResponse> getBookingChart(LocalDateTime from, LocalDateTime to, DashboardGroupBy groupBy);
+    BookingStatisticsResponse getBookingStats(LocalDateTime from, LocalDateTime to);
 
     // ================= CAR =================
     CarStatisticsResponse getCarStats();
@@ -33,15 +33,12 @@ public interface DashboardService {
 
     // ================= INVOICE =================
     InvoiceStatisticsResponse getInvoiceStats();
-    List<InvoiceChartResponse> getInvoiceDailyChart();
-    List<InvoiceChartResponse> getInvoiceMonthlyChart();
-    List<InvoiceChartResponse> getInvoiceYearlyChart();
-
+    List<InvoiceChartResponse> getInvoiceChart(LocalDateTime from, LocalDateTime to, DashboardGroupBy groupBy);
+    InvoiceStatisticsResponse getInvoiceStats(LocalDateTime from, LocalDateTime to);
 
     // ================= INCIDENT =================
     IncidentStatisticsResponse getIncidentStats();
-    List<IncidentChartResponse> getIncidentDailyChart();
-    List<IncidentChartResponse> getIncidentMonthlyChart();
-    List<IncidentChartResponse> getIncidentYearlyChart();
-    List<IncidentTopResponse> getTopIncidents();
+    List<IncidentChartResponse> getIncidentChart(LocalDateTime from, LocalDateTime to, DashboardGroupBy groupBy);
+    List<IncidentTopResponse> getTopIncidents(LocalDateTime from, LocalDateTime to);
+    IncidentStatisticsResponse getIncidentStats(LocalDateTime from, LocalDateTime to);
 }
