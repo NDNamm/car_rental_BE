@@ -74,13 +74,14 @@ public class InvoiceServiceImpl implements InvoiceService {
         invoice.setFinalAmount(finalAmount);
         invoice.setUpdatedAt(LocalDateTime.now());
         invoice.setPaidTotal(booking.getTotalDepositAmount());
-        if(booking.getStatus().equals(BookingStatusEnum.COMPLETED)){
+        if (booking.getStatus().equals(BookingStatusEnum.COMPLETED)) {
             invoice.setRemainingAmount(BigDecimal.ZERO);
+            invoice.setPaidTotal(finalAmount);
             invoice.setStatus(InvoiceStatusEnum.PAID);
-        } else if(booking.getStatus().equals(BookingStatusEnum.CANCELLED)){
+        } else if (booking.getStatus().equals(BookingStatusEnum.CANCELLED)) {
             invoice.setRemainingAmount(finalAmount);
             invoice.setStatus(InvoiceStatusEnum.CANCELLED);
-        }else{
+        } else {
             invoice.setRemainingAmount(finalAmount);
         }
         invoice.setNote("Điều chỉnh hóa đơn sau kiểm tra tình trạng xe");

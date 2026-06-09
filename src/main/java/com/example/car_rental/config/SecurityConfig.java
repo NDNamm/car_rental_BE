@@ -14,7 +14,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-
 @Configuration
 @RequiredArgsConstructor
 @EnableMethodSecurity(prePostEnabled = true)
@@ -23,40 +22,59 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+
+        http
                 .cors(Customizer.withDefaults())
-                .csrf(csrt -> csrt.disable())
+                .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
                 .authorizeHttpRequests(auth -> auth
-
                         .requestMatchers("/api/auth/**", "/api/v1/webhooks/**").permitAll()
+
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/cars/**",
+                                "/api/categories/**",
+                                "/api/features/**",
+                                "/api/reviews/**",
+                                "/api/reviews/car/**")
+                        .permitAll()
                         .requestMatchers("/api/users/me/change-password").hasAnyRole("USER", "ADMIN", "STAFF")
-                        .requestMatchers(HttpMethod.GET, "/api/cars/**", "/api/categories/**", "/api/features/**", "/api/reviews/car/**").permitAll()
 
-                        .requestMatchers("/api/verification/me/**").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/api/users/me/**").hasAnyRole("USER", "ADMIN", "STAFF")
-                        .requestMatchers("/api/bookings/me/**").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/api/payments/**").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/api/refunds/me/**").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/api/reviews/me/**").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/api/notifications/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers("/api/users/me/**", "/api/notifications/**")
+                        .hasAnyRole("USER", "ADMIN", "STAFF")
 
+                        .requestMatchers(
+                                "/api/verification/me/**",
+                                "/api/bookings/me/**",
+                                "/api/payments/**",
+                                "/api/refunds/me/**",
+                                "/api/reviews/me/**")
+                        .hasAnyRole("USER", "ADMIN")
 
-                        .requestMatchers("/api/verification/**").hasRole("ADMIN")
-                        .requestMatchers("/api/users/**").hasRole("ADMIN")
-                        .requestMatchers("/api/bookings/**").hasRole("ADMIN")
-                        .requestMatchers("/api/cars/**").hasRole("ADMIN")
-                        .requestMatchers("/api/categories/**").hasRole("ADMIN")
-                        .requestMatchers("/api/features/**").hasRole("ADMIN")
-                        .requestMatchers("/api/penalty-rules/**").hasRole("ADMIN")
-                        .requestMatchers("/api/dashboard/**").hasRole("ADMIN")
-                        .requestMatchers("/api/reviews/**").hasAnyRole("USER", "ADMIN")
+                        .requestMatchers(
+                                "/api/verification/**",
+                                "/api/bookings/**",
+                                "/api/refunds/**",
+                                "/api/reviews/**")
+                        .hasAnyRole("ADMIN", "STAFF")
 
-                        .anyRequest().authenticated()
-                )
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-        return httpSecurity.build();
+                        .requestMatchers(
+                                "/api/users/**",
+                                "/api/cars/**",
+                                "/api/categories/**",
+                                "/api/features/**",
+                                "/api/penalty-rules/**",
+                                "/api/dashboard/**")
+                        .hasRole("ADMIN")
+                        .anyRequest().authenticated())
+
+                .addFilterBefore(
+                        jwtAuthenticationFilter,
+                        UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
     }
 
     @Bean

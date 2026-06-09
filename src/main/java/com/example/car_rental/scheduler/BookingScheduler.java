@@ -5,6 +5,8 @@ import com.example.car_rental.entity.Bookings;
 import com.example.car_rental.entity.Users;
 import com.example.car_rental.entity.enums.BookingStatusEnum;
 import com.example.car_rental.entity.enums.CarStatusEnum;
+import com.example.car_rental.exception.AppException;
+import com.example.car_rental.exception.ErrorCode;
 import com.example.car_rental.repository.BookingStatusHistoryRepository;
 import com.example.car_rental.repository.BookingsRepository;
 import com.example.car_rental.repository.UserRepository;
@@ -30,13 +32,12 @@ public class BookingScheduler {
     @Transactional
     public void autoCancelExpiredBookings() {
 
-        List<Bookings> expiredBookings =
-                bookingsRepository.findByStatusAndPaymentDeadlineBefore(
-                        BookingStatusEnum.PENDING,
-                        LocalDateTime.now()
-                );
+        List<Bookings> expiredBookings = bookingsRepository.findByStatusAndPaymentDeadlineBefore(
+                BookingStatusEnum.PENDING,
+                LocalDateTime.now());
 
-        if (expiredBookings.isEmpty()) return;
+        if (expiredBookings.isEmpty())
+            return;
 
         for (Bookings booking : expiredBookings) {
 
@@ -46,15 +47,15 @@ public class BookingScheduler {
                 detail.getCar().setStatus(CarStatusEnum.AVAILABLE);
             });
 
-            Users user = userRepository.findByEmail("system@gmail.com")
-                    .orElseThrow(() -> new RuntimeException("System user not found"));
+            Users systemUser = userRepository.findByEmail("system@gmail.com")
+                    .orElseThrow(() -> new AppException(ErrorCode.SYSTEM_USER_NOT_FOUND));
 
             BookingStatusHistory his = BookingStatusHistory.builder()
-                    .booking(booking) // ⚠️ QUAN TRỌNG
+                    .booking(booking)
                     .newStatus(BookingStatusEnum.CANCELLED)
                     .reason("Hết hạn thanh toán - Auto cancel")
                     .changedAt(LocalDateTime.now())
-                    .changedBy(user)
+                    .changedBy(systemUser)
                     .build();
 
             bookingStatusHistoryRepository.save(his);

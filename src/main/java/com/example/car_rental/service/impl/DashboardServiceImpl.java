@@ -55,6 +55,7 @@ public class DashboardServiceImpl implements DashboardService {
             case DAY -> bookingRepo.getDailyChart(from, to);
             case MONTH -> bookingRepo.getMonthlyChart(from, to);
             case YEAR -> bookingRepo.getYearlyChart(from, to);
+            case HOUR -> bookingRepo.getHourlyChart(from, to);
         };
     }
 
@@ -79,7 +80,6 @@ public class DashboardServiceImpl implements DashboardService {
                 .totalRevenue(bookingRepo.getTotalRevenue(from, to))
                 .build();
     }
-
 
     @Override
     public CarStatisticsResponse getCarStats() {
@@ -133,6 +133,7 @@ public class DashboardServiceImpl implements DashboardService {
             case DAY -> invoiceRepo.getDailyChart(from, to);
             case MONTH -> invoiceRepo.getMonthlyChart(from, to);
             case YEAR -> invoiceRepo.getYearlyChart(from, to);
+            case HOUR -> invoiceRepo.getHourlyChart(from, to);
         };
     }
 
@@ -148,7 +149,6 @@ public class DashboardServiceImpl implements DashboardService {
                 .build();
     }
 
-
     @Override
     public IncidentStatisticsResponse getIncidentStats() {
         return IncidentStatisticsResponse.builder()
@@ -158,11 +158,13 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     @Override
-    public List<IncidentChartResponse> getIncidentChart(LocalDateTime from, LocalDateTime to, DashboardGroupBy groupBy) {
+    public List<IncidentChartResponse> getIncidentChart(LocalDateTime from, LocalDateTime to,
+            DashboardGroupBy groupBy) {
         return switch (groupBy) {
             case DAY -> incidentRepo.getDailyChart(from, to);
             case MONTH -> incidentRepo.getMonthlyChart(from, to);
             case YEAR -> incidentRepo.getYearlyChart(from, to);
+            case HOUR -> incidentRepo.getHourlyChart(from, to);
         };
     }
 
@@ -175,9 +177,8 @@ public class DashboardServiceImpl implements DashboardService {
     public IncidentStatisticsResponse getIncidentStats(LocalDateTime from, LocalDateTime to) {
         return IncidentStatisticsResponse.builder()
                 .totalIncidents(incidentRepo.countByCreatedAtBetween(from, to))
-                .totalDamageCost(incidentRepo.getTotalDamageCost(from,to))
+                .totalDamageCost(incidentRepo.getTotalDamageCost(from, to))
                 .build();
     }
-
 
 }

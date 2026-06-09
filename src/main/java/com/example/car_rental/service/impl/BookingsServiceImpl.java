@@ -57,19 +57,17 @@ public class BookingsServiceImpl implements BookingsService {
     final InvoiceService invoiceService;
     final NotificationService notificationService;
 
-
     @Override
     public Page<BookingsResponse> getAllBookings(String search, String status, int page, int size) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
         Page<Bookings> bookingsPage;
 
-        boolean noFilter =
-                (search == null || search.isBlank()) &&
-//                        (email == null || email.isBlank()) &&
-//                        (name == null || name.isBlank()) &&
-//                        (phoneNumber == null || phoneNumber.isBlank()) &&
-                        (status == null || status.isBlank());
+        boolean noFilter = (search == null || search.isBlank()) &&
+        // (email == null || email.isBlank()) &&
+        // (name == null || name.isBlank()) &&
+        // (phoneNumber == null || phoneNumber.isBlank()) &&
+                (status == null || status.isBlank());
 
         if (noFilter) {
             bookingsPage = bookingsRepository.searchBookings(null, null, pageable);
@@ -103,7 +101,6 @@ public class BookingsServiceImpl implements BookingsService {
                 .totalDepositAmount(booking.getTotalDepositAmount())
                 .status(booking.getStatus())
                 .createdAt(booking.getCreatedAt())
-                .nameStaff(booking.getUser().getFullName())
                 .note(booking.getNote())
                 .paymentDeadline(booking.getPaymentDeadline())
                 .qrCodeUrl(booking.getQrCodeUrl())
@@ -114,7 +111,8 @@ public class BookingsServiceImpl implements BookingsService {
     }
 
     private List<BookingStatusResponse> getBookingStatusHistory(List<BookingStatusHistory> historyList) {
-        if (historyList == null) return Collections.emptyList();
+        if (historyList == null)
+            return Collections.emptyList();
 
         return historyList.stream().map(history -> BookingStatusResponse.builder()
                 .id(history.getId())
@@ -128,7 +126,8 @@ public class BookingsServiceImpl implements BookingsService {
     }
 
     private List<BookingDetailResponse> getBookingDetails(List<BookingDetails> bookingDetailsList) {
-        if (bookingDetailsList == null) return Collections.emptyList();
+        if (bookingDetailsList == null)
+            return Collections.emptyList();
 
         return bookingDetailsList.stream().map(detail -> {
             Cars currentCar = detail.getCar();
@@ -165,7 +164,8 @@ public class BookingsServiceImpl implements BookingsService {
 
     @Override
     @Transactional
-    public void updateBookingsStatus(BookingStatusRequest request, Long bookingId, HandoverRequest handoverRequest, MultipartFile[] images) {
+    public void updateBookingsStatus(BookingStatusRequest request, Long bookingId, HandoverRequest handoverRequest,
+            MultipartFile[] images) {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         Users staff = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
@@ -179,7 +179,8 @@ public class BookingsServiceImpl implements BookingsService {
 
         BookingStatusEnum current = booking.getStatus();
         BookingStatusEnum next = request.getStatus();
-        if (current == next) return;
+        if (current == next)
+            return;
 
         // Kiểm tra tính hợp lệ của việc chuyển trạng thái
         boolean isValid = switch (current) {
@@ -190,7 +191,8 @@ public class BookingsServiceImpl implements BookingsService {
             default -> false;
         };
 
-        if (!isValid) throw new AppException(ErrorCode.INVALID_STATUS_TRANSITION);
+        if (!isValid)
+            throw new AppException(ErrorCode.INVALID_STATUS_TRANSITION);
 
         booking.setStatus(next);
         bookingsRepository.save(booking);
@@ -231,7 +233,7 @@ public class BookingsServiceImpl implements BookingsService {
         Bookings booking = bookingsRepository.findById(bookingId)
                 .orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
 
-        if(!booking.getStatus().equals(BookingStatusEnum.CONFIRMED)){
+        if (!booking.getStatus().equals(BookingStatusEnum.CONFIRMED)) {
             throw new AppException(ErrorCode.BOOKING_ALREADY_PROCESSED);
         }
 
@@ -263,16 +265,13 @@ public class BookingsServiceImpl implements BookingsService {
                 booking,
                 booking.getStatus(),
                 "Đổi xe trong đơn đặt xe",
-                "Xe cũ: " + oldCar.getName() + " → Xe mới: " + newCar.getName()
-        );
+                "Xe cũ: " + oldCar.getName() + " → Xe mới: " + newCar.getName());
 
         notificationService.createNotification(
                 booking.getUser().getId(),
                 NotificationTypeEnum.BOOKING,
-                "Đơn " + booking.getBookingCode() + " đã được đổi sang xe mới: " + newCar.getName()
-        );
+                "Đơn " + booking.getBookingCode() + " đã được đổi sang xe mới: " + newCar.getName());
     }
-
 
     @Override
     @Transactional
@@ -283,7 +282,7 @@ public class BookingsServiceImpl implements BookingsService {
         bookingsRepository.delete(booking);
     }
 
-    //USER
+    // USER
     @Override
     @Transactional
     public BookingCodeResponse addBooking(String email, BookingRequest request) {
@@ -449,8 +448,7 @@ public class BookingsServiceImpl implements BookingsService {
         }
         long days = ChronoUnit.DAYS.between(
                 start.toLocalDate(),
-                end.toLocalDate()
-        );
+                end.toLocalDate());
         return (days == 0) ? 1 : days;
     }
 
@@ -462,12 +460,12 @@ public class BookingsServiceImpl implements BookingsService {
     }
 
     @Override
-    public Page<BookingsResponse> getAllBookingUser(String email, String bookingCode, String status, int page, int size) {
+    public Page<BookingsResponse> getAllBookingUser(String email, String bookingCode, String status, int page,
+            int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Bookings> bookingsPage;
-        boolean noFilter =
-                (bookingCode == null || bookingCode.isBlank()) &&
-                        (status == null || status.isBlank());
+        boolean noFilter = (bookingCode == null || bookingCode.isBlank()) &&
+                (status == null || status.isBlank());
         if (noFilter) {
             bookingsPage = bookingsRepository.findBookingsByUser(email, null, null, pageable);
         } else {
@@ -581,14 +579,18 @@ public class BookingsServiceImpl implements BookingsService {
         String message = switch (newStatus) {
             case CONFIRMED -> "Đơn đặt xe " + booking.getBookingCode() + " của bạn đã được xác nhận.";
             case RENTED ->
-                    "Chúc mừng! Bạn đã nhận xe thành công cho đơn hàng " + booking.getBookingCode() + ". Chúc bạn có những trải nghiệm tuyệt vời với chiếc xe!";
+                "Chúc mừng! Bạn đã nhận xe thành công cho đơn hàng " + booking.getBookingCode()
+                        + ". Chúc bạn có những trải nghiệm tuyệt vời với chiếc xe!";
             case RETURNING ->
-                    "Bạn đang trong quá trình trả xe cho đơn hàng " + booking.getBookingCode();
+                "Bạn đang trong quá trình trả xe cho đơn hàng " + booking.getBookingCode();
             case COMPLETED ->
-                    "Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi! Đơn hàng " + booking.getBookingCode() + " đã hoàn thành. Chúng tôi hy vọng bạn hài lòng với trải nghiệm thuê xe và mong được phục vụ bạn trong những lần tiếp theo.";
+                "Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi! Đơn hàng " + booking.getBookingCode()
+                        + " đã hoàn thành. Chúng tôi hy vọng bạn hài lòng với trải nghiệm thuê xe và mong được phục vụ bạn trong những lần tiếp theo.";
             case CANCELLED ->
-                    "Đơn đặt xe " + booking.getBookingCode() + " của bạn đã bị hủy. Nếu bạn có bất kỳ thắc mắc nào, vui lòng liên hệ với chúng tôi để được hỗ trợ.";
-            default -> "Bạn đã tạo đơn đặt xe thành công với mã " + booking.getBookingCode() + ". Vui lòng thanh toán trong vong 1 giờ để xác nhận đơn hàng.";
+                "Đơn đặt xe " + booking.getBookingCode()
+                        + " của bạn đã bị hủy. Nếu bạn có bất kỳ thắc mắc nào, vui lòng liên hệ với chúng tôi để được hỗ trợ.";
+            default -> "Bạn đã tạo đơn đặt xe thành công với mã " + booking.getBookingCode()
+                    + ". Vui lòng thanh toán trong vong 1 giờ để xác nhận đơn hàng.";
         };
 
         notificationService.createNotification(booking.getUser().getId(), NotificationTypeEnum.BOOKING, message);

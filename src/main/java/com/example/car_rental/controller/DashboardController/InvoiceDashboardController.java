@@ -42,8 +42,9 @@ public class InvoiceDashboardController {
     }
 
     @GetMapping("/stats/range")
-    public ApiResponse<InvoiceStatisticsResponse> invoiceStats(@RequestParam @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate from,
-                                                               @RequestParam @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate to) {
+    public ApiResponse<InvoiceStatisticsResponse> invoiceStats(
+            @RequestParam @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate from,
+            @RequestParam @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate to) {
         LocalDateTime start = from.atStartOfDay();
         LocalDateTime end = to.atTime(LocalTime.MAX);
         return ApiResponse.<InvoiceStatisticsResponse>builder()
@@ -53,9 +54,10 @@ public class InvoiceDashboardController {
     }
 
     @GetMapping("/chart")
-    public ApiResponse<List<InvoiceChartResponse>> invoiceChart(@RequestParam @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate from,
-                                                                     @RequestParam @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate to,
-                                                                     @RequestParam DashboardGroupBy groupBy) {
+    public ApiResponse<List<InvoiceChartResponse>> invoiceChart(
+            @RequestParam @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate from,
+            @RequestParam @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate to,
+            @RequestParam DashboardGroupBy groupBy) {
         LocalDateTime start = from.atStartOfDay();
         LocalDateTime end = to.atTime(LocalTime.MAX);
         return ApiResponse.<List<InvoiceChartResponse>>builder()

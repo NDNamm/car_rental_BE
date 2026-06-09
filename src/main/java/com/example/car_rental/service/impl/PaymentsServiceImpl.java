@@ -50,8 +50,7 @@ public class PaymentsServiceImpl implements PaymentsService {
                 "https://img.vietqr.io/image/%s-%s-compact2.png?amount=%s&addInfo=%s",
                 bankId, accountNo,
                 booking.getTotalDepositAmount().toPlainString(),
-                booking.getBookingCode()
-        );
+                booking.getBookingCode());
     }
 
     @Override
@@ -81,36 +80,35 @@ public class PaymentsServiceImpl implements PaymentsService {
         bookingCode = normalizeBookingCode(bookingCode);
         Bookings booking = bookingsRepository.findByBookingCode(bookingCode)
                 .orElseThrow(() -> new AppException(ErrorCode.BOOKING_NOT_FOUND));
-        //Ignore nếu đã xử lý rồi
+        // Ignore nếu đã xử lý rồi
         if (booking.getStatus() != BookingStatusEnum.PENDING) {
             log.info("Booking {} đã được xử lý trước đó.", bookingCode);
             return;
         }
-        //Check timeout thanh toán
+        // Check timeout thanh toán
         if (LocalDateTime.now().isAfter(booking.getPaymentDeadline())) {
             booking.setStatus(BookingStatusEnum.CANCELLED);
-            booking.getBookingDetailsList().forEach(detail ->
-                    detail.getCar().setStatus(CarStatusEnum.AVAILABLE)
-            );
+            booking.getBookingDetailsList().forEach(detail -> detail.getCar().setStatus(CarStatusEnum.AVAILABLE));
             bookingsRepository.save(booking);
 
             createBookingHistory(booking);
             invoiceService.updateInvoiceStatus(booking.getId(), InvoiceStatusEnum.CANCELLED);
-            notificationService.createNotification(booking.getUser().getId(), NotificationTypeEnum.BOOKING, "Đơn đặt xe " + bookingCode + " đã bị hủy do quá hạn thanh toán.");
+            notificationService.createNotification(booking.getUser().getId(), NotificationTypeEnum.BOOKING,
+                    "Đơn đặt xe " + bookingCode + " đã bị hủy do quá hạn thanh toán.");
             log.warn("Booking {} bị cancel do quá hạn thanh toán", bookingCode);
             return;
         }
-        //SAFE NULL CHECK amount
+        // SAFE NULL CHECK amount
         if (request.getTransferAmount() == null) {
             log.warn("SePay webhook thiếu amount. Content={}", request.getContent());
             return;
         }
-        //Compare amount
+        // Compare amount
         if (request.getTransferAmount().compareTo(booking.getTotalDepositAmount()) < 0) {
             log.warn("Số tiền không đủ cho booking {}. Amount={}", bookingCode, request.getTransferAmount());
             return;
         }
-        //Find payment
+        // Find payment
         Payments payment = paymentsRepository
                 .findByBookingAndPaymentType(booking, PaymentTypeEnum.DEPOSIT)
                 .orElseThrow(() -> new AppException(ErrorCode.PAYMENT_NOT_FOUND));
@@ -126,7 +124,8 @@ public class PaymentsServiceImpl implements PaymentsService {
         createBookingHistory(booking);
         invoiceService.updateInvoiceStatus(booking.getId(), InvoiceStatusEnum.PARTIAL);
         invoiceService.recalculateInvoice(booking.getId());
-        notificationService.createNotification(booking.getUser().getId(), NotificationTypeEnum.BOOKING, "Đơn đặt xe " + bookingCode + " đã được xác nhận thanh toán cọc.");
+        notificationService.createNotification(booking.getUser().getId(), NotificationTypeEnum.BOOKING,
+                "Đơn đặt xe " + bookingCode + " đã được xác nhận thanh toán cọc.");
         log.info("Thanh toán cọc thành công cho booking: {}", bookingCode);
     }
 
@@ -153,9 +152,10 @@ public class PaymentsServiceImpl implements PaymentsService {
         return booking.getStatus().name();
     }
 
-    //Lay ma don hang
+    // Lay ma don hang
     private String extractBookingCode(String content) {
-        if (content == null) return null;
+        if (content == null)
+            return null;
 
         Pattern pattern = Pattern.compile("(BK[_A-Z0-9]+)");
         Matcher matcher = pattern.matcher(content);
@@ -168,7 +168,8 @@ public class PaymentsServiceImpl implements PaymentsService {
     }
 
     private String normalizeBookingCode(String code) {
-        if (code == null) return null;
+        if (code == null)
+            return null;
 
         // nếu dạng BK123ABC → chuyển thành BK_123ABC
         if (code.matches("^BK[0-9A-Z]+$")) {
@@ -179,8 +180,8 @@ public class PaymentsServiceImpl implements PaymentsService {
     }
 
     private void createBookingHistory(Bookings booking) {
-        Users systemUser = userRepository.findByEmail("system@local")
-                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+        Users systemUser = userRepository.findByEmail("system@gmail.com")
+                .orElseThrow(() -> new AppException(ErrorCode.SYSTEM_USER_NOT_FOUND));
         BookingStatusEnum newStatus = booking.getStatus();
         String reason;
 

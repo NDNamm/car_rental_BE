@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 public enum ErrorCode {
 
     INVALID_KEY(9999, "Unknown error", HttpStatus.INTERNAL_SERVER_ERROR),
+    SYSTEM_USER_NOT_FOUND(1000, "System user not found", HttpStatus.NOT_FOUND),
 
     PASSWORD_NOT_MATCH(1001, "Passwords do not match", HttpStatus.BAD_REQUEST),
     USER_NOT_FOUND(1002, "User not found", HttpStatus.NOT_FOUND),
@@ -28,7 +29,6 @@ public enum ErrorCode {
     TOKEN_EXPIRED(4002, "TOKEN_EXPIRED", HttpStatus.UNAUTHORIZED),
     INVALID_OTP(4003, "INVALID_OTP", HttpStatus.UNAUTHORIZED),
     REFRESH_TOKEN_INVALID(4004, "REFRESH TOKEN INVALID OR EXPIRED", HttpStatus.UNAUTHORIZED),
-
 
     VERIFICATION_NOT_FOUND(5001, "Verification not found", HttpStatus.NOT_FOUND),
     ALREADY_VERIFIED(5002, "User already verified", HttpStatus.BAD_REQUEST),

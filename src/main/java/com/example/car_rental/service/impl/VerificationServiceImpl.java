@@ -41,16 +41,16 @@ public class VerificationServiceImpl implements VerificationService {
     private final ImageService imageService;
     final private NotificationService notificationService;
 
-    //ADMIN
+    // ADMIN
     @Override
-    public Page<VerificationResponse> getAllVerifications(String email, String fullName, String status, int page, int size) {
+    public Page<VerificationResponse> getAllVerifications(String email, String fullName, String status, int page,
+            int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
         Page<Verifications> versPage = null;
 
-        boolean noFilter =
-                (email == null || email.isBlank()) &&
-                        (fullName == null || fullName.isBlank()) &&
-                        (status == null || status.isBlank());
+        boolean noFilter = (email == null || email.isBlank()) &&
+                (fullName == null || fullName.isBlank()) &&
+                (status == null || status.isBlank());
 
         if (noFilter) {
             versPage = verificationRepository.findAllVerification(null, null, null, pageable);
@@ -65,7 +65,6 @@ public class VerificationServiceImpl implements VerificationService {
 
         return versPage.map(this::mapToVerification);
     }
-
 
     @Override
     @Transactional
@@ -83,8 +82,7 @@ public class VerificationServiceImpl implements VerificationService {
 
     }
 
-
-    //Client
+    // Client
     @Override
     public VerificationResponse getVerUser() {
 
@@ -107,7 +105,8 @@ public class VerificationServiceImpl implements VerificationService {
 
     @Override
     @Transactional
-    public void updateVer(VerificationRequest request, MultipartFile cccdFront, MultipartFile cccdBack, MultipartFile driverLicense) {
+    public void updateVer(VerificationRequest request, MultipartFile cccdFront, MultipartFile cccdBack,
+            MultipartFile driverLicense) {
         String email = SecurityContextHolder
                 .getContext()
                 .getAuthentication()
@@ -132,7 +131,8 @@ public class VerificationServiceImpl implements VerificationService {
                     imageService.deleteImages(verification.getPublicIdCccdFront());
                 }
 
-                Map<String, String> cccdFrontUrl = imageService.uploadImages(cccdFront, "users", user.getFullName(), "cccd_front");
+                Map<String, String> cccdFrontUrl = imageService.uploadImages(cccdFront, "users", user.getFullName(),
+                        "cccd_front");
                 verification.setCccdFrontUrl(cccdFrontUrl.get("url"));
                 verification.setPublicIdCccdFront(cccdFrontUrl.get("public_id"));
             }
@@ -142,7 +142,8 @@ public class VerificationServiceImpl implements VerificationService {
                     imageService.deleteImages(verification.getPublicIdCccdBack());
                 }
 
-                Map<String, String> cccdBackUrl = imageService.uploadImages(cccdBack, "users", user.getFullName(), "cccd_back");
+                Map<String, String> cccdBackUrl = imageService.uploadImages(cccdBack, "users", user.getFullName(),
+                        "cccd_back");
                 verification.setCccdBackUrl(cccdBackUrl.get("url"));
                 verification.setPublicIdCccdBack(cccdBackUrl.get("public_id"));
             }
@@ -152,7 +153,8 @@ public class VerificationServiceImpl implements VerificationService {
                     imageService.deleteImages(verification.getLicenseImageUrl());
                 }
 
-                Map<String, String> LicenseImageUrl = imageService.uploadImages(driverLicense, "users", user.getFullName(), "driver_license");
+                Map<String, String> LicenseImageUrl = imageService.uploadImages(driverLicense, "users",
+                        user.getFullName(), "driver_license");
                 verification.setLicenseImageUrl(LicenseImageUrl.get("url"));
                 verification.setPublicIdLicense(LicenseImageUrl.get("public_id"));
             }
@@ -166,9 +168,14 @@ public class VerificationServiceImpl implements VerificationService {
         verification.setCreatedAt(LocalDate.now());
 
         verificationRepository.save(verification);
+
         List<Users> admins = userRepository.findByRole_RoleName("ADMIN");
+        List<Users> staffs = userRepository.findByRole_RoleName("STAFF");
         for (Users admin : admins) {
             createNotificationVerification(admin.getId(), VerStatusEnum.PENDING);
+        }
+        for (Users staff : staffs) {
+            createNotificationVerification(staff.getId(), VerStatusEnum.PENDING);
         }
 
     }
@@ -198,6 +205,6 @@ public class VerificationServiceImpl implements VerificationService {
             case PENDING -> "Có một yêu cầu xác minh mới đang chờ xử lý. Vui lòng kiểm tra và cập nhật trạng thái.";
             default -> "Xác minh tài khoản để đặt xe";
         };
-         notificationService.createNotification(userId, NotificationTypeEnum.VERIFICATION, message);
+        notificationService.createNotification(userId, NotificationTypeEnum.VERIFICATION, message);
     }
 }

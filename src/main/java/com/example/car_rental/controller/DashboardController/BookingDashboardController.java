@@ -33,8 +33,9 @@ public class BookingDashboardController {
     }
 
     @GetMapping("/stats/range")
-    public ApiResponse<BookingStatisticsResponse> getStatsByRange(@RequestParam @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate from,
-                                                                  @RequestParam @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate to) {
+    public ApiResponse<BookingStatisticsResponse> getStatsByRange(
+            @RequestParam @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate from,
+            @RequestParam @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate to) {
 
         LocalDateTime start = from.atStartOfDay();
         LocalDateTime end = to.atTime(LocalTime.MAX);
@@ -45,9 +46,10 @@ public class BookingDashboardController {
     }
 
     @GetMapping("/chart")
-    public ApiResponse<List<BookingChartResponse>> bookingChart(@RequestParam @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate from,
-                                                                @RequestParam @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate to,
-                                                                @RequestParam DashboardGroupBy groupBy) {
+    public ApiResponse<List<BookingChartResponse>> bookingChart(
+            @RequestParam @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate from,
+            @RequestParam @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate to,
+            @RequestParam DashboardGroupBy groupBy) {
 
         LocalDateTime start = from.atStartOfDay();
         LocalDateTime end = to.atTime(LocalTime.MAX);

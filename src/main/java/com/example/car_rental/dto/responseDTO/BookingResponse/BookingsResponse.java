@@ -27,6 +27,7 @@ public class BookingsResponse {
     private BookingStatusEnum status;
     private LocalDateTime createdAt;
     private String nameStaff;
+    private Long staffId;
     private String note;
     private LocalDateTime paymentDeadline;
     private List<BookingDetailResponse> bookingDetailResponse;

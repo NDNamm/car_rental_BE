@@ -51,9 +51,8 @@ public class RefundServiceImpl implements RefundService {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Refunds> refundsPage = null;
 
-        boolean noFilter =
-                (bookingCode == null || bookingCode.isBlank()) &&
-                        (status == null || status.isBlank());
+        boolean noFilter = (bookingCode == null || bookingCode.isBlank()) &&
+                (status == null || status.isBlank());
 
         if (noFilter) {
             refundsPage = refundRepository.findRefundByUser(email, null, null, pageable);
@@ -108,8 +107,8 @@ public class RefundServiceImpl implements RefundService {
                 .build();
 
         try {
-            Map<String, String> qrCodeUrl =
-                    imageService.uploadImages(qrCode, "bookings", booking.getBookingCode(), "QrCode");
+            Map<String, String> qrCodeUrl = imageService.uploadImages(qrCode, "bookings", booking.getBookingCode(),
+                    "QrCode");
 
             refund.setQrCodeUrl(qrCodeUrl.get("url"));
             refund.setPublicId(qrCodeUrl.get("public_id"));
@@ -165,16 +164,14 @@ public class RefundServiceImpl implements RefundService {
             refunds.setNote(
                     "Đã hoàn " + refunds.getAmount()
                             + " (" + refunds.getRefundPercent() + "%)"
-                            + " số tiền sau " + refunds.getHoursBefore() + " giờ cọc"
-            );
+                            + " số tiền sau " + refunds.getHoursBefore() + " giờ cọc");
 
             try {
                 Map<String, String> adminProofImageUrl = imageService.uploadImages(
                         adminProofImage,
                         "bookings",
                         refunds.getBookingCode(),
-                        "adminProofImage"
-                );
+                        "adminProofImage");
 
                 refunds.setAdminProofImage(adminProofImageUrl.get("url"));
                 refunds.setPublicIdProof(adminProofImageUrl.get("public_id"));
@@ -200,10 +197,8 @@ public class RefundServiceImpl implements RefundService {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Refunds> refundsPage;
 
-
-        boolean noFilter =
-                (bookingCode == null || bookingCode.isBlank()) &&
-                        (status == null || status.isBlank());
+        boolean noFilter = (bookingCode == null || bookingCode.isBlank()) &&
+                (status == null || status.isBlank());
 
         if (noFilter) {
             refundsPage = refundRepository.findByBookingCode(null, null, pageable);
@@ -224,15 +219,25 @@ public class RefundServiceImpl implements RefundService {
             case REJECTED -> "Yêu cầu hoàn tiền đơn đặt xe:  " + bookingCode + " của bạn đã bị từ chối.";
             case COMPLETED -> "Đã hoàn tiền thành công đơn đặt xe:  " + bookingCode;
             default ->
-                    "Bạn đã yêu cầu hoàn tiền đơn đặt xe:  " + bookingCode + ". Chúng tôi sẽ xem xét và phản hồi sớm nhất có thể.";
+                "Bạn đã yêu cầu hoàn tiền đơn đặt xe:  " + bookingCode
+                        + ". Chúng tôi sẽ xem xét và phản hồi sớm nhất có thể.";
         };
         notificationService.createNotification(user.getId(), NotificationTypeEnum.REFUND, message);
     }
 
     private void createBookingNotificationAdmin(String bookingCode) {
         List<Users> admins = userRepository.findByRole_RoleName("ADMIN");
-        for(Users adminUser : admins) {
-            notificationService.createNotification(adminUser.getId(), NotificationTypeEnum.REFUND, "Yêu cầu hoàn tiền đơn đặt xe:  " + bookingCode + " đang chờ xử lý. Vui lòng kiểm tra và cập nhật trạng thái.");
+        List<Users> staffs = userRepository.findByRole_RoleName("STAFF");
+        for (Users adminUser : admins) {
+            notificationService.createNotification(adminUser.getId(), NotificationTypeEnum.REFUND,
+                    "Yêu cầu hoàn tiền đơn đặt xe:  " + bookingCode
+                            + " đang chờ xử lý. Vui lòng kiểm tra và cập nhật trạng thái.");
+        }
+
+        for (Users staff : staffs) {
+            notificationService.createNotification(staff.getId(), NotificationTypeEnum.REFUND,
+                    "Yêu cầu hoàn tiền đơn đặt xe:  " + bookingCode
+                            + " đang chờ xử lý. Vui lòng kiểm tra và cập nhật trạng thái.");
         }
     }
 }
