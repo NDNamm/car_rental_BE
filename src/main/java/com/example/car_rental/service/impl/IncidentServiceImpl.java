@@ -66,7 +66,7 @@ public class IncidentServiceImpl implements IncidentService {
 
     @Override
     public void handleLateReturn(Long handoverId) {
-        Users staff = usersRepository.findByEmail("system@local")
+        Users staff = usersRepository.findByEmail("system@gmail.com")
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         Handovers handovers = handoverRepository.findById(handoverId)
@@ -85,22 +85,23 @@ public class IncidentServiceImpl implements IncidentService {
 
     }
 
-//    @Override
-//    public void handleExceededMileage(Long bookingDetailId, Long currentMileageLong ) {
-//        BookingDetails detail = bookingDetailRepository.findById(bookingDetailId)
-//                .orElseThrow(() -> new AppException(ErrorCode.BOOKING_DETAIL_NOT_FOUND));
-//
-//    }
-//
-//    @Override
-//    public void handleFuelLoss(Long bookingDetailId,  Integer currentFuel) {
-//        Users staff = usersRepository.findByEmail("system@local")
-//                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
-//
-//        BookingDetails detail = bookingDetailRepository.findById(bookingDetailId)
-//                .orElseThrow(() -> new AppException(ErrorCode.BOOKING_DETAIL_NOT_FOUND));
-//
-//    }
+    // @Override
+    // public void handleExceededMileage(Long bookingDetailId, Long
+    // currentMileageLong ) {
+    // BookingDetails detail = bookingDetailRepository.findById(bookingDetailId)
+    // .orElseThrow(() -> new AppException(ErrorCode.BOOKING_DETAIL_NOT_FOUND));
+    //
+    // }
+    //
+    // @Override
+    // public void handleFuelLoss(Long bookingDetailId, Integer currentFuel) {
+    // Users staff = usersRepository.findByEmail("system@gmail.com")
+    // .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
+    //
+    // BookingDetails detail = bookingDetailRepository.findById(bookingDetailId)
+    // .orElseThrow(() -> new AppException(ErrorCode.BOOKING_DETAIL_NOT_FOUND));
+    //
+    // }
 
     public void handleLateMinutes(long lateMinutes, Handovers handovers, Users staff) {
         BigDecimal amount;
@@ -154,8 +155,8 @@ public class IncidentServiceImpl implements IncidentService {
     }
 
     private void createIncidentNotification(Long userId, Incidents incident) {
-        String message = "Sự cố " + incident.getType() + " đã được ghi nhận trong quá trình bàn giao xe. Vui lòng kiểm tra chi tiết và xử lý kịp thời.";
+        String message = "Sự cố " + incident.getType()
+                + " đã được ghi nhận trong quá trình bàn giao xe. Vui lòng kiểm tra chi tiết và xử lý kịp thời.";
         notificationService.createNotification(userId, NotificationTypeEnum.INCIDENT, message);
     }
 }
-

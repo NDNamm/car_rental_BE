@@ -19,26 +19,42 @@ public interface DashboardService {
 
     // ================= BOOKING =================
     BookingStatisticsResponse getBookingStats();
+
     List<BookingChartResponse> getBookingChart(LocalDateTime from, LocalDateTime to, DashboardGroupBy groupBy);
+
     BookingStatisticsResponse getBookingStats(LocalDateTime from, LocalDateTime to);
 
     // ================= CAR =================
     CarStatisticsResponse getCarStats();
+
     List<CarTopResponse> getCarTop();
+
+    List<CarTopResponse> getCarTop(LocalDateTime from, LocalDateTime to);
 
     // ================= CUSTOMER =================
     CustomerStatisticsResponse getCustomerStats();
+
     List<CustomerTopResponse> getTopSpendingCustomers();
+
+    List<CustomerTopResponse> getTopSpendingCustomers(LocalDateTime from, LocalDateTime to);
+
     List<CustomerTopResponse> getTopCancelledCustomers();
+
+    List<CustomerTopResponse> getTopCancelledCustomers(LocalDateTime from, LocalDateTime to);
 
     // ================= INVOICE =================
     InvoiceStatisticsResponse getInvoiceStats();
+
     List<InvoiceChartResponse> getInvoiceChart(LocalDateTime from, LocalDateTime to, DashboardGroupBy groupBy);
+
     InvoiceStatisticsResponse getInvoiceStats(LocalDateTime from, LocalDateTime to);
 
     // ================= INCIDENT =================
     IncidentStatisticsResponse getIncidentStats();
+
     List<IncidentChartResponse> getIncidentChart(LocalDateTime from, LocalDateTime to, DashboardGroupBy groupBy);
+
     List<IncidentTopResponse> getTopIncidents(LocalDateTime from, LocalDateTime to);
+
     IncidentStatisticsResponse getIncidentStats(LocalDateTime from, LocalDateTime to);
 }

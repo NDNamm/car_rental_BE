@@ -14,10 +14,16 @@ import com.example.car_rental.dto.responseDTO.DashboardResponse.Invoice.InvoiceC
 import com.example.car_rental.dto.responseDTO.DashboardResponse.Invoice.InvoiceStatisticsResponse;
 import com.example.car_rental.service.DashboardService;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 @RestController
@@ -26,7 +32,6 @@ import java.util.List;
 public class CarDashboardController {
 
     private final DashboardService dashboardService;
-
 
     @GetMapping("/stats")
     public ApiResponse<CarStatisticsResponse> carStats() {
@@ -41,6 +46,19 @@ public class CarDashboardController {
         return ApiResponse.<List<CarTopResponse>>builder()
                 .code(200)
                 .data(dashboardService.getCarTop())
+                .build();
+    }
+
+    @GetMapping("/range/top")
+    public ApiResponse<List<CarTopResponse>> carRangeTop(
+            @RequestParam @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate from,
+            @RequestParam @DateTimeFormat(pattern = "dd/MM/yyyy") LocalDate to) {
+
+        LocalDateTime start = from.atStartOfDay();
+        LocalDateTime end = to.atTime(LocalTime.MAX);
+        return ApiResponse.<List<CarTopResponse>>builder()
+                .code(200)
+                .data(dashboardService.getCarTop(start, end))
                 .build();
     }
 

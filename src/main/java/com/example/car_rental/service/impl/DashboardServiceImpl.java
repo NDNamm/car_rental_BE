@@ -97,6 +97,11 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     @Override
+    public List<CarTopResponse> getCarTop(LocalDateTime from, LocalDateTime to) {
+        return carRepo.getTopCars(from, to);
+    }
+
+    @Override
     public CustomerStatisticsResponse getCustomerStats() {
         return CustomerStatisticsResponse.builder()
                 .totalCustomers(customerRepo.getTotalCustomers())
@@ -111,8 +116,18 @@ public class DashboardServiceImpl implements DashboardService {
     }
 
     @Override
+    public List<CustomerTopResponse> getTopSpendingCustomers(LocalDateTime from, LocalDateTime to) {
+        return customerRepo.getTopSpendingCustomers(from, to);
+    }
+
+    @Override
     public List<CustomerTopResponse> getTopCancelledCustomers() {
         return customerRepo.getTopCancelledCustomers();
+    }
+
+    @Override
+    public List<CustomerTopResponse> getTopCancelledCustomers(LocalDateTime from, LocalDateTime to) {
+        return customerRepo.getTopCancelledCustomers(from, to);
     }
 
     @Override
