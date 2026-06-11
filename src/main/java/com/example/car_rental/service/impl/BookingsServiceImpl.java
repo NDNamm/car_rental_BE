@@ -254,10 +254,10 @@ public class BookingsServiceImpl implements BookingsService {
         bookingDetailRepository.save(bookingDetail);
 
         // ⚠️ chỉ update status nếu thật sự cần (không ép logic cứng)
-        newCar.setStatus(CarStatusEnum.RENTED);
+        // newCar.setStatus(CarStatusEnum.RENTED);
 
         carRepository.save(newCar);
-        carRepository.save(oldCar);
+        // carRepository.save(oldCar);
         recalculateBookingPrice(booking);
 
         invoiceService.recalculateInvoice(booking.getId());

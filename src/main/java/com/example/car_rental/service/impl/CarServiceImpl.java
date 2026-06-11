@@ -81,7 +81,8 @@ public class CarServiceImpl implements CarService {
                 .manufactureYear(carDetailRequest.getManufactureYear())
                 .address(carDetailRequest.getAddress())
                 .city(carDetailRequest.getCity())
-                .deliveryAvailable((carDetailRequest.getDeliveryAvailable() != null && carDetailRequest.getDeliveryAvailable()))
+                .deliveryAvailable(
+                        (carDetailRequest.getDeliveryAvailable() != null && carDetailRequest.getDeliveryAvailable()))
                 .deliveryFee(carDetailRequest.getDeliveryFee())
                 .features(features)
                 .car(car)
@@ -89,8 +90,7 @@ public class CarServiceImpl implements CarService {
 
         car.setCarDetail(carDetail);
 
-        List<CarImages> carImagesList =
-                imageService.uploadCarImages(images, "cars", request.getName(), car);
+        List<CarImages> carImagesList = imageService.uploadCarImages(images, "cars", request.getName(), car);
 
         car.setCarImages(carImagesList);
 
@@ -136,7 +136,6 @@ public class CarServiceImpl implements CarService {
             car.setCategory(category);
         }
 
-
         if (request.getImageIdsToDelete() != null && !request.getImageIdsToDelete().isEmpty()) {
 
             // 1. Tìm các đối tượng cần xóa
@@ -162,7 +161,7 @@ public class CarServiceImpl implements CarService {
             }
         }
 
-// 4. Thêm ảnh mới như bình thường
+        // 4. Thêm ảnh mới như bình thường
         if (images != null && images.length > 0) {
             List<CarImages> newCarImages = imageService.uploadCarImages(images, "cars", car.getName(), car);
             car.getCarImages().addAll(newCarImages);
@@ -175,7 +174,8 @@ public class CarServiceImpl implements CarService {
 
     private void updateCarDetail(Cars car, CarDetailRequest request) {
 
-        if (request == null) return;
+        if (request == null)
+            return;
 
         CarDetail carDetail = car.getCarDetail();
 
@@ -246,17 +246,17 @@ public class CarServiceImpl implements CarService {
     }
 
     @Override
-    public Page<CarResponse> getAllCar(String name, String city, String status, int page, int size) {
+    public Page<CarResponse> getAllCar(Long categoryId, String name, String city, String status, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
-//        Page<Cars> carsPage;
-//
-//        if (name != null && !name.isEmpty()) {
-//            carsPage = carRepository.findByCars(name, status, pageable);
-//        } else {
-//            carsPage = carRepository.findAll(pageable);
-//        }
+        // Page<Cars> carsPage;
+        //
+        // if (name != null && !name.isEmpty()) {
+        // carsPage = carRepository.findByCars(name, status, pageable);
+        // } else {
+        // carsPage = carRepository.findAll(pageable);
+        // }
 
-        Page<Cars> carsPage = carRepository.findCars(name, city, status, pageable);
+        Page<Cars> carsPage = carRepository.findCars(categoryId, name, city, status, pageable);
 
         return carsPage.map(this::mapToCarResponse);
     }
@@ -270,7 +270,8 @@ public class CarServiceImpl implements CarService {
     }
 
     @Override
-    public Page<CarResponse> getAllCarsByCategoryId(Long categoryId, int page, int size) {
+    public Page<CarResponse> getAllCarsByCategoryId(Long categoryId, int page,
+            int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
         Page<Cars> carsPage = carRepository.findByCategoryId(categoryId, pageable);
 
@@ -309,16 +310,7 @@ public class CarServiceImpl implements CarService {
         List<Cars> cars = carRepository.findAvailableSameCityCars(categoryId, city, start, end);
 
         return cars.stream()
-                .map(car -> CarResponse.builder()
-                        .id(car.getId())
-                        .name(car.getName())
-                        .licensePlate(car.getLicensePlate())
-                        .pricePerDay(car.getPricePerDay())
-                        .depositAmount(car.getDepositAmount())
-                        .categoryName(car.getCategory().getName())
-                        .city(car.getCarDetail().getCity())
-                        .build()
-                )
+                .map(this::mapToCarResponse)
                 .toList();
     }
 

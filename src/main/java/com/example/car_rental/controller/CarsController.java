@@ -21,98 +21,99 @@ import java.util.List;
 @RequestMapping("/api/cars")
 public class CarsController {
 
-    private final CarService carService;
+        private final CarService carService;
 
-    @GetMapping("")
-    public ApiResponse<Page<CarResponse>> getAllCars(@RequestParam(defaultValue = "0", required = false) int page,
-                                                     @RequestParam(defaultValue = "5") int size,
-                                                     @RequestParam(required = false) String name,
-                                                     @RequestParam(required = false) String city,
-                                                     @RequestParam(required = false) String status) {
-        return ApiResponse.<Page<CarResponse>>builder()
-                .code(200)
-                .data(carService.getAllCar(name, city, status, page, size))
-                .build();
-    }
+        @GetMapping("")
+        public ApiResponse<Page<CarResponse>> getAllCars(@RequestParam(defaultValue = "0", required = false) int page,
+                        @RequestParam(defaultValue = "5") int size,
+                        @RequestParam(required = false) Long categoryId,
+                        @RequestParam(required = false) String name,
+                        @RequestParam(required = false) String city,
+                        @RequestParam(required = false) String status) {
+                return ApiResponse.<Page<CarResponse>>builder()
+                                .code(200)
+                                .data(carService.getAllCar(categoryId, name, city, status, page, size))
+                                .build();
+        }
 
-    @GetMapping("/city")
-    public ApiResponse<Page<String>> getAllCity(@RequestParam(required = false) String city,
-                                                @RequestParam(defaultValue = "0", required = false) int page,
-                                                @RequestParam(defaultValue = "5") int size) {
-        return ApiResponse.<Page<String>>builder()
-                .code(200)
-                .data(carService.getAllCities(city, page, size))
-                .build();
-    }
+        @GetMapping("/city")
+        public ApiResponse<Page<String>> getAllCity(@RequestParam(required = false) String city,
+                        @RequestParam(defaultValue = "0", required = false) int page,
+                        @RequestParam(defaultValue = "5") int size) {
+                return ApiResponse.<Page<String>>builder()
+                                .code(200)
+                                .data(carService.getAllCities(city, page, size))
+                                .build();
+        }
 
-    @GetMapping("/{carId}")
-    public ApiResponse<CarResponse> getCar(@PathVariable(value = "carId") Long carId) {
-        return ApiResponse.<CarResponse>builder()
-                .code(200)
-                .data(carService.getCarById(carId))
-                .build();
-    }
+        @GetMapping("/{carId}")
+        public ApiResponse<CarResponse> getCar(@PathVariable(value = "carId") Long carId) {
+                return ApiResponse.<CarResponse>builder()
+                                .code(200)
+                                .data(carService.getCarById(carId))
+                                .build();
+        }
 
-    @PostMapping(value = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ApiResponse<Void> addCar(@RequestPart("carRequest") String request,
-                                    @RequestPart("images") MultipartFile[] images) throws JsonProcessingException {
+        @PostMapping(value = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+        public ApiResponse<Void> addCar(@RequestPart("carRequest") String request,
+                        @RequestPart("images") MultipartFile[] images) throws JsonProcessingException {
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        CarRequest carRequest = objectMapper.readValue(request, CarRequest.class);
-        carService.addCar(carRequest, images);
+                ObjectMapper objectMapper = new ObjectMapper();
+                CarRequest carRequest = objectMapper.readValue(request, CarRequest.class);
+                carService.addCar(carRequest, images);
 
-        return ApiResponse.<Void>builder()
-                .code(200)
-                .message("Create car successful")
-                .build();
-    }
+                return ApiResponse.<Void>builder()
+                                .code(200)
+                                .message("Create car successful")
+                                .build();
+        }
 
+        @PutMapping(value = "/{carId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+        public ApiResponse<Void> updateCar(@PathVariable(value = "carId") Long carId,
+                        @RequestPart(value = "carRequest", required = false) String request,
+                        @RequestPart(value = "images", required = false) MultipartFile[] images)
+                        throws JsonProcessingException {
 
-    @PutMapping(value = "/{carId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ApiResponse<Void> updateCar(@PathVariable(value = "carId") Long carId,
-                                       @RequestPart(value = "carRequest", required = false) String request,
-                                       @RequestPart(value = "images", required = false) MultipartFile[] images) throws JsonProcessingException {
+                ObjectMapper objectMapper = new ObjectMapper();
+                CarRequest carRequest = objectMapper.readValue(request, CarRequest.class);
+                carService.updateCar(carId, carRequest, images);
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        CarRequest carRequest = objectMapper.readValue(request, CarRequest.class);
-        carService.updateCar(carId, carRequest, images);
+                return ApiResponse.<Void>builder()
+                                .code(200)
+                                .message("Update car successful")
+                                .build();
+        }
 
-        return ApiResponse.<Void>builder()
-                .code(200)
-                .message("Update car successful")
-                .build();
-    }
+        @PatchMapping(value = "/{carId}")
+        public ApiResponse<Void> updateCar(@PathVariable(value = "carId") Long carId,
+                        @RequestBody UpdateCarStatusRequest request) {
 
-    @PatchMapping(value = "/{carId}")
-    public ApiResponse<Void> updateCar(@PathVariable(value = "carId") Long carId,
-                                       @RequestBody UpdateCarStatusRequest request) {
+                carService.updateStatusCar(carId, request);
 
-        carService.updateStatusCar(carId, request);
+                return ApiResponse.<Void>builder()
+                                .code(200)
+                                .message("Update car successful")
+                                .build();
+        }
 
-        return ApiResponse.<Void>builder()
-                .code(200)
-                .message("Update car successful")
-                .build();
-    }
+        @DeleteMapping("/{carId}")
+        public ApiResponse<Void> deleteCar(@PathVariable("carId") Long carId) {
 
-    @DeleteMapping("/{carId}")
-    public ApiResponse<Void> deleteCar(@PathVariable("carId") Long carId) {
+                carService.deleteCar(carId);
+                return ApiResponse.<Void>builder()
+                                .code(200)
+                                .message("Delete car successful")
+                                .build();
+        }
 
-        carService.deleteCar(carId);
-        return ApiResponse.<Void>builder()
-                .code(200)
-                .message("Delete car successful")
-                .build();
-    }
+        @GetMapping("/{carId}/booked-times")
+        public ApiResponse<List<BookingTimeResponse>> getBookedTimes(@PathVariable Long carId) {
+                List<BookingTimeResponse> ranges = carService.getBookedRanges(carId);
 
-    @GetMapping("/{carId}/booked-times")
-    public ApiResponse<List<BookingTimeResponse>> getBookedTimes(@PathVariable Long carId) {
-        List<BookingTimeResponse> ranges = carService.getBookedRanges(carId);
-
-        return ApiResponse.<List<BookingTimeResponse>>builder()
-                .data(ranges)
-                .message("Lấy danh sách thời gian đã đặt thành công")
-                .build();
-    }
+                return ApiResponse.<List<BookingTimeResponse>>builder()
+                                .data(ranges)
+                                .message("Lấy danh sách thời gian đã đặt thành công")
+                                .build();
+        }
 
 }
