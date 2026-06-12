@@ -38,39 +38,38 @@ public class HandoverServiceImpl implements HandoverService {
                 .orElseThrow(() -> new AppException(ErrorCode.BOOKING_DETAIL_NOT_FOUND));
 
         Handovers handover = Handovers.builder()
-                        .bookingDetails(detail)
-                        .staff(staff)
-                        .type(request.getType())
-                        .handoverTime(LocalDateTime.now())
-                        .mileage(request.getMileage())
-                        .fuel_level(request.getFuelLevel())
-                        .note(request.getNoteHandover())
-                        .createdAt(LocalDateTime.now())
-                        .build();
+                .bookingDetails(detail)
+                .staff(staff)
+                .type(request.getType())
+                .handoverTime(LocalDateTime.now())
+                .mileage(request.getMileage())
+                .fuel_level(request.getFuelLevel())
+                .note(request.getNoteHandover())
+                .createdAt(LocalDateTime.now())
+                .build();
 
         handoverRepository.save(handover);
 
         String folderName = request.getType() == CarHandoverEnum.OUT
-                        ? "Ảnh bàn giao xe"
-                        : "Ảnh thu hồi xe";
+                ? "Ảnh bàn giao xe"
+                : "Ảnh thu hồi xe";
 
-        List<HandoverImages> handoverImages = imageService.uploadHandoverImages(images, "handovers", detail.getBooking().getBookingCode(), folderName, handover);
+        List<HandoverImages> handoverImages = imageService.uploadHandoverImages(images, "handovers",
+                detail.getBooking().getBookingCode(), folderName, handover);
 
         handover.setHandoverImages(handoverImages);
         handoverRepository.save(handover);
 
-
         if (request.getType() == CarHandoverEnum.IN) {
             incidentService.handleLateReturn(handover.getId());
-//            incidentService.handleExceededMileage(bookingDetailId, request.getMileage());
-//            incidentService.handleFuelLoss(bookingDetailId, request.getFuelLevel());
+            // incidentService.handleExceededMileage(bookingDetailId, request.getMileage());
+            // incidentService.handleFuelLoss(bookingDetailId, request.getFuelLevel());
 
             if (request.getIncidentRequests() != null) {
                 incidentService.createManualIncident(
                         handover.getId(),
                         request.getIncidentRequests(),
-                        staff
-                );
+                        staff);
             }
 
             invoiceService.recalculateInvoice(detail.getBooking().getId());
@@ -96,8 +95,7 @@ public class HandoverServiceImpl implements HandoverService {
                                 handover.getHandoverImages()
                                         .stream()
                                         .map(HandoverImages::getImageUrl)
-                                        .toList()
-                        )
+                                        .toList())
                         .incidentResponses(incidentService.getIncidentByHandoverId(handover.getId()))
                         .build())
                 .toList();

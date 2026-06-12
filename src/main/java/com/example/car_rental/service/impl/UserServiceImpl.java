@@ -41,21 +41,20 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final NotificationService notificationService;
 
-    //ADMIN
+    // ADMIN
     @Override
     public Page<UserResponse> getAllUsers(String search, String role, Boolean isActive, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
         Page<Users> usersPage = null;
 
-        boolean noFilter =
-                (search == null || search.isBlank()) &&
-                        (role == null || role.isBlank()) &&
-                        (isActive == null);
+        boolean noFilter = (search == null || search.isBlank()) &&
+                (role == null || role.isBlank()) &&
+                (isActive == null);
 
         if (noFilter) {
             usersPage = userRepository.finByUser(null, null, null, pageable);
         } else {
-            usersPage = userRepository.finByUser(search, role, isActive ,pageable);
+            usersPage = userRepository.finByUser(search, role, isActive, pageable);
         }
 
         return usersPage.map(this::mapToUserResponse);
@@ -90,7 +89,8 @@ public class UserServiceImpl implements UserService {
         if (request.getGender() != null) {
             user.setGender(request.getGender());
         }
-        if (request.getDob() != null) {user.setDob(request.getDob());
+        if (request.getDob() != null) {
+            user.setDob(request.getDob());
         }
         if (request.getIsActive() != null) {
             user.setIsActive(request.getIsActive());
@@ -122,6 +122,7 @@ public class UserServiceImpl implements UserService {
                 .phoneNumber(request.getPhoneNumber())
                 .dob(request.getDob())
                 .createdAt(LocalDate.now())
+                .isActive(true)
                 .role(roleRepository.findByRoleName(roleName)
                         .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND)))
                 .build();
@@ -136,7 +137,7 @@ public class UserServiceImpl implements UserService {
                 .build();
     }
 
-    //USER
+    // USER
     @Override
     public UserResponse getProfile(String email) {
 
@@ -187,7 +188,8 @@ public class UserServiceImpl implements UserService {
                     imageService.deleteImages(user.getPublicIdAvatar());
                 }
 
-                Map<String, String> avatarUrl = imageService.uploadImages(avatar, "users", user.getFullName(), "avatar");
+                Map<String, String> avatarUrl = imageService.uploadImages(avatar, "users", user.getFullName(),
+                        "avatar");
                 user.setAvatarUrl(avatarUrl.get("url"));
                 user.setPublicIdAvatar(avatarUrl.get("public_id"));
             }
@@ -219,8 +221,7 @@ public class UserServiceImpl implements UserService {
         notificationService.createNotification(
                 user.getId(),
                 NotificationTypeEnum.ACCOUNT,
-                message
-        );
+                message);
     }
 
     private void createUserActiveNotification(Users user) {
@@ -228,7 +229,6 @@ public class UserServiceImpl implements UserService {
         notificationService.createNotification(
                 user.getId(),
                 NotificationTypeEnum.ACCOUNT,
-                message
-        );
+                message);
     }
 }
