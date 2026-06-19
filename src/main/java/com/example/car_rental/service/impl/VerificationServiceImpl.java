@@ -78,7 +78,7 @@ public class VerificationServiceImpl implements VerificationService {
         verification.setNote(request.getNote());
         verificationRepository.save(verification);
 
-        createNotificationVerification(verification.getUser().getId(), newStatus);
+        createNotificationVerification(verification.getUser().getId(), newStatus, verId);
 
     }
 
@@ -172,10 +172,10 @@ public class VerificationServiceImpl implements VerificationService {
         List<Users> admins = userRepository.findByRole_RoleName("ADMIN");
         List<Users> staffs = userRepository.findByRole_RoleName("STAFF");
         for (Users admin : admins) {
-            createNotificationVerification(admin.getId(), VerStatusEnum.PENDING);
+            createNotificationVerification(admin.getId(), VerStatusEnum.PENDING, verification.getId());
         }
         for (Users staff : staffs) {
-            createNotificationVerification(staff.getId(), VerStatusEnum.PENDING);
+            createNotificationVerification(staff.getId(), VerStatusEnum.PENDING, verification.getId());
         }
 
     }
@@ -197,7 +197,7 @@ public class VerificationServiceImpl implements VerificationService {
                 .build();
     }
 
-    public void createNotificationVerification(Long userId, VerStatusEnum status) {
+    public void createNotificationVerification(Long userId, VerStatusEnum status, Long verId) {
 
         String message = switch (status) {
             case APPROVED -> "Tài khoản của bạn đã được xác minh thành công.";
@@ -205,6 +205,6 @@ public class VerificationServiceImpl implements VerificationService {
             case PENDING -> "Có một yêu cầu xác minh mới đang chờ xử lý. Vui lòng kiểm tra và cập nhật trạng thái.";
             default -> "Xác minh tài khoản để đặt xe";
         };
-        notificationService.createNotification(userId, NotificationTypeEnum.VERIFICATION, message);
+        notificationService.createNotification(userId, NotificationTypeEnum.VERIFICATION, message, verId);
     }
 }

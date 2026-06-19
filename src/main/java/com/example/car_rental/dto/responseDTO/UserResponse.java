@@ -24,4 +24,5 @@ public class UserResponse {
     private LocalDate createdAt;
     private Boolean isActive;
     private String reason;
+    private Boolean isGoogleLogin;
 }

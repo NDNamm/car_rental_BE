@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 public class NotificationResponse {
 
     private Long id;
+    private Long referenceId;
     private NotificationTypeEnum type;
     private String message;
     private Boolean isRead = false;

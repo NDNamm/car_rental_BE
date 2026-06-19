@@ -75,8 +75,7 @@ public class AuthServiceImpl implements AuthService {
         redisTemplate.opsForValue().set(
                 "refreshToken:" + user.getEmail(),
                 refreshToken,
-                Duration.ofDays(7)
-        );
+                Duration.ofDays(7));
 
         // COOKIE
         Cookie cookie = new Cookie("refreshToken", refreshToken);
@@ -88,7 +87,6 @@ public class AuthServiceImpl implements AuthService {
 
         return mapToAuthResponse(user, accessToken);
     }
-
 
     @Override
     @Transactional
@@ -110,7 +108,6 @@ public class AuthServiceImpl implements AuthService {
                         .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND)))
                 .build();
 
-
         userRepository.save(user);
 
         Verifications verifications = Verifications.builder()
@@ -119,7 +116,8 @@ public class AuthServiceImpl implements AuthService {
                 .build();
 
         verificationRepository.save(verifications);
-        verificationService.createNotificationVerification(user.getId(), VerStatusEnum.UNVERIFIED);
+        verificationService.createNotificationVerification(user.getId(), VerStatusEnum.UNVERIFIED,
+                verifications.getId());
 
         return mapToAuthResponse(user, null);
     }
@@ -130,14 +128,15 @@ public class AuthServiceImpl implements AuthService {
         if (refreshToken != null) {
             try {
                 Claims claims = jwtUtils.parseToken(refreshToken);
-                String email = claims.getSubject();;
+                String email = claims.getSubject();
+                ;
                 redisTemplate.delete("refreshToken:" + email);
                 log.info("User {} logout → refresh token deleted", email);
             } catch (Exception e) {
                 log.warn("Logout not success");
             }
         }
-        //Xóa cookie ở trình duyệt
+        // Xóa cookie ở trình duyệt
         ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
                 .secure(false)
@@ -163,7 +162,7 @@ public class AuthServiceImpl implements AuthService {
             String email = claims.getSubject();
             String role = claims.get("role", String.class);
 
-            //Check Redis
+            // Check Redis
             String redisKey = "refreshToken:" + email;
             String savedToken = (String) redisTemplate.opsForValue().get(redisKey);
 
@@ -178,8 +177,7 @@ public class AuthServiceImpl implements AuthService {
             redisTemplate.opsForValue().set(
                     "refreshToken:" + email,
                     newRefreshToken,
-                    Duration.ofMillis(ttl)
-            );
+                    Duration.ofMillis(ttl));
 
             ResponseCookie cookie = ResponseCookie.from("refreshToken", newRefreshToken)
                     .httpOnly(true)
@@ -205,14 +203,12 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
-
     @Override
     public AuthResponse loginWithGoogle(GoogleLoginRequest request, HttpServletResponse response) {
         try {
             GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(
                     new NetHttpTransport(),
-                    JacksonFactory.getDefaultInstance()
-            )
+                    JacksonFactory.getDefaultInstance())
                     .setAudience(Collections.singletonList(clientId))
                     .build();
 
@@ -248,7 +244,8 @@ public class AuthServiceImpl implements AuthService {
                         .build();
 
                 verificationRepository.save(verification);
-                verificationService.createNotificationVerification(savedUser.getId(), VerStatusEnum.UNVERIFIED);
+                verificationService.createNotificationVerification(savedUser.getId(), VerStatusEnum.UNVERIFIED,
+                        verification.getId());
                 return savedUser;
             });
 
@@ -256,14 +253,13 @@ public class AuthServiceImpl implements AuthService {
             String accessToken = jwtUtils.generateAccessToken(email, role);
             String refreshToken = jwtUtils.generateRefreshToken(email, role);
 
-            //Lưu Redis whitelist
+            // Lưu Redis whitelist
             redisTemplate.opsForValue().set(
                     "refreshToken:" + user.getEmail(),
                     refreshToken,
-                    Duration.ofDays(7)
-            );
+                    Duration.ofDays(7));
 
-            //Set HttpOnly Cookie
+            // Set HttpOnly Cookie
             ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
                     .httpOnly(true)
                     .secure(false)
@@ -281,9 +277,9 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
-
     public String getRefreshToken(HttpServletRequest request) {
-        if (request.getCookies() == null) return null;
+        if (request.getCookies() == null)
+            return null;
 
         for (Cookie cookie : request.getCookies()) {
             if ("refreshToken".equals(cookie.getName())) {
@@ -303,6 +299,7 @@ public class AuthServiceImpl implements AuthService {
                 .roleName(user.getRole().getRoleName())
                 .token(token)
                 .isActive(user.getIsActive())
+                .isGoogleLogin(passwordEncoder.matches("GOOGLE_LOGIN", user.getPassword()))
                 .build();
     }
 

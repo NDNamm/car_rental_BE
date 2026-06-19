@@ -18,4 +18,5 @@ public class AuthResponse {
     private String avatarUrl;
     private String token;
     private Boolean isActive;
+    private Boolean isGoogleLogin;
 }

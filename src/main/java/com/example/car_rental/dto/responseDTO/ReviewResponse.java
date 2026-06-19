@@ -22,4 +22,6 @@ public class ReviewResponse {
     private Boolean isHidden;
     private String reason;
     private String email;
+    private String bookingCode;
+    private String carImage;
 }

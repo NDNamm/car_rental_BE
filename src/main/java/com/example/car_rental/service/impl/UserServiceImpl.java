@@ -213,6 +213,7 @@ public class UserServiceImpl implements UserService {
                 .createdAt(user.getCreatedAt())
                 .isActive(user.getIsActive())
                 .reason(user.getReason())
+                .isGoogleLogin(passwordEncoder.matches("GOOGLE_LOGIN", user.getPassword()))
                 .build();
     }
 
@@ -221,7 +222,7 @@ public class UserServiceImpl implements UserService {
         notificationService.createNotification(
                 user.getId(),
                 NotificationTypeEnum.ACCOUNT,
-                message);
+                message, null);
     }
 
     private void createUserActiveNotification(Users user) {
@@ -229,6 +230,6 @@ public class UserServiceImpl implements UserService {
         notificationService.createNotification(
                 user.getId(),
                 NotificationTypeEnum.ACCOUNT,
-                message);
+                message, null);
     }
 }

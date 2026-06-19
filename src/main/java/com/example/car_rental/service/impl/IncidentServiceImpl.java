@@ -59,7 +59,8 @@ public class IncidentServiceImpl implements IncidentService {
                 .build();
 
         incidentRepository.save(incidents);
-        createIncidentNotification(handovers.getBookingDetails().getBooking().getUser().getId(), incidents);
+        createIncidentNotification(handovers.getBookingDetails().getBooking().getUser().getId(), incidents,
+                handovers.getBookingDetails().getBooking().getId());
         return incidents;
 
     }
@@ -150,13 +151,14 @@ public class IncidentServiceImpl implements IncidentService {
             incidentRepository.save(incidents);
 
             penaltyService.createPenalty(incidents.getId(), request.getAmount());
-            createIncidentNotification(handovers.getBookingDetails().getBooking().getUser().getId(), incidents);
+            createIncidentNotification(handovers.getBookingDetails().getBooking().getUser().getId(), incidents,
+                    handovers.getBookingDetails().getBooking().getId());
         }
     }
 
-    private void createIncidentNotification(Long userId, Incidents incident) {
+    private void createIncidentNotification(Long userId, Incidents incident, Long bookingId) {
         String message = "Sự cố " + incident.getType()
                 + " đã được ghi nhận trong quá trình bàn giao xe. Vui lòng kiểm tra chi tiết và xử lý kịp thời.";
-        notificationService.createNotification(userId, NotificationTypeEnum.INCIDENT, message);
+        notificationService.createNotification(userId, NotificationTypeEnum.INCIDENT, message, bookingId);
     }
 }

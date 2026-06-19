@@ -10,5 +10,6 @@ public enum NotificationTypeEnum {
     REVIEW,
     REFUND,
     ACCOUNT,
-    INCIDENT;
+    INCIDENT,
+    LATE_RETURN;
 }

@@ -40,12 +40,13 @@ public class NotificationServiceImpl implements NotificationService {
                 .message(notification.getMessage())
                 .isRead(notification.getIsRead())
                 .createdAt(notification.getCreatedAt())
+                .referenceId(notification.getReferenceId())
                 .build());
 
     }
 
     @Override
-    public void createNotification(Long userId, NotificationTypeEnum type, String message) {
+    public void createNotification(Long userId, NotificationTypeEnum type, String message, Long referenceId) {
 
         Users user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
@@ -54,6 +55,7 @@ public class NotificationServiceImpl implements NotificationService {
                 .user(user)
                 .type(type)
                 .message(message)
+                .referenceId(referenceId)
                 .createdAt(LocalDateTime.now())
                 .isRead(false)
                 .build();

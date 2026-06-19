@@ -19,7 +19,6 @@ import com.example.car_rental.service.PaymentsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -94,7 +93,7 @@ public class PaymentsServiceImpl implements PaymentsService {
             createBookingHistory(booking);
             invoiceService.updateInvoiceStatus(booking.getId(), InvoiceStatusEnum.CANCELLED);
             notificationService.createNotification(booking.getUser().getId(), NotificationTypeEnum.BOOKING,
-                    "Đơn đặt xe " + bookingCode + " đã bị hủy do quá hạn thanh toán.");
+                    "Đơn đặt xe " + bookingCode + " đã bị hủy do quá hạn thanh toán.", booking.getId());
             log.warn("Booking {} bị cancel do quá hạn thanh toán", bookingCode);
             return;
         }
@@ -125,7 +124,7 @@ public class PaymentsServiceImpl implements PaymentsService {
         invoiceService.updateInvoiceStatus(booking.getId(), InvoiceStatusEnum.PARTIAL);
         invoiceService.recalculateInvoice(booking.getId());
         notificationService.createNotification(booking.getUser().getId(), NotificationTypeEnum.BOOKING,
-                "Đơn đặt xe " + bookingCode + " đã được xác nhận thanh toán cọc.");
+                "Đơn đặt xe " + bookingCode + " đã được xác nhận thanh toán cọc.", booking.getId());
         log.info("Thanh toán cọc thành công cho booking: {}", bookingCode);
     }
 

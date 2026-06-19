@@ -5,11 +5,14 @@ import com.example.car_rental.entity.Bookings;
 import com.example.car_rental.entity.Users;
 import com.example.car_rental.entity.enums.BookingStatusEnum;
 import com.example.car_rental.entity.enums.CarStatusEnum;
+import com.example.car_rental.entity.enums.NotificationTypeEnum;
 import com.example.car_rental.exception.AppException;
 import com.example.car_rental.exception.ErrorCode;
 import com.example.car_rental.repository.BookingStatusHistoryRepository;
 import com.example.car_rental.repository.BookingsRepository;
 import com.example.car_rental.repository.UserRepository;
+import com.example.car_rental.service.NotificationService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -27,6 +30,7 @@ public class BookingScheduler {
     private final BookingsRepository bookingsRepository;
     private final BookingStatusHistoryRepository bookingStatusHistoryRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     @Scheduled(fixedRate = 60000)
     @Transactional
@@ -59,7 +63,8 @@ public class BookingScheduler {
                     .build();
 
             bookingStatusHistoryRepository.save(his);
-
+            notificationService.createNotification(booking.getUser().getId(), NotificationTypeEnum.BOOKING,
+                    "Đơn đặt xe " + booking.getBookingCode() + " đã bị hủy do quá hạn thanh toán.", booking.getId());
             log.info("Auto cancel booking: {}", booking.getBookingCode());
         }
 

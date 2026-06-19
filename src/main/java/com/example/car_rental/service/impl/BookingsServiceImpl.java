@@ -270,7 +270,8 @@ public class BookingsServiceImpl implements BookingsService {
         notificationService.createNotification(
                 booking.getUser().getId(),
                 NotificationTypeEnum.BOOKING,
-                "Đơn " + booking.getBookingCode() + " đã được đổi sang xe mới: " + newCar.getName());
+                "Đơn " + booking.getBookingCode() + " đã được đổi sang xe mới: " + newCar.getName(),
+                bookingId);
     }
 
     @Override
@@ -593,7 +594,8 @@ public class BookingsServiceImpl implements BookingsService {
                     + ". Vui lòng thanh toán trong vong 1 giờ để xác nhận đơn hàng.";
         };
 
-        notificationService.createNotification(booking.getUser().getId(), NotificationTypeEnum.BOOKING, message);
+        notificationService.createNotification(booking.getUser().getId(), NotificationTypeEnum.BOOKING, message,
+                booking.getId());
     }
 
     private void recalculateBookingPrice(Bookings booking) {

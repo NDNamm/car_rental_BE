@@ -118,8 +118,8 @@ public class RefundServiceImpl implements RefundService {
         }
 
         refundRepository.save(refund);
-        createBookingNotification(booking.getUser(), RefundStatus.PENDING, booking.getBookingCode());
-        createBookingNotificationAdmin(booking.getBookingCode());
+        createBookingNotification(booking.getUser(), RefundStatus.PENDING, booking.getBookingCode(), refund.getId());
+        createBookingNotificationAdmin(booking.getBookingCode(), refund.getId());
         return getRefund(refund);
     }
 
@@ -187,7 +187,8 @@ public class RefundServiceImpl implements RefundService {
         }
 
         refundRepository.save(refunds);
-        createBookingNotification(refunds.getBooking().getUser(), refunds.getStatus(), refunds.getBookingCode());
+        createBookingNotification(refunds.getBooking().getUser(), refunds.getStatus(), refunds.getBookingCode(),
+                refundId);
         return getRefund(refunds);
     }
 
@@ -214,7 +215,7 @@ public class RefundServiceImpl implements RefundService {
         return refundsPage.map(this::getRefund);
     }
 
-    private void createBookingNotification(Users user, RefundStatus status, String bookingCode) {
+    private void createBookingNotification(Users user, RefundStatus status, String bookingCode, Long refundId) {
         String message = switch (status) {
             case REJECTED -> "Yêu cầu hoàn tiền đơn đặt xe:  " + bookingCode + " của bạn đã bị từ chối.";
             case COMPLETED -> "Đã hoàn tiền thành công đơn đặt xe:  " + bookingCode;
@@ -222,22 +223,24 @@ public class RefundServiceImpl implements RefundService {
                 "Bạn đã yêu cầu hoàn tiền đơn đặt xe:  " + bookingCode
                         + ". Chúng tôi sẽ xem xét và phản hồi sớm nhất có thể.";
         };
-        notificationService.createNotification(user.getId(), NotificationTypeEnum.REFUND, message);
+        notificationService.createNotification(user.getId(), NotificationTypeEnum.REFUND, message, refundId);
     }
 
-    private void createBookingNotificationAdmin(String bookingCode) {
+    private void createBookingNotificationAdmin(String bookingCode, Long refundId) {
         List<Users> admins = userRepository.findByRole_RoleName("ADMIN");
         List<Users> staffs = userRepository.findByRole_RoleName("STAFF");
         for (Users adminUser : admins) {
             notificationService.createNotification(adminUser.getId(), NotificationTypeEnum.REFUND,
                     "Yêu cầu hoàn tiền đơn đặt xe:  " + bookingCode
-                            + " đang chờ xử lý. Vui lòng kiểm tra và cập nhật trạng thái.");
+                            + " đang chờ xử lý. Vui lòng kiểm tra và cập nhật trạng thái.",
+                    refundId);
         }
 
         for (Users staff : staffs) {
             notificationService.createNotification(staff.getId(), NotificationTypeEnum.REFUND,
                     "Yêu cầu hoàn tiền đơn đặt xe:  " + bookingCode
-                            + " đang chờ xử lý. Vui lòng kiểm tra và cập nhật trạng thái.");
+                            + " đang chờ xử lý. Vui lòng kiểm tra và cập nhật trạng thái.",
+                    refundId);
         }
     }
 }

@@ -57,6 +57,9 @@ public class Bookings {
     @Column(name = "qr_code_url")
     private String qrCodeUrl;
 
+    @Column(name = "late_reminder_sent")
+    private Boolean lateReminderSent;
+
     @ManyToOne
     @JsonIgnore
     @JoinColumn(name = "user_id")

@@ -32,8 +32,7 @@ public class ReviewServiceImpl implements ReviewService {
     final private NotificationService notificationService;
 
     @Override
-    public Page<ReviewResponse> getAllReviewUser(String email, Boolean isHidden, int page, int size
-    ) {
+    public Page<ReviewResponse> getAllReviewUser(String email, Boolean isHidden, int page, int size) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
@@ -43,8 +42,7 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public ReviewResponse createReview(String email, Long bookingId, ReviewRequest request
-    ) {
+    public ReviewResponse createReview(String email, Long bookingId, ReviewRequest request) {
 
         Users user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
@@ -77,7 +75,7 @@ public class ReviewServiceImpl implements ReviewService {
         reviewRepository.save(review);
 
         updateCarRating(review.getCar().getId());
-        createReviewNotification(user);
+        createReviewNotification(user, review.getId(), booking.getBookingCode());
         return mapToReviewResponse(review);
     }
 
@@ -113,11 +111,9 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public Page<ReviewResponse> getAllReviews(Boolean isHidden, int page, int size
-    ) {
+    public Page<ReviewResponse> getAllReviews(Boolean isHidden, int page, int size) {
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending()
-        );
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         Page<Reviews> reviewsPage;
         if (isHidden == null) {
             reviewsPage = reviewRepository.findAll(pageable);
@@ -129,8 +125,7 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public void updateStatusReview(Long reviewId, UpdateReviewRequest request
-    ) {
+    public void updateStatusReview(Long reviewId, UpdateReviewRequest request) {
 
         Reviews review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new AppException(ErrorCode.REVIEW_NOT_FOUND));
@@ -141,7 +136,7 @@ public class ReviewServiceImpl implements ReviewService {
 
         if (Boolean.TRUE.equals(isHidden)) {
             review.setReason(request.getReason());
-            createReviewHiddenNotification(review.getUser());
+            createReviewHiddenNotification(review.getUser(), reviewId);
         } else {
             review.setReason(null);
         }
@@ -164,6 +159,8 @@ public class ReviewServiceImpl implements ReviewService {
                 .isHidden(review.getIsHidden())
                 .reason(review.getReason())
                 .createdAt(review.getCreatedAt())
+                .bookingCode(review.getBooking().getBookingCode())
+                .carImage(review.getCar().getCarImages().get(0).getImageUrl())
                 .build();
     }
 
@@ -184,21 +181,22 @@ public class ReviewServiceImpl implements ReviewService {
         carRepository.save(car);
     }
 
-    private void createReviewNotification(Users user) {
-        String message = "Bạn đã gửi đánh giá thành công. Cảm ơn bạn đã sử dụng dịch vụ!";
+    private void createReviewNotification(Users user, Long reviewId, String bookingCode) {
+        String message = "Bạn đã gửi đánh giá thành công cho mã đặt xe " + bookingCode
+                + ". Cảm ơn bạn đã sử dụng dịch vụ!";
         notificationService.createNotification(
                 user.getId(),
                 NotificationTypeEnum.REVIEW,
-                message
-        );
+                message,
+                reviewId);
     }
 
-    private void createReviewHiddenNotification(Users user) {
+    private void createReviewHiddenNotification(Users user, Long reviewId) {
         String message = "Đánh giá của bạn đã bị ẩn do vi phạm chính sách. Vui lòng kiểm tra lại nội dung.";
         notificationService.createNotification(
                 user.getId(),
                 NotificationTypeEnum.REVIEW,
-                message
-        );
+                message,
+                reviewId);
     }
 }
