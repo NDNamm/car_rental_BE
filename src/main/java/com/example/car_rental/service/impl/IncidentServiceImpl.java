@@ -157,7 +157,7 @@ public class IncidentServiceImpl implements IncidentService {
     }
 
     private void createIncidentNotification(Long userId, Incidents incident, Long bookingId) {
-        String message = "Sự cố " + incident.getType()
+        String message = "Sự cố " + incident.getType().getLabel()
                 + " đã được ghi nhận trong quá trình bàn giao xe. Vui lòng kiểm tra chi tiết và xử lý kịp thời.";
         notificationService.createNotification(userId, NotificationTypeEnum.INCIDENT, message, bookingId);
     }
