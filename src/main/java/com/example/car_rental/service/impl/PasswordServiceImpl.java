@@ -36,17 +36,22 @@ public class PasswordServiceImpl implements PasswordService {
         Users user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User Not Found"));
 
-        String otpCode = String.format("%06d", new Random().nextInt(999999));
+        try {
+            String otpCode = String.format("%06d", new Random().nextInt(999999));
 
-        String key = "password:otp:" + email;
-        redisTemplate.opsForValue().set(key, otpCode, OTP_EXPIRE_MINUTES, TimeUnit.MINUTES);
+            String key = "password:otp:" + email;
+            redisTemplate.opsForValue().set(key, otpCode, OTP_EXPIRE_MINUTES, TimeUnit.MINUTES);
 
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(email);
-        message.setSubject("Your OTP Code for Password Reset");
-        message.setText("Hello " + user.getFullName() + ",\n\nYour OTP code is: " + otpCode +
-                "\nThis code will expire in " + OTP_EXPIRE_MINUTES + " minutes.");
-        mailSender.send(message);
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(email);
+            message.setSubject("Your OTP Code for Password Reset");
+            message.setText("Hello " + user.getFullName() + ",\n\nYour OTP code is: " + otpCode +
+                    "\nThis code will expire in " + OTP_EXPIRE_MINUTES + " minutes.");
+            mailSender.send(message);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to send OTP, " + e.getMessage());
+        }
+
     }
 
     @Override
@@ -66,7 +71,6 @@ public class PasswordServiceImpl implements PasswordService {
                 .getContext()
                 .getAuthentication()
                 .getName();
-
 
         Users user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
