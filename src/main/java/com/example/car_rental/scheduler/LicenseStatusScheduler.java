@@ -29,7 +29,7 @@ public class LicenseStatusScheduler {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
 
-    @Scheduled(cron = "0 5 22 * * ?")
+    @Scheduled(cron = "0 0 0 * * ?")
     @Transactional
     public void updateLicenseStatus() {
 
