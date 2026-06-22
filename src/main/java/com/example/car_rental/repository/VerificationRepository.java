@@ -10,23 +10,24 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface VerificationRepository extends JpaRepository<Verifications, Long> {
-   Optional<Verifications> findByUserId(Long userId);
-    @Query("""
-    SELECT v FROM Verifications v
-    JOIN v.user u
-    WHERE (:email IS NULL OR LOWER(u.email) LIKE LOWER(CONCAT('%', :email, '%')))
-      AND (:fullName IS NULL OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :fullName, '%')))
-      AND (:status IS NULL OR v.status = :status)
-""")
-    Page<Verifications> findAllVerification(
-            @Param("email") String email,
-            @Param("fullName") String fullName,
-            @Param("status") VerStatusEnum status,
-            Pageable pageable
-    );
+  Optional<Verifications> findByUserId(Long userId);
+
+  @Query("""
+          SELECT v FROM Verifications v
+          JOIN v.user u
+          WHERE (:email IS NULL OR LOWER(u.email) LIKE LOWER(CONCAT('%', :email, '%')))
+            AND (:fullName IS NULL OR LOWER(u.fullName) LIKE LOWER(CONCAT('%', :fullName, '%')))
+            AND (:status IS NULL OR v.status = :status)
+      """)
+  Page<Verifications> findAllVerification(
+      @Param("email") String email,
+      @Param("fullName") String fullName,
+      @Param("status") VerStatusEnum status,
+      Pageable pageable);
 
 }

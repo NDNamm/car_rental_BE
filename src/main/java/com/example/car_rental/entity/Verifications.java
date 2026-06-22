@@ -1,13 +1,12 @@
 package com.example.car_rental.entity;
 
-import com.example.car_rental.entity.enums.GenderEnum;
 import com.example.car_rental.entity.enums.VerStatusEnum;
+import com.example.car_rental.entity.enums.LicenseStatusEnum;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
-import java.util.Date;
 
 @Entity
 @Getter
@@ -51,7 +50,11 @@ public class Verifications {
     private String note;
 
     @Column(name = "license_expired_date")
-    private String licenseExpiredDate;
+    private LocalDate licenseExpiredDate;
+
+    @Column(name = "license_status")
+    @Enumerated(EnumType.STRING)
+    private LicenseStatusEnum licenseStatus;
 
     @Column(name = "created_at")
     private LocalDate createdAt;

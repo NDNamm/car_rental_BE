@@ -6,6 +6,7 @@ import com.example.car_rental.dto.responseDTO.UserResponse;
 import com.example.car_rental.dto.responseDTO.VerificationResponse;
 import com.example.car_rental.entity.Users;
 import com.example.car_rental.entity.Verifications;
+import com.example.car_rental.entity.enums.LicenseStatusEnum;
 import com.example.car_rental.entity.enums.NotificationTypeEnum;
 import com.example.car_rental.entity.enums.VerStatusEnum;
 import com.example.car_rental.exception.AppException;
@@ -76,6 +77,11 @@ public class VerificationServiceImpl implements VerificationService {
         VerStatusEnum newStatus = request.getStatus();
         verification.setStatus(newStatus);
         verification.setNote(request.getNote());
+        if (newStatus == VerStatusEnum.APPROVED) {
+            verification.setLicenseStatus(LicenseStatusEnum.VALID);
+        } else {
+            verification.setLicenseStatus(LicenseStatusEnum.NULL);
+        }
         verificationRepository.save(verification);
 
         createNotificationVerification(verification.getUser().getId(), newStatus, verId);
@@ -121,7 +127,8 @@ public class VerificationServiceImpl implements VerificationService {
                         .status(VerStatusEnum.PENDING)
                         .build());
 
-        if (verification.getStatus() == VerStatusEnum.APPROVED) {
+        if (verification.getStatus() == VerStatusEnum.APPROVED
+                && LicenseStatusEnum.VALID.equals(verification.getLicenseStatus())) {
             throw new AppException(ErrorCode.ALREADY_VERIFIED);
         }
 
@@ -165,6 +172,7 @@ public class VerificationServiceImpl implements VerificationService {
         verification.setLicenseNumber(request.getLicenseNumber());
         verification.setLicenseExpiredDate(request.getLicenseExpiredDate());
         verification.setStatus(VerStatusEnum.PENDING);
+        verification.setLicenseStatus(LicenseStatusEnum.NULL);
         verification.setCreatedAt(LocalDate.now());
 
         verificationRepository.save(verification);
@@ -193,6 +201,7 @@ public class VerificationServiceImpl implements VerificationService {
                 .status(verification.getStatus())
                 .note(verification.getNote())
                 .licenseExpiredDate(verification.getLicenseExpiredDate())
+                .licenseStatus(verification.getLicenseStatus())
                 .createdAt(verification.getCreatedAt())
                 .build();
     }
