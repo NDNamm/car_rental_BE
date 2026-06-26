@@ -97,17 +97,17 @@ public class PaymentsServiceImpl implements PaymentsService {
             log.warn("Booking {} bị cancel do quá hạn thanh toán", bookingCode);
             return;
         }
-        // SAFE NULL CHECK amount
+
         if (request.getTransferAmount() == null) {
             log.warn("SePay webhook thiếu amount. Content={}", request.getContent());
             return;
         }
-        // Compare amount
+
         if (request.getTransferAmount().compareTo(booking.getTotalDepositAmount()) < 0) {
             log.warn("Số tiền không đủ cho booking {}. Amount={}", bookingCode, request.getTransferAmount());
             return;
         }
-        // Find payment
+
         Payments payment = paymentsRepository
                 .findByBookingAndPaymentType(booking, PaymentTypeEnum.DEPOSIT)
                 .orElseThrow(() -> new AppException(ErrorCode.PAYMENT_NOT_FOUND));

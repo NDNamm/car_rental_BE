@@ -149,10 +149,9 @@ public class IncidentServiceImpl implements IncidentService {
                     .build();
 
             incidentRepository.save(incidents);
-
+            Bookings booking = handovers.getBookingDetails().getBooking();
             penaltyService.createPenalty(incidents.getId(), request.getAmount());
-            createIncidentNotification(handovers.getBookingDetails().getBooking().getUser().getId(), incidents,
-                    handovers.getBookingDetails().getBooking().getId());
+            createIncidentNotification(booking.getUser().getId(), incidents, booking.getId());
         }
     }
 

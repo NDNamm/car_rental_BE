@@ -15,13 +15,12 @@ public interface InvoiceRepository extends JpaRepository<Invoices, Long> {
     Optional<Invoices> findByBookingId(Long bookingId);
 
     @Query("""
-    SELECT i
-    FROM Invoices i
-    WHERE i.booking.id = :bookingId
-    AND i.booking.user.email = :email
-""")
+                SELECT i
+                FROM Invoices i
+                WHERE i.booking.id = :bookingId
+                AND i.booking.user.email = :email
+            """)
     Optional<Invoices> findByBookingIdAndUserEmail(
             @Param("bookingId") Long bookingId,
-            @Param("email") String email
-    );
+            @Param("email") String email);
 }
