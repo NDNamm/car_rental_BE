@@ -13,6 +13,7 @@ import com.example.car_rental.dto.responseDTO.BookingResponse.BookingStatusRespo
 import com.example.car_rental.dto.responseDTO.BookingResponse.BookingsResponse;
 import com.example.car_rental.dto.responseDTO.CarResponse.CarImageResponse;
 import com.example.car_rental.dto.responseDTO.CarResponse.CarResponse;
+import com.example.car_rental.dto.responseDTO.CarResponse.CarDetailResponse;
 import com.example.car_rental.dto.responseDTO.RefundResponse;
 import com.example.car_rental.entity.*;
 import com.example.car_rental.entity.enums.*;
@@ -131,6 +132,7 @@ public class BookingsServiceImpl implements BookingsService {
 
         return bookingDetailsList.stream().map(detail -> {
             Cars currentCar = detail.getCar();
+            CarDetail carDetail = currentCar.getCarDetail();
 
             List<CarImageResponse> carImages = currentCar.getCarImages().stream()
                     .map(image -> CarImageResponse.builder()
@@ -156,6 +158,10 @@ public class BookingsServiceImpl implements BookingsService {
                             .depositAmount(currentCar.getDepositAmount())
                             .categoryName(currentCar.getCategory().getName())
                             .carImageResponses(carImages)
+                            .carDetailResponse(CarDetailResponse.builder()
+                                    .address(carDetail.getAddress())
+                                    .city(carDetail.getCity())
+                                    .build())
                             .build())
                     .handoverResponses(handoverService.getHandoversByBookingDetailId(detail.getId()))
                     .build();

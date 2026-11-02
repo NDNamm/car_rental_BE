@@ -14,7 +14,7 @@ public class RefundCalculate {
         BigDecimal percent = BigDecimal.valueOf(refundPercent);
         BigDecimal divisor = new BigDecimal("100");
 
-        // Công thức đúng: tiền hoàn = tiền cọc * % hoàn
+        // tiền hoàn = tiền cọc * % hoàn
         return booking.getTotalDepositAmount()
                 .multiply(percent)
                 .divide(divisor, 2, RoundingMode.HALF_UP);
@@ -23,13 +23,14 @@ public class RefundCalculate {
     public long calculateHoursBefore(LocalDateTime startTime) {
         return Math.max(
                 Duration.between(LocalDateTime.now(), startTime).toHours(),
-                0
-        );
+                0);
     }
 
     public int calculateRefundPercent(long hoursBefore) {
-        if (hoursBefore >= 24) return 100;
-        if (hoursBefore >= 12) return 60;
+        if (hoursBefore >= 24)
+            return 100;
+        if (hoursBefore >= 12)
+            return 60;
         return 0;
     }
 }
